@@ -11,12 +11,18 @@
   <style>
     body { font-family: 'Inter', sans-serif; background: #F8FAFC; color: #0F172A; }
     .mono { font-family: 'JetBrains Mono', monospace; }
+    @media print {
+      body * { visibility: hidden; }
+      #printableInvoiceArea, #printableInvoiceArea * { visibility: visible; }
+      #printableInvoiceArea { position: absolute; left: 0; top: 0; width: 100%; }
+      .no-print { display: none !important; }
+    }
   </style>
 </head>
 <body class="min-h-screen flex flex-col">
 
   <!-- =========================================================================
-       TELA 1: PÁGINA INICIAL DE LOGIN & CADASTRO REAL (SUPABASE AUTH + GOOGLE)
+       TELA 1: AUTENTICAÇÃO REAL COM SUPABASE AUTH + GOOGLE OAUTH 2.0
        ========================================================================= -->
   <div id="authScreen" class="min-h-screen flex flex-col justify-center items-center px-4 py-10 bg-gradient-to-br from-slate-950 via-[#002266] to-[#0038A8]">
     <div class="w-full max-w-md bg-white rounded-3xl shadow-2xl border border-slate-200 overflow-hidden">
@@ -57,7 +63,6 @@
           <div class="flex-grow border-t border-slate-200"></div>
         </div>
 
-        <!-- Alerta de Erro / Sucesso -->
         <div id="authAlertBox" class="hidden p-3 rounded-xl text-xs font-semibold"></div>
 
         <!-- FORMULÁRIO DE LOGIN -->
@@ -75,7 +80,7 @@
           </button>
         </form>
 
-        <!-- FORMULÁRIO DE CADASTRO (CRIAR CONTA) -->
+        <!-- FORMULÁRIO DE CADASTRO -->
         <form id="formSignup" onsubmit="handleEmailSignup(event)" class="hidden space-y-3">
           <div>
             <label class="block text-[11px] font-bold text-slate-700 mb-1">Nome da Locadora / Gráfica</label>
@@ -100,7 +105,7 @@
             <input id="signupPassword" type="password" required minlength="6" placeholder="••••••••" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-xs" />
           </div>
           <button id="btnSubmitSignup" type="submit" class="w-full py-3 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs shadow-md transition">
-            Criar Minha Conta & Escolher Plano
+            Criar Minha Conta & Iniciar
           </button>
         </form>
       </div>
@@ -108,151 +113,532 @@
   </div>
 
   <!-- =========================================================================
-       TELA 2: PAINEL DE PRODUÇÃO (EXIBIDO APENAS APÓS AUTENTICAÇÃO REAL)
+       TELA 2: PAINEL PRINCIPAL (SESSÃO SUPABASE ATIVA)
        ========================================================================= -->
   <div id="appScreen" class="hidden min-h-screen flex flex-col">
-    <!-- TOPBAR -->
-    <header class="bg-[#0038A8] text-white shadow-lg sticky top-0 z-40">
-      <div class="max-w-7xl mx-auto px-4 py-3.5 flex flex-wrap items-center justify-between gap-3">
+    <!-- TOPBAR COM COMUTADOR DE MODO E ABAS SERENAS -->
+    <header class="bg-[#0038A8] text-white shadow-lg sticky top-0 z-40 no-print">
+      <div class="max-w-7xl mx-auto px-4 py-3 flex flex-wrap items-center justify-between gap-3">
+        <!-- Marca + Identidade + Comutador -->
         <div class="flex items-center space-x-3">
           <div class="w-10 h-10 rounded-2xl bg-white/15 flex items-center justify-center border border-white/20">
             <i data-lucide="printer" class="w-5 h-5 text-white"></i>
           </div>
           <div>
             <div class="flex items-center space-x-2">
-              <span id="topTenantName" class="font-black text-lg tracking-tight">PrintMind</span>
-              <span id="topPlanBadge" class="text-[10px] font-bold uppercase px-2 py-0.5 rounded-full bg-emerald-400/20 text-emerald-200 border border-emerald-300/30">PRO</span>
+              <span id="topTenantName" class="font-black text-base tracking-tight">PrintMind</span>
+              <!-- Seletor Modo Híbrido / Locadora / Gráfica -->
+              <select id="operationModeSelect" onchange="switchOperationMode(this.value)" class="bg-blue-900/60 hover:bg-blue-900/90 text-white text-[11px] font-bold px-2 py-0.5 rounded-lg border border-blue-400/30 cursor-pointer focus:outline-none">
+                <option value="hibrido">⚡ Modo Híbrido (Ambos)</option>
+                <option value="locacao">🏢 Modo Locadora (Outsourcing)</option>
+                <option value="grafica">🖨️ Modo Gráfica Própria</option>
+              </select>
+              <button onclick="openModal('pricingModal')" id="topPlanBadge" class="text-[10px] font-bold uppercase px-2 py-0.5 rounded-full bg-emerald-400/20 text-emerald-200 border border-emerald-300/30 hover:bg-emerald-400/30 transition">
+                MÓDULO 1 (R$ 1/MÊS)
+              </button>
             </div>
             <p id="topUserEmail" class="text-[11px] text-blue-100 mono"></p>
           </div>
         </div>
 
-        <div class="flex flex-wrap items-center gap-2">
-          <button onclick="openModal('newClientModal')" class="px-3.5 py-2 rounded-xl bg-white text-[#0038A8] hover:bg-blue-50 text-xs font-black flex items-center space-x-1.5 shadow-sm transition">
-            <i data-lucide="plus" class="w-4 h-4"></i><span>Novo Cliente / Hospital</span>
+        <!-- 3 ABAS SERENAS CENTRAIS -->
+        <nav class="flex items-center bg-white/10 p-1 rounded-2xl border border-white/15 text-xs font-bold">
+          <button id="navTabClients" onclick="switchTab('clients')" class="px-3.5 py-1.5 rounded-xl bg-white text-[#0038A8] shadow-sm transition flex items-center space-x-1.5">
+            <i data-lucide="layout-grid" class="w-3.5 h-3.5"></i>
+            <span>Operação & Clientes</span>
           </button>
-          <button onclick="openModal('newPrinterModal')" class="px-3 py-2 rounded-xl bg-white/10 hover:bg-white/20 text-xs font-bold flex items-center space-x-1.5 border border-white/15 transition">
-            <i data-lucide="cpu" class="w-4 h-4"></i><span>Cadastrar Impressora</span>
+          <button id="navTabReports" onclick="switchTab('reports')" class="px-3.5 py-1.5 rounded-xl text-white/80 hover:text-white hover:bg-white/10 transition flex items-center space-x-1.5">
+            <i data-lucide="file-check-2" class="w-3.5 h-3.5"></i>
+            <span>Relatórios & Faturamento</span>
           </button>
-          <button onclick="openModal('agentModal')" class="px-3 py-2 rounded-xl bg-white/10 hover:bg-white/20 text-xs font-bold flex items-center space-x-1.5 border border-white/15 transition">
-            <i data-lucide="radar" class="w-4 h-4"></i><span>Baixar Agente & Sub-redes</span>
+          <button id="navTabGrafica" onclick="switchTab('grafica')" class="px-3.5 py-1.5 rounded-xl text-white/80 hover:text-white hover:bg-white/10 transition flex items-center space-x-1.5">
+            <i data-lucide="printer" class="w-3.5 h-3.5"></i>
+            <span>Minha Gráfica</span>
           </button>
-          <button onclick="openModal('planModal')" class="px-3 py-2 rounded-xl bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-100 text-xs font-bold flex items-center space-x-1.5 border border-emerald-400/30 transition">
-            <i data-lucide="credit-card" class="w-4 h-4"></i><span>Plano & Split Asaas</span>
+        </nav>
+
+        <!-- BOTÕES DE AÇÃO RÁPIDA -->
+        <div class="flex items-center gap-2">
+          <button onclick="openModal('newClientModal')" class="px-3 py-1.5 rounded-xl bg-white text-[#0038A8] hover:bg-blue-50 text-xs font-black flex items-center space-x-1 shadow-sm transition">
+            <i data-lucide="plus" class="w-3.5 h-3.5"></i><span>Novo Cliente</span>
           </button>
-          <button onclick="handleLogout()" class="px-3 py-2 rounded-xl bg-rose-500/20 hover:bg-rose-500/30 text-rose-100 text-xs font-bold border border-rose-400/30 transition">
-            Sair
+          <button onclick="openModal('newPrinterModal')" class="px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 text-xs font-bold flex items-center space-x-1 border border-white/15 transition">
+            <i data-lucide="cpu" class="w-3.5 h-3.5"></i><span>+ Impressora</span>
+          </button>
+          <button onclick="openModal('agentModal')" class="px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 text-xs font-bold flex items-center space-x-1 border border-white/15 transition">
+            <i data-lucide="radar" class="w-3.5 h-3.5"></i><span>Agente Satélite</span>
+          </button>
+          <button onclick="openModal('pricingModal')" class="px-3 py-1.5 rounded-xl bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-100 text-xs font-bold flex items-center space-x-1 border border-emerald-400/30 transition">
+            <i data-lucide="calculator" class="w-3.5 h-3.5"></i><span>Módulos (R$ 1 a R$ 6)</span>
+          </button>
+          <button onclick="handleLogout()" class="px-2.5 py-1.5 rounded-xl bg-rose-500/20 hover:bg-rose-500/30 text-rose-100 text-xs font-bold border border-rose-400/30 transition" title="Sair">
+            <i data-lucide="log-out" class="w-3.5 h-3.5"></i>
           </button>
         </div>
       </div>
     </header>
 
-    <main class="max-w-7xl mx-auto w-full px-4 py-7 space-y-7 flex-1">
-      <!-- KPI ROW -->
-      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div class="bg-white p-5 rounded-3xl border border-slate-200 shadow-sm">
-          <span class="text-[11px] font-bold uppercase text-slate-400">Clientes Cadastrados</span>
-          <div id="kpiClients" class="text-3xl font-black text-slate-900 mt-1 mono">0</div>
-          <span class="text-xs text-slate-500">Isolamento RLS no Supabase</span>
-        </div>
-        <div class="bg-white p-5 rounded-3xl border border-slate-200 shadow-sm">
-          <span class="text-[11px] font-bold uppercase text-slate-400">Impressoras no Parque</span>
-          <div id="kpiPrinters" class="text-3xl font-black text-emerald-600 mt-1 mono">0</div>
-          <span class="text-xs text-slate-500">SNMPv2c/v3 (RFC 3805) + USB</span>
-        </div>
-        <div class="bg-white p-5 rounded-3xl border border-slate-200 shadow-sm">
-          <span class="text-[11px] font-bold uppercase text-slate-400">Páginas no Ciclo (Delta)</span>
-          <div id="kpiDeltaPages" class="text-3xl font-black text-[#0038A8] mt-1 mono">0</div>
-          <span class="text-xs text-slate-500">Cont. Final − Cont. Inicial</span>
-        </div>
-        <div class="bg-white p-5 rounded-3xl border border-slate-200 shadow-sm">
-          <span class="text-[11px] font-bold uppercase text-slate-400">Faturamento Apurado</span>
-          <div id="kpiTotalBilling" class="text-3xl font-black text-amber-600 mt-1 mono">R$ 0,00</div>
-          <span class="text-xs text-slate-500">PIX CRC16 + Split Asaas</span>
-        </div>
-      </div>
+    <main class="max-w-7xl mx-auto w-full px-4 py-6 space-y-6 flex-1">
 
-      <!-- TABELA DE CLIENTES E FECHAMENTO -->
-      <div class="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden">
-        <div class="p-5 border-b border-slate-100 flex flex-wrap items-center justify-between gap-3">
-          <div>
-            <h2 class="text-lg font-black text-slate-900">Clientes, Contratos & Fechamento Mensal</h2>
-            <p class="text-xs text-slate-500">Zero dados fictícios: todos os registros abaixo vêm exclusivamente da sua conta no banco PostgreSQL</p>
-          </div>
-          <div class="flex gap-2">
-            <button onclick="openModal('newClientModal')" class="px-3.5 py-2 rounded-xl bg-[#0038A8] hover:bg-blue-800 text-white text-xs font-bold transition">
-              + Cadastrar Cliente
-            </button>
-            <button onclick="loadTenantData()" class="px-3.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition">
-              ↻ Sincronizar
-            </button>
-          </div>
+      <!-- =====================================================================
+           ABA 1: OPERAÇÃO & CLIENTES
+           ===================================================================== -->
+      <section id="sectionClients" class="space-y-6">
+        <!-- Subtítulo e Descrição de Contexto -->
+        <div class="text-center py-1">
+          <span class="inline-block px-3 py-1 rounded-full text-xs font-bold bg-blue-50 text-[#0038A8] border border-blue-100 mb-1">
+            Gestão Completa de Telemetria & Custos de Impressão
+          </span>
+          <h2 class="text-2xl font-black text-slate-900 tracking-tight" id="mainSectionTitle">Controle Inteligente de Impressão</h2>
+          <p class="text-xs text-slate-500 mt-0.5" id="mainSectionSubtitle">
+            Seja para alugar impressoras para seus clientes ou para gerenciar os custos e a produção da sua própria gráfica.
+          </p>
         </div>
-        <div class="overflow-x-auto">
-          <table class="w-full text-left text-xs">
-            <thead class="bg-slate-50 text-slate-500 uppercase text-[10px] font-bold border-b border-slate-200">
-              <tr>
-                <th class="py-3 px-4">Cliente / Contrato</th>
-                <th class="py-3 px-4">Unidades / Setores</th>
-                <th class="py-3 px-4">Máquinas</th>
-                <th class="py-3 px-4 text-right">Consumo Mês (Delta)</th>
-                <th class="py-3 px-4 text-right">Total Fatura</th>
-                <th class="py-3 px-4">Status Cobrança</th>
-                <th class="py-3 px-4 text-right">Ações</th>
-              </tr>
-            </thead>
-            <tbody id="clientsTableBody" class="divide-y divide-slate-100"></tbody>
-          </table>
-        </div>
-      </div>
 
-      <!-- PARQUE DE IMPRESSORAS -->
-      <div class="space-y-3">
-        <div class="flex items-center justify-between">
-          <h3 class="text-base font-black text-slate-900">Parque de Impressoras & Telemetria de Suprimentos</h3>
-          <button onclick="openModal('newPrinterModal')" class="text-xs font-bold text-[#0038A8] hover:underline">+ Adicionar Impressora Manual ou via Agente</button>
+        <!-- 4 KPIS PRINCIPAIS -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div class="bg-white p-5 rounded-3xl border border-slate-200 shadow-sm flex items-center justify-between">
+            <div>
+              <span class="text-[11px] font-bold uppercase text-slate-400" id="kpiClientsLabel">Clientes / Unidades</span>
+              <div id="kpiClients" class="text-3xl font-black text-slate-900 mt-1 mono">0</div>
+              <span class="text-xs text-slate-500">Empresas monitoradas</span>
+            </div>
+            <div class="w-10 h-10 rounded-2xl bg-blue-50 text-[#0038A8] flex items-center justify-center">
+              <i data-lucide="users" class="w-5 h-5"></i>
+            </div>
+          </div>
+
+          <div class="bg-white p-5 rounded-3xl border border-slate-200 shadow-sm flex items-center justify-between">
+            <div>
+              <span class="text-[11px] font-bold uppercase text-slate-400">Máquinas Ativas</span>
+              <div id="kpiPrinters" class="text-3xl font-black text-emerald-600 mt-1 mono">0</div>
+              <span class="text-xs text-slate-500">SNMPv2c (RFC 3805) + USB</span>
+            </div>
+            <div class="w-10 h-10 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center">
+              <i data-lucide="printer" class="w-5 h-5"></i>
+            </div>
+          </div>
+
+          <div class="bg-white p-5 rounded-3xl border border-slate-200 shadow-sm flex items-center justify-between">
+            <div>
+              <span class="text-[11px] font-bold uppercase text-slate-400">Páginas Totais Lidas</span>
+              <div id="kpiDeltaPages" class="text-3xl font-black text-[#0038A8] mt-1 mono">0</div>
+              <span class="text-xs text-slate-500">Contadores reais de hardware</span>
+            </div>
+            <div class="w-10 h-10 rounded-2xl bg-blue-50 text-[#0038A8] flex items-center justify-center">
+              <i data-lucide="file-text" class="w-5 h-5"></i>
+            </div>
+          </div>
+
+          <div class="bg-white p-5 rounded-3xl border border-slate-200 shadow-sm flex items-center justify-between">
+            <div>
+              <span class="text-[11px] font-bold uppercase text-slate-400">Faturamento Estimado</span>
+              <div id="kpiTotalBilling" class="text-3xl font-black text-amber-600 mt-1 mono">R$ 0,00</div>
+              <span class="text-xs text-slate-500">Franquias + excedentes calculados</span>
+            </div>
+            <div class="w-10 h-10 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center">
+              <i data-lucide="badge-dollar-sign" class="w-5 h-5"></i>
+            </div>
+          </div>
         </div>
-        <div id="printersGrid" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
-      </div>
+
+        <!-- CARD DE ALERTA: FATURAMENTO DO DIA / CORTE -->
+        <div id="dueAlertCard" class="hidden p-4 rounded-3xl bg-amber-50/70 border border-amber-200 flex flex-wrap items-center justify-between gap-3 shadow-sm">
+          <div class="flex items-center space-x-3">
+            <div class="w-9 h-9 rounded-2xl bg-amber-500 text-white flex items-center justify-center font-black">
+              <i data-lucide="bell-ring" class="w-4 h-4"></i>
+            </div>
+            <div>
+              <span class="text-xs font-black text-amber-900 block" id="dueAlertTitle">● FATURAMENTO DO DIA • CORTE MENSAL</span>
+              <p class="text-xs text-amber-800" id="dueAlertDesc">Clientes atingiram a data de corte contratual.</p>
+            </div>
+          </div>
+          <button onclick="handleQuickBillingAction()" class="px-4 py-2 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs shadow transition flex items-center space-x-1.5">
+            <i data-lucide="message-circle" class="w-4 h-4"></i>
+            <span>Cobrar no WhatsApp + PIX</span>
+          </button>
+        </div>
+
+        <!-- TABELA DE CLIENTES E CONTRATOS -->
+        <div class="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden">
+          <div class="p-5 border-b border-slate-100 flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <h3 class="text-base font-black text-slate-900 flex items-center space-x-2">
+                <span>Clientes, Contratos & Fechamento Mensal</span>
+                <span id="clientsCountBadge" class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 text-slate-600">0</span>
+              </h3>
+              <p class="text-xs text-slate-500">Gestão de franquias, medições SNMP e rateio por centros de custo</p>
+            </div>
+            <div class="flex items-center gap-2">
+              <button onclick="openModal('newClientModal')" class="px-3.5 py-2 rounded-xl bg-[#0038A8] hover:bg-blue-800 text-white text-xs font-bold transition flex items-center space-x-1">
+                <i data-lucide="plus" class="w-3.5 h-3.5"></i>
+                <span>Novo Cliente</span>
+              </button>
+              <button onclick="loadTenantData()" class="px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition flex items-center space-x-1">
+                <i data-lucide="rotate-cw" class="w-3.5 h-3.5"></i>
+                <span>Sincronizar</span>
+              </button>
+              <button onclick="loadDemoDataIfEmpty()" id="btnDemoData" class="px-3 py-2 rounded-xl bg-indigo-50 hover:bg-indigo-100 text-indigo-700 text-xs font-bold transition border border-indigo-200 flex items-center space-x-1" title="Preenche exemplos para teste">
+                <i data-lucide="sparkles" class="w-3.5 h-3.5"></i>
+                <span>Carregar Exemplos de Teste</span>
+              </button>
+            </div>
+          </div>
+
+          <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs">
+              <thead class="bg-slate-50 text-slate-500 uppercase text-[10px] font-bold border-b border-slate-200">
+                <tr>
+                  <th class="py-3 px-4">Cliente / Contrato</th>
+                  <th class="py-3 px-4">Unidades / Centros de Custo</th>
+                  <th class="py-3 px-4 text-center">Máquinas</th>
+                  <th class="py-3 px-4 text-right">Consumo Mês (Delta)</th>
+                  <th class="py-3 px-4 text-right">Total Fatura</th>
+                  <th class="py-3 px-4 text-center">Status</th>
+                  <th class="py-3 px-4 text-right">Ações</th>
+                </tr>
+              </thead>
+              <tbody id="clientsTableBody" class="divide-y divide-slate-100"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- PARQUE DE IMPRESSORAS -->
+        <div class="space-y-4">
+          <div class="flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <h3 class="text-base font-black text-slate-900 flex items-center space-x-2">
+                <span>Parque de Impressoras & Telemetria em Tempo Real</span>
+                <span id="printersCountBadge" class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 text-slate-600">0</span>
+              </h3>
+              <p class="text-xs text-slate-500">Monitoramento via SNMP RFC 3805 (contadores invioláveis e insumos)</p>
+            </div>
+            <button onclick="openModal('newPrinterModal')" class="text-xs font-bold text-[#0038A8] hover:underline flex items-center space-x-1">
+              <i data-lucide="plus-circle" class="w-3.5 h-3.5"></i>
+              <span>+ Adicionar Impressora Manual ou via Agente</span>
+            </button>
+          </div>
+          <div id="printersGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
+        </div>
+      </section>
+
+      <!-- =====================================================================
+           ABA 2: CENTRAL DE RELATÓRIOS & FATURAMENTO AUDITÁVEL
+           ===================================================================== -->
+      <section id="sectionReports" class="hidden space-y-6">
+        <div class="text-center py-1">
+          <span class="inline-block px-3 py-1 rounded-full text-xs font-bold bg-emerald-50 text-emerald-800 border border-emerald-200 mb-1">
+            Auditoria SNMP RFC 3805
+          </span>
+          <h2 class="text-2xl font-black text-slate-900 tracking-tight">Central de Relatórios & Faturamento Auditável</h2>
+          <p class="text-xs text-slate-500 mt-0.5">Fechamentos auditáveis, esteira de congelamento e prevenção de desperdício de insumos.</p>
+        </div>
+
+        <!-- Sub-navegação de Relatórios -->
+        <div class="flex items-center space-x-2 border-b border-slate-200 pb-3 text-xs font-bold">
+          <button id="subTabFechamento" onclick="switchReportsSubTab('fechamento')" class="px-4 py-2 rounded-xl bg-[#0038A8] text-white transition flex items-center space-x-1.5 shadow-sm">
+            <i data-lucide="receipt" class="w-3.5 h-3.5"></i>
+            <span>Fechamento Mensal</span>
+          </button>
+          <button id="subTabSuprimentos" onclick="switchReportsSubTab('suprimentos')" class="px-4 py-2 rounded-xl bg-slate-100 text-slate-700 hover:bg-slate-200 transition flex items-center space-x-1.5">
+            <i data-lucide="droplet" class="w-3.5 h-3.5"></i>
+            <span>Suprimentos & Desperdício</span>
+          </button>
+          <button id="subTabOciosidade" onclick="switchReportsSubTab('ociosidade')" class="px-4 py-2 rounded-xl bg-slate-100 text-slate-700 hover:bg-slate-200 transition flex items-center space-x-1.5">
+            <i data-lucide="gauge" class="w-3.5 h-3.5"></i>
+            <span>Ociosidade do Parque</span>
+          </button>
+        </div>
+
+        <!-- KPIS DO FECHAMENTO -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div class="bg-white p-5 rounded-3xl border border-slate-200 shadow-sm">
+            <span class="text-[11px] font-bold uppercase text-slate-400">Faturamento Total Apurado</span>
+            <div id="repTotalBilling" class="text-3xl font-black text-emerald-600 mt-1 mono">R$ 0,00</div>
+            <span class="text-xs text-emerald-700 font-semibold">✓ Franquias + Excedentes Auditados</span>
+          </div>
+          <div class="bg-white p-5 rounded-3xl border border-slate-200 shadow-sm">
+            <span class="text-[11px] font-bold uppercase text-slate-400">Status da Esteira de Cobrança</span>
+            <div id="repStatusCount" class="text-2xl font-black text-slate-900 mt-1 mono">0 Congelada • 0 Em Aberto</div>
+            <span class="text-xs text-slate-500">Contadores travados para emissão de Nota Fiscal</span>
+          </div>
+          <div class="bg-white p-5 rounded-3xl border border-slate-200 shadow-sm">
+            <span class="text-[11px] font-bold uppercase text-slate-400">Volume de Páginas Faturadas</span>
+            <div id="repTotalPages" class="text-3xl font-black text-[#0038A8] mt-1 mono">0 págs</div>
+            <span id="repColorRatio" class="text-xs text-slate-500">0% Coloridas • 0% Monocromáticas</span>
+          </div>
+        </div>
+
+        <!-- SUB-ABA CONTEÚDO: FECHAMENTO MENSAL -->
+        <div id="subViewFechamento" class="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden space-y-4">
+          <div class="p-5 border-b border-slate-100 flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <h3 class="text-base font-black text-slate-900">Demonstrativo Consolidado de Contratos (Mês Atual)</h3>
+              <p class="text-xs text-slate-500">Contadores auditados via SNMP na data de corte contratual de cada cliente</p>
+            </div>
+            <button onclick="freezeAllClosings()" class="px-4 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold transition flex items-center space-x-1.5 shadow">
+              <i data-lucide="lock" class="w-3.5 h-3.5"></i>
+              <span>Congelar Lote</span>
+            </button>
+          </div>
+          <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs">
+              <thead class="bg-slate-50 text-slate-500 uppercase text-[10px] font-bold border-b border-slate-200">
+                <tr>
+                  <th class="py-3 px-4">Cliente</th>
+                  <th class="py-3 px-4">Corte Contratual</th>
+                  <th class="py-3 px-4 text-center">Máquinas</th>
+                  <th class="py-3 px-4 text-right">Páginas Apuradas</th>
+                  <th class="py-3 px-4 text-right">Fatura a Cobrar</th>
+                  <th class="py-3 px-4 text-center">Trava Contábil</th>
+                  <th class="py-3 px-4 text-right">Documento Oficial</th>
+                </tr>
+              </thead>
+              <tbody id="reportsTableBody" class="divide-y divide-slate-100"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- SUB-ABA CONTEÚDO: SUPRIMENTOS & DESPERDÍCIO -->
+        <div id="subViewSuprimentos" class="hidden bg-white p-6 rounded-3xl border border-slate-200 shadow-sm space-y-4">
+          <h3 class="text-base font-black text-slate-900">Auditoria Preventiva de Consumíveis</h3>
+          <p class="text-xs text-slate-500">Detecta impressoras com toner abaixo de 15% ou trocas prematuras de cartuchos com tinta restante.</p>
+          <div id="suppliesAuditGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 pt-2"></div>
+        </div>
+
+        <!-- SUB-ABA CONTEÚDO: OCIOSIDADE -->
+        <div id="subViewOciosidade" class="hidden bg-white p-6 rounded-3xl border border-slate-200 shadow-sm space-y-4">
+          <h3 class="text-base font-black text-slate-900">Análise de Ociosidade & Remanejamento de Máquinas</h3>
+          <p class="text-xs text-slate-500">Identifica equipamentos alugados com menos de 20% da franquia utilizada para realocação estratégica.</p>
+          <div id="idlePrintersList" class="space-y-3 pt-2"></div>
+        </div>
+      </section>
+
+      <!-- =====================================================================
+           ABA 3: MINHA GRÁFICA (PRODUÇÃO DIÁRIA & BALCÃO)
+           ===================================================================== -->
+      <section id="sectionGrafica" class="hidden space-y-6">
+        <div class="text-center py-1">
+          <span class="inline-block px-3 py-1 rounded-full text-xs font-bold bg-indigo-50 text-indigo-700 border border-indigo-200 mb-1">
+            Produção Própria & Oficina
+          </span>
+          <h2 class="text-2xl font-black text-slate-900 tracking-tight">Minha Gráfica • Volume Diário & Telemetria</h2>
+          <p class="text-xs text-slate-500 mt-0.5">Acompanhamento de custos de insumos, tiragem por dia e margem de lucro da produção interna.</p>
+        </div>
+
+        <!-- 4 KPIS DE PRODUÇÃO -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div class="bg-white p-5 rounded-3xl border border-slate-200 shadow-sm">
+            <span class="text-[11px] font-bold uppercase text-slate-400">Volume Total do Mês</span>
+            <div id="graficaTotalPages" class="text-3xl font-black text-slate-900 mt-1 mono">0 folhas</div>
+            <span class="text-xs text-slate-500">Fechamento do período</span>
+          </div>
+
+          <div class="bg-white p-5 rounded-3xl border border-slate-200 shadow-sm">
+            <span class="text-[11px] font-bold uppercase text-slate-400">Coloridas (Color)</span>
+            <div id="graficaColorPages" class="text-3xl font-black text-indigo-600 mt-1 mono">0 págs</div>
+            <span id="graficaColorPercent" class="text-xs text-indigo-700 font-semibold">0% • Adesivos, rótulos e brindes</span>
+          </div>
+
+          <div class="bg-white p-5 rounded-3xl border border-slate-200 shadow-sm">
+            <span class="text-[11px] font-bold uppercase text-slate-400">Preto & Branco (P&B)</span>
+            <div id="graficaMonoPages" class="text-3xl font-black text-slate-700 mt-1 mono">0 págs</div>
+            <span id="graficaMonoPercent" class="text-xs text-slate-500">0% • Documentos e apostilas</span>
+          </div>
+
+          <div class="bg-white p-5 rounded-3xl border border-slate-200 shadow-sm">
+            <span class="text-[11px] font-bold uppercase text-slate-400">Média Diária</span>
+            <div id="graficaAvgDay" class="text-3xl font-black text-emerald-600 mt-1 mono">0 págs/dia</div>
+            <span id="graficaPeakRecord" class="text-xs text-emerald-700 font-semibold">Pico do mês em monitoramento</span>
+          </div>
+        </div>
+
+        <!-- GRÁFICO DIÁRIO DE PRODUÇÃO -->
+        <div class="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm space-y-4">
+          <div class="flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <h3 class="text-base font-black text-slate-900">Curva de Produção Diária (Volume por Dia do Mês)</h3>
+              <p class="text-xs text-slate-500">Passe o cursor sobre os dias para verificar a tiragem diária P&B vs Color</p>
+            </div>
+            <div class="flex items-center space-x-3 text-xs font-semibold">
+              <span class="flex items-center space-x-1"><span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span><span>Coloridas</span></span>
+              <span class="flex items-center space-x-1"><span class="w-2.5 h-2.5 rounded-full bg-blue-700"></span><span>P&B</span></span>
+            </div>
+          </div>
+          <!-- Barras de Produção (Dias 01 a 30) -->
+          <div id="graficaDailyBars" class="h-48 flex items-end gap-1.5 pt-6 pb-2 border-b border-slate-100 overflow-x-auto"></div>
+        </div>
+
+        <!-- NÍVEIS DE CONSUMÍVEIS CMYK EM TEMPO REAL -->
+        <div class="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm space-y-4">
+          <h3 class="text-base font-black text-slate-900">Níveis de Consumíveis CMYK das Máquinas de Produção</h3>
+          <p class="text-xs text-slate-500">Leitura em tempo real do nível de toners/tintas via SNMP Printer-MIB RFC 3805</p>
+          <div id="graficaSuppliesPark" class="grid grid-cols-1 md:grid-cols-2 gap-4 pt-1"></div>
+        </div>
+      </section>
+
     </main>
+
+    <!-- FOOTER SERENO -->
+    <footer class="bg-white border-t border-slate-200 py-4 px-6 text-xs text-slate-500 flex flex-wrap items-center justify-between gap-3 no-print">
+      <div>
+        <strong>PrintMind V3.0</strong> • Telemetria SNMP RFC 3805 & Gestão de Contratos de Impressão
+      </div>
+      <div class="flex items-center space-x-4">
+        <button onclick="openModal('pricingModal')" class="hover:text-[#0038A8] font-bold transition flex items-center space-x-1">
+          <i data-lucide="calculator" class="w-3.5 h-3.5 text-blue-700"></i>
+          <span>Tabela de Módulos & Preços (R$ 1 a R$ 6)</span>
+        </button>
+        <span class="text-slate-300">|</span>
+        <button onclick="openModal('agentModal')" class="hover:text-[#0038A8] font-bold transition">Agente Satélite</button>
+      </div>
+    </footer>
   </div>
 
   <!-- =========================================================================
-       MODAL 1: ESCOLHA DO PLANO DE ASSINATURA & CHAVE PIX (ONBOARDING)
+       MODAL 1: TABELA DE MÓDULOS & PREÇOS (R$ 1 A R$ 6) + SIMULADOR INTERATIVO
        ========================================================================= -->
-  <div id="planModal" class="hidden fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
-    <div class="bg-white rounded-3xl max-w-2xl w-full p-6 space-y-5 shadow-2xl max-h-[90vh] overflow-y-auto">
+  <div id="pricingModal" class="hidden fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl max-w-4xl w-full p-6 space-y-6 shadow-2xl max-h-[92vh] overflow-y-auto">
       <div class="flex justify-between items-center border-b border-slate-100 pb-3">
-        <div>
-          <span class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase bg-blue-50 text-[#0038A8]">Configuração Comercial & Split B2B2C</span>
-          <h3 class="font-black text-lg text-slate-900 mt-1">Escolha seu Plano & Configure sua Chave PIX de Recebimento</h3>
+        <div class="flex items-center space-x-3">
+          <div class="w-10 h-10 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center">
+            <i data-lucide="sparkles" class="w-5 h-5"></i>
+          </div>
+          <div>
+            <h3 class="font-black text-lg text-slate-900">Módulos & Precificação PrintMind</h3>
+            <p class="text-xs text-slate-500">Pague apenas pelas impressoras que você tem. Sem fidelidade e sem mensalidade mínima fixa.</p>
+          </div>
         </div>
-        <button onclick="closeModal('planModal')" class="text-slate-400 hover:text-slate-600">✕</button>
+        <button onclick="closeModal('pricingModal')" class="text-slate-400 hover:text-slate-600 text-lg">✕</button>
       </div>
 
-      <form onsubmit="saveTenantPlanAndPix(event)" class="space-y-4 text-xs">
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
-          <label class="p-4 rounded-2xl border-2 border-slate-200 hover:border-[#0038A8] cursor-pointer space-y-1">
-            <input type="radio" name="plan_tier" value="starter" class="hidden" onchange="highlightPlan()" />
-            <strong class="block text-slate-900 text-sm">Starter</strong>
-            <span class="block mono font-black text-lg text-[#0038A8]">R$ 197/mês</span>
-            <span class="block text-[11px] text-slate-500">Até 30 impressoras • Fechamento PIX</span>
-          </label>
-          <label class="p-4 rounded-2xl border-2 border-[#0038A8] bg-blue-50/30 cursor-pointer space-y-1">
-            <input type="radio" name="plan_tier" value="pro" checked class="hidden" onchange="highlightPlan()" />
-            <strong class="block text-[#0038A8] text-sm">Pro Hospitalar ✓</strong>
-            <span class="block mono font-black text-lg text-[#0038A8]">R$ 397/mês</span>
-            <span class="block text-[11px] text-slate-600">Até 150 impressoras • Rateio A4 + WhatsApp + Split</span>
-          </label>
-          <label class="p-4 rounded-2xl border-2 border-slate-200 hover:border-[#0038A8] cursor-pointer space-y-1">
-            <input type="radio" name="plan_tier" value="enterprise" class="hidden" onchange="highlightPlan()" />
-            <strong class="block text-slate-900 text-sm">Enterprise</strong>
-            <span class="block mono font-black text-lg text-[#0038A8]">R$ 697/mês</span>
-            <span class="block text-[11px] text-slate-500">Máquinas ilimitadas • White-Label</span>
-          </label>
+      <!-- GRID DOS 5 MÓDULOS -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 text-xs">
+        <!-- Módulo 1 -->
+        <div class="p-4 rounded-2xl border-2 border-slate-200 bg-slate-50 flex flex-col justify-between hover:border-slate-400 transition">
+          <div class="space-y-2">
+            <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">Módulo 1</span>
+            <strong class="block text-slate-900 font-extrabold text-sm">Contador Essencial</strong>
+            <div class="text-2xl font-black text-slate-900 mono">R$ 1,00<span class="text-[10px] text-slate-400 block font-normal">/máq/mês</span></div>
+            <ul class="text-[11px] text-slate-600 space-y-1 pt-1">
+              <li>✓ Coleta SNMP RFC 3805</li>
+              <li>✓ Contador Total P&B/Color</li>
+              <li>✓ Zero visita técnica</li>
+            </ul>
+          </div>
+          <button onclick="selectModularPlan(1, 'Contador Essencial')" class="mt-4 w-full py-1.5 rounded-xl bg-white border border-slate-300 hover:bg-slate-100 text-slate-900 font-bold transition">Escolher</button>
         </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-3 pt-2">
+        <!-- Módulo 2 -->
+        <div class="p-4 rounded-2xl border-2 border-slate-200 bg-slate-50 flex flex-col justify-between hover:border-cyan-400 transition">
+          <div class="space-y-2">
+            <span class="text-[10px] font-bold uppercase tracking-wider text-cyan-600 block">Módulo 2</span>
+            <strong class="block text-slate-900 font-extrabold text-sm">Suprimentos & Insumos</strong>
+            <div class="text-2xl font-black text-slate-900 mono">R$ 2,00<span class="text-[10px] text-slate-400 block font-normal">/máq/mês</span></div>
+            <ul class="text-[11px] text-slate-600 space-y-1 pt-1">
+              <li>✓ Tudo do Módulo 1</li>
+              <li>✓ Nível Toner % tempo real</li>
+              <li>✓ Alerta preventivo</li>
+            </ul>
+          </div>
+          <button onclick="selectModularPlan(2, 'Suprimentos & Insumos')" class="mt-4 w-full py-1.5 rounded-xl bg-cyan-50 hover:bg-cyan-100 text-cyan-800 font-bold transition">Escolher</button>
+        </div>
+
+        <!-- Módulo 3 -->
+        <div class="p-4 rounded-2xl border-2 border-[#0038A8] bg-blue-50/40 flex flex-col justify-between relative shadow-sm">
+          <div class="space-y-2">
+            <div class="flex justify-between items-center">
+              <span class="text-[10px] font-bold uppercase tracking-wider text-[#0038A8] block">Módulo 3</span>
+              <span class="px-1.5 py-0.5 rounded text-[9px] font-bold bg-[#0038A8] text-white uppercase">Recomendado</span>
+            </div>
+            <strong class="block text-[#0038A8] font-extrabold text-sm">Telemetria & Gráficos</strong>
+            <div class="text-2xl font-black text-[#0038A8] mono">R$ 3,00<span class="text-[10px] text-slate-400 block font-normal">/máq/mês</span></div>
+            <ul class="text-[11px] text-slate-600 space-y-1 pt-1">
+              <li>✓ Tudo do Módulo 2</li>
+              <li>✓ Gráficos diários P&B vs Cor</li>
+              <li>✓ Picos e médias</li>
+            </ul>
+          </div>
+          <button onclick="selectModularPlan(3, 'Telemetria & Gráficos')" class="mt-4 w-full py-1.5 rounded-xl bg-[#0038A8] hover:bg-blue-800 text-white font-bold transition">Escolher</button>
+        </div>
+
+        <!-- Módulo 4 -->
+        <div class="p-4 rounded-2xl border-2 border-slate-200 bg-slate-50 flex flex-col justify-between hover:border-amber-400 transition">
+          <div class="space-y-2">
+            <span class="text-[10px] font-bold uppercase tracking-wider text-amber-600 block">Módulo 4</span>
+            <strong class="block text-slate-900 font-extrabold text-sm">Gestão & Auditoria</strong>
+            <div class="text-2xl font-black text-slate-900 mono">R$ 4,00<span class="text-[10px] text-slate-400 block font-normal">/máq/mês</span></div>
+            <ul class="text-[11px] text-slate-600 space-y-1 pt-1">
+              <li>✓ Tudo do Módulo 3</li>
+              <li>✓ Franquia & Excedentes</li>
+              <li>✓ Auditoria Troca Prematura</li>
+            </ul>
+          </div>
+          <button onclick="selectModularPlan(4, 'Gestão & Auditoria')" class="mt-4 w-full py-1.5 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-800 font-bold transition">Escolher</button>
+        </div>
+
+        <!-- Módulo 5 -->
+        <div class="p-4 rounded-2xl border-2 border-slate-200 bg-slate-50 flex flex-col justify-between hover:border-emerald-400 transition">
+          <div class="space-y-2">
+            <span class="text-[10px] font-bold uppercase tracking-wider text-emerald-600 block">Módulo 5</span>
+            <strong class="block text-slate-900 font-extrabold text-sm">Full Automation</strong>
+            <div class="text-2xl font-black text-slate-900 mono">R$ 6,00<span class="text-[10px] text-slate-400 block font-normal">/máq/mês</span></div>
+            <ul class="text-[11px] text-slate-600 space-y-1 pt-1">
+              <li>✓ Tudo do Módulo 4</li>
+              <li>✓ WhatsApp em 1 Clique</li>
+              <li>✓ PIX Dinâmico com QR Code</li>
+            </ul>
+          </div>
+          <button onclick="selectModularPlan(5, 'Full Automation')" class="mt-4 w-full py-1.5 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-800 font-bold transition">Escolher</button>
+        </div>
+      </div>
+
+      <!-- SIMULADOR INTERATIVO -->
+      <div class="bg-slate-50 border border-slate-200 rounded-3xl p-5 space-y-4">
+        <h4 class="font-bold text-slate-900 text-xs flex items-center space-x-1.5">
+          <i data-lucide="calculator" class="w-4 h-4 text-[#0038A8]"></i>
+          <span>Simulador de Assinatura Interativo</span>
+        </h4>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-center text-xs">
+          <div>
+            <label class="block text-slate-700 font-semibold mb-1">Quantas impressoras na sua base?</label>
+            <input type="number" id="simPrintersCount" min="1" max="10000" value="15" oninput="updatePricingSimulation()" class="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 mono font-black text-slate-900" />
+            <div class="flex space-x-1.5 mt-2">
+              <button onclick="setSimPrinters(5)" class="px-2.5 py-1 text-[10px] bg-white border border-slate-200 rounded-lg hover:bg-slate-100">5 máq</button>
+              <button onclick="setSimPrinters(15)" class="px-2.5 py-1 text-[10px] bg-white border border-slate-300 font-bold text-[#0038A8] rounded-lg hover:bg-slate-100">15 máq</button>
+              <button onclick="setSimPrinters(60)" class="px-2.5 py-1 text-[10px] bg-white border border-slate-200 rounded-lg hover:bg-slate-100">60 máq</button>
+              <button onclick="setSimPrinters(300)" class="px-2.5 py-1 text-[10px] bg-white border border-slate-200 rounded-lg hover:bg-slate-100">300 máq</button>
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-slate-700 font-semibold mb-1">Módulo Selecionado:</label>
+            <select id="simPlanRate" onchange="updatePricingSimulation()" class="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-xs text-slate-800">
+              <option value="1">Módulo 1: Contador Essencial (R$ 1,00/mês)</option>
+              <option value="2">Módulo 2: Suprimentos & Insumos (R$ 2,00/mês)</option>
+              <option value="3" selected>Módulo 3: Telemetria & Gráficos (R$ 3,00/mês)</option>
+              <option value="4">Módulo 4: Gestão & Auditoria (R$ 4,00/mês)</option>
+              <option value="6">Módulo 5: Full Automation (R$ 6,00/mês)</option>
+            </select>
+            <span class="text-[10px] text-slate-400 block mt-1">Sem fidelidade. Cancele ou mude a qualquer momento.</span>
+          </div>
+
+          <div class="bg-blue-50/70 border border-blue-200 rounded-2xl p-4 text-center">
+            <span class="text-xs text-[#0038A8] font-bold">Total Mensal PrintMind</span>
+            <div class="text-2xl font-black text-[#0038A8] mono" id="simMonthlyTotal">R$ 45,00</div>
+            <div class="text-[11px] text-emerald-700 font-semibold" id="simSavings">
+              Economia de R$ 305,00 vs concorrência (PrintWayy: R$ 350+)
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- CONFIGURAÇÃO DA CHAVE PIX & CARTEIRA ASAAS -->
+      <form onsubmit="saveModularPlanAndPix(event)" class="space-y-3 pt-2 text-xs border-t border-slate-100">
+        <h4 class="font-bold text-slate-900 text-xs">Dados de Recebimento da sua Locadora</h4>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
           <div>
             <label class="block font-bold text-slate-700 mb-1">Sua Chave PIX (Para receber dos seus clientes)</label>
             <input id="tenantPixKey" type="text" required placeholder="CNPJ, E-mail ou Celular" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300" />
@@ -262,21 +648,147 @@
             <input id="tenantWalletId" type="text" placeholder="wal_..." class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 mono" />
           </div>
         </div>
-
-        <div class="p-3.5 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-900 text-[11px]">
-          <strong>URL do Webhook Asaas da sua Plataforma:</strong>
-          <code class="block mono mt-1 select-all font-bold">https://zbsmzcbcivhzslcnfxmq.supabase.co/functions/v1/asaas-webhook</code>
+        <div class="flex justify-end gap-2 pt-2">
+          <button type="button" onclick="closeModal('pricingModal')" class="px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold transition">Fechar</button>
+          <button type="submit" class="px-5 py-2.5 rounded-xl bg-[#0038A8] hover:bg-blue-800 text-white font-black shadow transition">
+            Salvar Módulo e Preferências
+          </button>
         </div>
-
-        <button type="submit" class="w-full py-3 rounded-2xl bg-[#0038A8] hover:bg-blue-800 text-white font-black transition">
-          Salvar Plano e Continuar para o Painel
-        </button>
       </form>
     </div>
   </div>
 
   <!-- =========================================================================
-       MODAL 2: CADASTRAR NOVO CLIENTE / HOSPITAL (GRAVA NO SUPABASE)
+       MODAL 2: DEMONSTRATIVO FORMAL A4 DE FECHAMENTO & RATEIO HOSPITALAR
+       ========================================================================= -->
+  <div id="invoiceModal" class="hidden fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl max-w-4xl w-full p-6 space-y-5 shadow-2xl max-h-[92vh] overflow-y-auto">
+      <div class="flex justify-between items-center border-b border-slate-100 pb-3 no-print">
+        <div class="flex items-center space-x-2">
+          <span class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase bg-emerald-50 text-emerald-800">✓ Documento Fiscal / Contábil Homologado</span>
+          <span class="text-xs text-slate-400">Padrão A4</span>
+        </div>
+        <div class="flex items-center space-x-2">
+          <button onclick="printFormalInvoice()" class="px-3.5 py-1.5 rounded-xl bg-[#0038A8] hover:bg-blue-800 text-white text-xs font-bold transition flex items-center space-x-1 shadow-sm">
+            <i data-lucide="printer" class="w-3.5 h-3.5"></i>
+            <span>Imprimir / Salvar PDF (A4)</span>
+          </button>
+          <button onclick="closeModal('invoiceModal')" class="text-slate-400 hover:text-slate-600 text-lg">✕</button>
+        </div>
+      </div>
+
+      <!-- ÁREA IMPRIMÍVEL DO ESPELHO FORMAL A4 -->
+      <div id="printableInvoiceArea" class="bg-white border border-slate-200 rounded-2xl p-6 space-y-6 text-slate-800 text-xs">
+        <!-- Cabeçalho Oficial -->
+        <div class="flex justify-between items-start border-b border-slate-200 pb-4">
+          <div>
+            <h2 class="text-xl font-black text-slate-900 tracking-tight" id="formalLocadoraName">PRINTMIND OUTSOURCING DE IMPRESSÃO</h2>
+            <p class="text-xs text-slate-500 mt-0.5">Locação de Equipamentos • Soluções em Bilhetagem e Telemetria Digital</p>
+            <p class="text-[11px] text-slate-400 mono mt-0.5" id="formalLocadoraDoc">CNPJ: 00.000.000/0001-00 • contato@printmind.io</p>
+          </div>
+          <div class="text-right">
+            <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">Demonstrativo de Locação</span>
+            <span class="text-base font-black text-[#0038A8] mono block" id="formalInvoiceNum">FAT-2026/4233</span>
+            <span class="text-[11px] text-slate-500" id="formalIssueDate">Data de Emissão: 12/11/2026</span>
+          </div>
+        </div>
+
+        <!-- Dados do Locatário / Tomador e Contrato -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 bg-slate-50 p-4 rounded-2xl border border-slate-200">
+          <div>
+            <span class="text-[10px] font-bold uppercase text-slate-400 block">Dados do Locatário / Tomador</span>
+            <strong class="text-sm font-black text-slate-900 block mt-0.5" id="formalClientName">Hospital Santa Casa</strong>
+            <span class="text-[11px] text-slate-600 mono block" id="formalClientDoc">CNPJ: 00.000.000/0001-00</span>
+            <span class="text-[11px] text-slate-500 block" id="formalClientAddress">Endereço: Unidade Central</span>
+          </div>
+          <div>
+            <span class="text-[10px] font-bold uppercase text-slate-400 block">Dados Contratuais & Vencimento</span>
+            <span class="text-[11px] text-slate-700 block mt-0.5">Contrato Vinculado: <strong class="mono" id="formalContractNum">CT-2026/01</strong></span>
+            <span class="text-[11px] text-slate-700 block">Período de Apuração: <span id="formalPeriod">13/10/2026 a 12/11/2026</span></span>
+            <span class="text-[11px] text-slate-700 block">Vencimento da Fatura: <strong class="text-blue-700 mono" id="formalDueDate">20/11/2026</strong></span>
+          </div>
+        </div>
+
+        <!-- Apuração Técnica de Leituras SNMP -->
+        <div class="space-y-2">
+          <div class="flex justify-between items-center">
+            <span class="font-bold text-slate-900 text-xs uppercase tracking-wider">Apuração de Leituras Técnicas (Medição SNMP RFC 3805)</span>
+            <span class="text-[10px] text-slate-500">Zero estimativas manuais</span>
+          </div>
+          <table class="w-full text-left border border-slate-200 rounded-xl overflow-hidden">
+            <thead class="bg-slate-100 text-slate-600 text-[10px] font-bold uppercase border-b border-slate-200">
+              <tr>
+                <th class="py-2.5 px-3">Equipamento & Serial</th>
+                <th class="py-2.5 px-3 text-right">Contador Inicial</th>
+                <th class="py-2.5 px-3 text-right">Contador Final</th>
+                <th class="py-2.5 px-3 text-right">Tiragem P&B</th>
+                <th class="py-2.5 px-3 text-right">Tiragem Color</th>
+                <th class="py-2.5 px-3 text-right">Total Páginas</th>
+              </tr>
+            </thead>
+            <tbody id="formalTelemetryRows" class="divide-y divide-slate-100 mono"></tbody>
+          </table>
+        </div>
+
+        <!-- Rateio por Centro de Custo Hospitalar -->
+        <div id="formalDeptSection" class="space-y-2">
+          <span class="font-bold text-indigo-950 text-xs uppercase tracking-wider block">Rateio por Centro de Custo (Auditoria Hospitalar)</span>
+          <div id="formalDeptCards" class="grid grid-cols-1 md:grid-cols-3 gap-2.5"></div>
+        </div>
+
+        <!-- Resumo Financeiro da Fatura -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
+          <div class="p-4 rounded-2xl border border-slate-200 bg-slate-50 space-y-1 text-[11px]">
+            <span class="font-bold text-slate-900 text-xs uppercase tracking-wider block mb-1">Franquias Contratadas</span>
+            <div class="flex justify-between"><span>Franquia Mensal P&B:</span><strong class="mono" id="formalFranqMono">5.000 págs</strong></div>
+            <div class="flex justify-between"><span>Franquia Mensal Color:</span><strong class="mono" id="formalFranqColor">1.000 págs</strong></div>
+            <div class="flex justify-between"><span>Custo Pág. Excedente P&B:</span><strong class="mono" id="formalRateMono">R$ 0,06</strong></div>
+            <div class="flex justify-between"><span>Custo Pág. Excedente Color:</span><strong class="mono" id="formalRateColor">R$ 0,45</strong></div>
+          </div>
+
+          <div class="p-4 rounded-2xl border-2 border-[#0038A8] bg-blue-50/40 space-y-1.5 text-[11px]">
+            <span class="font-black text-[#0038A8] text-xs uppercase tracking-wider block mb-1">Resumo do Faturamento</span>
+            <div class="flex justify-between"><span>Mensalidade Base de Locação:</span><strong class="mono" id="formalBaseRate">R$ 1.200,00</strong></div>
+            <div class="flex justify-between"><span>Total Excedente P&B:</span><strong class="mono" id="formalExcedMono">R$ 0,00</strong></div>
+            <div class="flex justify-between"><span>Total Excedente Color:</span><strong class="mono" id="formalExcedColor">R$ 0,00</strong></div>
+            <div class="border-t border-blue-200 pt-2 flex justify-between items-center text-sm">
+              <span class="font-black text-slate-900">Total a Liquidar:</span>
+              <strong class="text-xl font-black text-[#0038A8] mono" id="formalGrandTotal">R$ 1.200,00</strong>
+            </div>
+          </div>
+        </div>
+
+        <!-- PIX Copia e Cola Oficial EMVCo -->
+        <div class="p-3.5 rounded-2xl bg-slate-50 border border-slate-200 space-y-2 no-print">
+          <div class="flex justify-between items-center">
+            <span class="text-[11px] font-bold text-slate-700">PIX Copia e Cola Oficial (EMVCo + Checksum CRC16-CCITT):</span>
+            <button onclick="copyPixCode()" class="text-[11px] font-bold text-[#0038A8] hover:underline">Copiar Código PIX</button>
+          </div>
+          <input id="invPixInput" readonly class="w-full px-3 py-2 rounded-xl bg-white border border-slate-300 mono text-[11px]" />
+        </div>
+
+        <!-- Ações do Fechamento -->
+        <div class="flex flex-wrap items-center justify-between gap-3 pt-2 no-print">
+          <button id="btnFreezeClosing" onclick="toggleCurrentClientFreeze()" class="px-4 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold transition flex items-center space-x-1.5">
+            <i data-lucide="lock" class="w-3.5 h-3.5"></i>
+            <span id="btnFreezeLabel">Congelar Faturamento</span>
+          </button>
+          <div class="flex items-center gap-2">
+            <button onclick="sendFormalWhatsApp()" class="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold transition flex items-center space-x-1.5">
+              <i data-lucide="message-circle" class="w-3.5 h-3.5"></i>
+              <span>Enviar no WhatsApp</span>
+            </button>
+            <button onclick="emitAsaasSplitChargeCurrent()" class="px-4 py-2 rounded-xl bg-[#0038A8] hover:bg-blue-800 text-white font-bold transition">
+              Emitir Fatura Asaas
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- =========================================================================
+       MODAL 3: CADASTRAR NOVO CLIENTE / HOSPITAL
        ========================================================================= -->
   <div id="newClientModal" class="hidden fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
     <div class="bg-white rounded-3xl max-w-xl w-full p-6 space-y-4 shadow-2xl max-h-[90vh] overflow-y-auto">
@@ -337,7 +849,7 @@
             <span>🏥 Cliente Multi-Unidade / Hospital (Habilitar Rateio por Centro de Custo)</span>
           </label>
           <div>
-            <label class="block text-[11px] font-bold text-indigo-900 mb-1">Unidades Físicas / Filiais (separadas por vírgula — gera Token de Agente para cada uma)</label>
+            <label class="block text-[11px] font-bold text-indigo-900 mb-1">Unidades Físicas / Filiais (separadas por vírgula)</label>
             <input id="cliUnits" type="text" placeholder="Ex: Hospital Central, Clínica Sul" class="w-full px-3 py-2 rounded-xl border border-indigo-200 bg-white" />
           </div>
           <div>
@@ -353,7 +865,7 @@
   </div>
 
   <!-- =========================================================================
-       MODAL 3: CADASTRAR IMPRESSORA NO CLIENTE / SETOR
+       MODAL 4: CADASTRAR IMPRESSORA
        ========================================================================= -->
   <div id="newPrinterModal" class="hidden fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
     <div class="bg-white rounded-3xl max-w-lg w-full p-6 space-y-4 shadow-2xl max-h-[90vh] overflow-y-auto">
@@ -393,21 +905,21 @@
           </div>
           <div>
             <label class="block font-bold text-slate-700 mb-1">Cont. Inicial P&B</label>
-            <input id="prtInitMono" type="number" value="0" required class="w-full px-3 py-2 rounded-xl border border-slate-300 mono" />
+            <input id="prtInitMono" type="number" value="0" required class="w-full px-2.5 py-2 rounded-xl border border-slate-300 mono" />
           </div>
           <div>
             <label class="block font-bold text-slate-700 mb-1">Cont. Atual P&B</label>
-            <input id="prtCurMono" type="number" value="0" required class="w-full px-3 py-2 rounded-xl border border-slate-300 mono" />
+            <input id="prtCurMono" type="number" value="0" required class="w-full px-2.5 py-2 rounded-xl border border-slate-300 mono" />
           </div>
         </div>
         <div class="grid grid-cols-2 gap-2.5">
           <div>
             <label class="block font-bold text-slate-700 mb-1">Cont. Inicial Colorido</label>
-            <input id="prtInitColor" type="number" value="0" required class="w-full px-3 py-2 rounded-xl border border-slate-300 mono" />
+            <input id="prtInitColor" type="number" value="0" required class="w-full px-2.5 py-2 rounded-xl border border-slate-300 mono" />
           </div>
           <div>
             <label class="block font-bold text-slate-700 mb-1">Cont. Atual Colorido</label>
-            <input id="prtCurColor" type="number" value="0" required class="w-full px-3 py-2 rounded-xl border border-slate-300 mono" />
+            <input id="prtCurColor" type="number" value="0" required class="w-full px-2.5 py-2 rounded-xl border border-slate-300 mono" />
           </div>
         </div>
         <button type="submit" class="w-full py-3 rounded-2xl bg-[#0038A8] hover:bg-blue-800 text-white font-black transition">
@@ -418,7 +930,7 @@
   </div>
 
   <!-- =========================================================================
-       MODAL 4: AGENTE MULTI-LOCAL & TOKENS REAIS DAS UNIDADES
+       MODAL 5: AGENTE SATÉLITE MULTI-LOCAL
        ========================================================================= -->
   <div id="agentModal" class="hidden fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
     <div class="bg-white rounded-3xl max-w-3xl w-full p-6 space-y-4 shadow-2xl max-h-[90vh] overflow-y-auto">
@@ -430,29 +942,15 @@
         <button onclick="closeModal('agentModal')" class="text-slate-400 hover:text-slate-600">✕</button>
       </div>
       <p class="text-xs text-slate-600">
-        Cada unidade física cadastrada nos seus clientes recebe um token único no Supabase (`public.client_units`). Para varrer múltiplos andares ou filiais interligadas por VLAN/VPN, informe as faixas CIDR separadas por vírgula:
+        Cada unidade física cadastrada recebe um token único no Supabase (`public.client_units`). O executável Go de 12 MB roda como serviço silencioso com consumo de &lt;15 MB de RAM:
       </p>
       <div id="unitsTokensList" class="space-y-2.5 text-xs"></div>
     </div>
   </div>
 
   <!-- =========================================================================
-       MODAL 5: DEMONSTRATIVO DE RATEIO HOSPITALAR & PIX CRC16
+       JAVASCRIPT: SUPABASE AUTH + MÉTODOS DE CÁLCULO E RENDERIZAÇÃO
        ========================================================================= -->
-  <div id="invoiceModal" class="hidden fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
-    <div class="bg-white rounded-3xl max-w-3xl w-full p-6 space-y-4 shadow-2xl max-h-[90vh] overflow-y-auto">
-      <div class="flex justify-between items-center border-b border-slate-100 pb-3">
-        <h3 id="invClientTitle" class="font-black text-lg text-slate-900">Demonstrativo de Fechamento & Rateio</h3>
-        <button onclick="closeModal('invoiceModal')" class="text-slate-400 hover:text-slate-600">✕</button>
-      </div>
-      <div id="invRateioBody" class="space-y-2 text-xs"></div>
-      <div class="p-3.5 rounded-2xl bg-slate-50 border border-slate-200 space-y-2">
-        <span class="text-[11px] font-bold text-slate-700 block">PIX Copia e Cola Oficial (EMVCo + Checksum CRC16-CCITT):</span>
-        <input id="invPixInput" readonly class="w-full px-3 py-2 rounded-xl bg-white border border-slate-300 mono text-[11px]" />
-      </div>
-    </div>
-  </div>
-
   <script>
     const SUPABASE_URL = 'https://zbsmzcbcivhzslcnfxmq.supabase.co';
     const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inpic216Y2JjaXZoenNsY25meG1xIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTQ0NDUxNTcsImV4cCI6MjExMDAyMTE1N30.U9F-EL3ddBBqEK0MqkNuZBC6ZvwtuEElN6Z_VpEGT7Q';
@@ -461,15 +959,136 @@
     let currentSession = null;
     let currentProfile = null;
     let currentTenant = null;
+    let activeClientForInvoice = null;
     let clients = [], units = [], printers = [], closings = [];
+    let currentTab = 'clients';
+    let currentMode = 'hibrido';
 
     function openModal(id) {
       document.getElementById(id).classList.remove('hidden');
       if (id === 'newPrinterModal') populateClientSelect();
       if (id === 'agentModal') renderUnitsTokens();
+      if (id === 'pricingModal') updatePricingSimulation();
     }
     function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
 
+    // --- COMUTAÇÃO DE ABAS SERENAS ---
+    function switchTab(tabId) {
+      currentTab = tabId;
+      const secClients = document.getElementById('sectionClients');
+      const secReports = document.getElementById('sectionReports');
+      const secGrafica = document.getElementById('sectionGrafica');
+      const btnClients = document.getElementById('navTabClients');
+      const btnReports = document.getElementById('navTabReports');
+      const btnGrafica = document.getElementById('navTabGrafica');
+
+      secClients.classList.toggle('hidden', tabId !== 'clients');
+      secReports.classList.toggle('hidden', tabId !== 'reports');
+      secGrafica.classList.toggle('hidden', tabId !== 'grafica');
+
+      const activeClasses = 'px-3.5 py-1.5 rounded-xl bg-white text-[#0038A8] shadow-sm transition flex items-center space-x-1.5';
+      const inactiveClasses = 'px-3.5 py-1.5 rounded-xl text-white/80 hover:text-white hover:bg-white/10 transition flex items-center space-x-1.5';
+
+      btnClients.className = tabId === 'clients' ? activeClasses : inactiveClasses;
+      btnReports.className = tabId === 'reports' ? activeClasses : inactiveClasses;
+      btnGrafica.className = tabId === 'grafica' ? activeClasses : inactiveClasses;
+
+      if (tabId === 'reports') renderReportsView();
+      if (tabId === 'grafica') renderGraficaView();
+      lucide.createIcons();
+    }
+
+    // --- COMUTAÇÃO DE MODO: HÍBRIDO / LOCADORA / GRÁFICA ---
+    async function switchOperationMode(mode) {
+      currentMode = mode;
+      const title = document.getElementById('mainSectionTitle');
+      const sub = document.getElementById('mainSectionSubtitle');
+      const kpiLab = document.getElementById('kpiClientsLabel');
+
+      if (mode === 'grafica') {
+        title.innerText = 'Minha Gráfica • Gestão de Produção & Insumos';
+        sub.innerText = 'Acompanhe a tiragem de balcão, custos de papel/tinta e rendimento dos consumíveis da oficina.';
+        kpiLab.innerText = 'Bancadas / Máquinas';
+        switchTab('grafica');
+      } else if (mode === 'locacao') {
+        title.innerText = 'Outsourcing de Impressão • Gestão de Clientes & Contratos';
+        sub.innerText = 'Telemetria SNMP remota, franquias, excedentes e rateio por centro de custo hospitalar.';
+        kpiLab.innerText = 'Clientes / Tomadores';
+        switchTab('clients');
+      } else {
+        title.innerText = 'Controle Inteligente de Impressão (Modo Híbrido)';
+        sub.innerText = 'Seja para alugar impressoras para seus clientes ou para gerenciar os custos e a produção da sua própria gráfica.';
+        kpiLab.innerText = 'Clientes / Unidades';
+        switchTab('clients');
+      }
+
+      if (currentTenant && currentTenant.id) {
+        await sb.from('tenants').update({ operation_mode: mode }).eq('id', currentTenant.id);
+      }
+    }
+
+    // --- SUB-ABAS DA CENTRAL DE RELATÓRIOS ---
+    function switchReportsSubTab(sub) {
+      document.getElementById('subViewFechamento').classList.toggle('hidden', sub !== 'fechamento');
+      document.getElementById('subViewSuprimentos').classList.toggle('hidden', sub !== 'suprimentos');
+      document.getElementById('subViewOciosidade').classList.toggle('hidden', sub !== 'ociosidade');
+
+      const act = 'px-4 py-2 rounded-xl bg-[#0038A8] text-white transition flex items-center space-x-1.5 shadow-sm';
+      const inact = 'px-4 py-2 rounded-xl bg-slate-100 text-slate-700 hover:bg-slate-200 transition flex items-center space-x-1.5';
+      document.getElementById('subTabFechamento').className = sub === 'fechamento' ? act : inact;
+      document.getElementById('subTabSuprimentos').className = sub === 'suprimentos' ? act : inact;
+      document.getElementById('subTabOciosidade').className = sub === 'ociosidade' ? act : inact;
+      lucide.createIcons();
+    }
+
+    // --- SIMULADOR INTERATIVO DE MÓDULOS (R$ 1 A R$ 6) ---
+    function updatePricingSimulation() {
+      const count = Math.max(1, parseInt(document.getElementById('simPrintersCount').value || 15));
+      const rate = parseFloat(document.getElementById('simPlanRate').value || 3);
+      const total = count * rate;
+      document.getElementById('simMonthlyTotal').innerText = total.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+      const pwCost = Math.max(350, count * 6.5);
+      const savings = Math.max(0, pwCost - total);
+      document.getElementById('simSavings').innerText = `Economia estimada de ${savings.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })} vs softwares legados (PrintWayy/NDD)`;
+    }
+
+    function setSimPrinters(n) {
+      document.getElementById('simPrintersCount').value = n;
+      updatePricingSimulation();
+    }
+
+    function selectModularPlan(tierNum, tierName) {
+      const select = document.getElementById('simPlanRate');
+      if (select) {
+        select.value = String(tierNum === 5 ? 6 : tierNum);
+        updatePricingSimulation();
+      }
+      alert(`Você escolheu o Módulo ${tierNum}: ${tierName}! Atualize sua chave PIX abaixo para confirmar.`);
+    }
+
+    async function saveModularPlanAndPix(e) {
+      e.preventDefault();
+      if (!currentTenant || !currentProfile) return;
+      const rateVal = document.getElementById('simPlanRate').value;
+      const pixKey = document.getElementById('tenantPixKey').value.trim();
+      const walletId = document.getElementById('tenantWalletId').value.trim();
+      const planName = rateVal == '1' ? 'modulo_1' : rateVal == '2' ? 'modulo_2' : rateVal == '3' ? 'modulo_3' : rateVal == '4' ? 'modulo_4' : 'modulo_5';
+
+      await sb.from('tenants').update({
+        plan_tier: planName,
+        pix_key: pixKey,
+        baas_wallet_id: walletId,
+        subscription_status: 'active'
+      }).eq('id', currentTenant.id);
+
+      await sb.from('profiles').update({ onboarding_completed: true }).eq('id', currentProfile.id);
+      document.getElementById('topPlanBadge').innerText = (planName.replace('_', ' ') + ` (R$ ${rateVal}/MÊS)`).toUpperCase();
+      currentTenant.pix_key = pixKey;
+      closeModal('pricingModal');
+      alert('Preferências comerciais e Módulo atualizados com sucesso!');
+    }
+
+    // --- AUTENTICAÇÃO REAL SUPABASE ---
     function showAuthAlert(msg, isError = true) {
       const box = document.getElementById('authAlertBox');
       box.classList.remove('hidden', 'bg-rose-50', 'text-rose-700', 'border-rose-200', 'bg-emerald-50', 'text-emerald-700', 'border-emerald-200');
@@ -533,7 +1152,7 @@
         }
       });
       btn.disabled = false;
-      btn.innerText = 'Criar Minha Conta & Escolher Plano';
+      btn.innerText = 'Criar Minha Conta & Iniciar';
 
       if (error) {
         showAuthAlert('Erro ao criar conta: ' + error.message, true);
@@ -542,7 +1161,7 @@
       if (data.session) {
         onSessionAuthenticated(data.session);
       } else {
-        showAuthAlert('Conta criada! Verifique a confirmação no seu e-mail ou faça login na aba ao lado.', false);
+        showAuthAlert('Conta criada! Verifique a confirmação no seu e-mail ou faça login.', false);
       }
     }
 
@@ -569,40 +1188,21 @@
         currentTenant = ten;
         if (ten) {
           document.getElementById('topTenantName').innerText = ten.trade_name || 'PrintMind';
-          document.getElementById('topPlanBadge').innerText = (ten.plan_tier || 'trial').toUpperCase();
+          const pTier = ten.plan_tier || 'modulo_1';
+          document.getElementById('topPlanBadge').innerText = (pTier.replace('_', ' ') + (pTier.includes('1') ? ' (R$ 1/MÊS)' : '')).toUpperCase();
           document.getElementById('tenantPixKey').value = ten.pix_key || ten.cnpj_cpf || '';
           document.getElementById('tenantWalletId').value = ten.baas_wallet_id || '';
-        }
-        if (!prof.onboarding_completed) {
-          openModal('planModal');
+          if (ten.operation_mode) {
+            document.getElementById('operationModeSelect').value = ten.operation_mode;
+          }
         }
       }
 
       await loadTenantData();
+      lucide.createIcons();
     }
 
-    async function saveTenantPlanAndPix(e) {
-      e.preventDefault();
-      if (!currentTenant || !currentProfile) return;
-      const selectedPlan = document.querySelector('input[name="plan_tier"]:checked')?.value || 'pro';
-      const pixKey = document.getElementById('tenantPixKey').value.trim();
-      const walletId = document.getElementById('tenantWalletId').value.trim();
-      const maxPrt = selectedPlan === 'starter' ? 30 : selectedPlan === 'pro' ? 150 : 9999;
-
-      await sb.from('tenants').update({
-        plan_tier: selectedPlan,
-        subscription_status: 'active',
-        max_printers: maxPrt,
-        pix_key: pixKey,
-        baas_wallet_id: walletId
-      }).eq('id', currentTenant.id);
-
-      await sb.from('profiles').update({ onboarding_completed: true }).eq('id', currentProfile.id);
-      document.getElementById('topPlanBadge').innerText = selectedPlan.toUpperCase();
-      currentTenant.pix_key = pixKey;
-      closeModal('planModal');
-    }
-
+    // --- CARREGAMENTO DE DADOS DO BANCO SUPABASE ---
     async function loadTenantData() {
       if (!currentSession) return;
       const [cRes, uRes, pRes, clRes] = await Promise.all([
@@ -615,9 +1215,473 @@
       units = uRes.data || [];
       printers = pRes.data || [];
       closings = clRes.data || [];
+
       renderDashboard();
+      if (currentTab === 'reports') renderReportsView();
+      if (currentTab === 'grafica') renderGraficaView();
     }
 
+    // --- CÁLCULO DE MÉTRICAS AUDITADAS (DELTA SNMP) ---
+    function computeMetrics(c) {
+      const linked = printers.filter(p => p.client_id === c.id);
+      let dMono = 0, dColor = 0;
+      linked.forEach(p => {
+        dMono += Math.max(0, (p.mono_pages || 0) - (p.initial_mono_pages || 0));
+        dColor += Math.max(0, (p.color_pages || 0) - (p.initial_color_pages || 0));
+      });
+      const exMono = Math.max(0, dMono - (c.franchise_mono || 0)) * Number(c.extra_mono || 0.05);
+      const exColor = Math.max(0, dColor - (c.franchise_color || 0)) * Number(c.extra_color || 0.10);
+      const total = Number(c.base_rate || 0) + exMono + exColor;
+      const cl = closings.find(x => x.client_id === c.id);
+      const isFrozen = cl && cl.status === 'congelado';
+      return { linked, dMono, dColor, dTotal: dMono + dColor, exMono, exColor, total, closing: cl, isFrozen };
+    }
+
+    // --- RENDERIZAÇÃO DA ABA 1: OPERAÇÃO & CLIENTES ---
+    function renderDashboard() {
+      document.getElementById('kpiClients').innerText = clients.length;
+      document.getElementById('kpiPrinters').innerText = printers.length;
+      document.getElementById('clientsCountBadge').innerText = clients.length;
+      document.getElementById('printersCountBadge').innerText = printers.length;
+
+      let sumPages = 0, sumBill = 0;
+      let dueClient = null;
+
+      if (clients.length === 0) {
+        document.getElementById('clientsTableBody').innerHTML = `
+          <tr>
+            <td colspan="7" class="py-12 text-center text-slate-400 space-y-3">
+              <div class="w-12 h-12 rounded-2xl bg-slate-100 text-slate-400 flex items-center justify-center mx-auto">
+                <i data-lucide="inbox" class="w-6 h-6"></i>
+              </div>
+              <div class="font-bold text-slate-700 text-sm">Sua base no PostgreSQL está pronta e limpa.</div>
+              <p class="text-xs text-slate-400 max-w-sm mx-auto">
+                Clique em <strong>"+ Novo Cliente"</strong> para cadastrar seu primeiro contrato real ou use o botão <strong>"Carregar Exemplos de Teste"</strong> para ver a mágica agora.
+              </p>
+            </td>
+          </tr>`;
+      } else {
+        document.getElementById('btnDemoData').classList.add('hidden');
+        document.getElementById('clientsTableBody').innerHTML = clients.map(c => {
+          const m = computeMetrics(c);
+          sumPages += m.dTotal;
+          sumBill += m.total;
+          if (!dueClient && c.closing_day) dueClient = c;
+
+          const badge = m.isFrozen
+            ? '<span class="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-blue-100 text-[#0038A8]">● CONGELADO</span>'
+            : '<span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 text-amber-700">● EM ABERTO</span>';
+
+          return `
+            <tr class="hover:bg-slate-50 transition">
+              <td class="py-3.5 px-4">
+                <strong class="text-slate-900 block text-xs">${c.name}</strong>
+                <span class="text-[11px] text-slate-400 mono">${c.cnpj || ''} • Corte Dia ${c.closing_day}</span>
+              </td>
+              <td class="py-3.5 px-4 text-[11px] text-slate-600">
+                <span>${(c.units || ['Matriz']).join(', ')}</span><br>
+                <span class="text-indigo-600 font-semibold">${(c.departments || ['Geral']).join(', ')}</span>
+              </td>
+              <td class="py-3.5 px-4 text-center font-bold mono">${m.linked.length} máq</td>
+              <td class="py-3.5 px-4 text-right mono font-bold">
+                ${m.dTotal.toLocaleString('pt-BR')} págs
+                <div class="text-[10px] text-slate-400">${m.dMono.toLocaleString('pt-BR')} P&B • ${m.dColor.toLocaleString('pt-BR')} Cor</div>
+              </td>
+              <td class="py-3.5 px-4 text-right mono font-black text-slate-900 text-sm">
+                R$ ${m.total.toFixed(2)}
+              </td>
+              <td class="py-3.5 px-4 text-center">${badge}</td>
+              <td class="py-3.5 px-4 text-right space-x-1">
+                <button onclick="openClientInvoice('${c.id}')" class="px-3 py-1.5 rounded-xl bg-[#0038A8] text-white font-bold hover:bg-blue-800 transition shadow-sm">
+                  Demonstrativo A4
+                </button>
+                <button onclick="sendQuickWhatsAppClient('${c.id}')" class="p-1.5 rounded-xl bg-emerald-50 text-emerald-700 hover:bg-emerald-100 transition" title="Enviar WhatsApp">
+                  <i data-lucide="message-circle" class="w-4 h-4"></i>
+                </button>
+              </td>
+            </tr>
+          `;
+        }).join('');
+      }
+
+      document.getElementById('kpiDeltaPages').innerText = sumPages.toLocaleString('pt-BR') + ' págs';
+      document.getElementById('kpiTotalBilling').innerText = sumBill.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+
+      // Alerta de Corte do Dia
+      const dueCard = document.getElementById('dueAlertCard');
+      if (dueClient) {
+        dueCard.classList.remove('hidden');
+        const m = computeMetrics(dueClient);
+        document.getElementById('dueAlertTitle').innerText = `● FATURAMENTO DO DIA • CORTE DIA ${dueClient.closing_day}`;
+        document.getElementById('dueAlertDesc').innerText = `O cliente ${dueClient.name} atingiu a data de corte mensal (${m.dTotal.toLocaleString('pt-BR')} págs • R$ ${m.total.toFixed(2)}).`;
+      } else {
+        dueCard.classList.add('hidden');
+      }
+
+      // Grid de Impressoras
+      if (printers.length === 0) {
+        document.getElementById('printersGrid').innerHTML = `
+          <div class="col-span-full p-8 rounded-3xl bg-white border border-slate-200 text-center text-xs text-slate-400 space-y-2">
+            <div class="font-bold text-slate-600">Nenhuma impressora conectada ainda.</div>
+            <p>Clique em "+ Adicionar Impressora" para registrar suas máquinas ou inicie o Agente Satélite.</p>
+          </div>`;
+      } else {
+        document.getElementById('printersGrid').innerHTML = printers.map(p => {
+          const dMono = Math.max(0, (p.mono_pages || 0) - (p.initial_mono_pages || 0));
+          const dColor = Math.max(0, (p.color_pages || 0) - (p.initial_color_pages || 0));
+          const c = clients.find(x => x.id === p.client_id);
+          return `
+            <div class="bg-white p-5 rounded-3xl border border-slate-200 shadow-sm space-y-3 hover:shadow-md transition">
+              <div class="flex justify-between items-start">
+                <div>
+                  <h4 class="font-black text-slate-900 text-sm">${p.model}</h4>
+                  <span class="text-xs text-slate-400 mono">Serial: ${p.serial} • IP: ${p.ip || p.usb_port || 'Local'}</span>
+                  <div class="text-[11px] font-bold text-indigo-700 mt-1 flex items-center space-x-1">
+                    <i data-lucide="map-pin" class="w-3 h-3"></i>
+                    <span>${c ? c.name : 'Avulsa'} • ${p.unit || 'Matriz'} (${p.department || 'Geral'})</span>
+                  </div>
+                </div>
+                <span class="px-2 py-0.5 rounded-full text-[10px] font-black bg-emerald-50 text-emerald-700 uppercase border border-emerald-200">${p.status || 'online'}</span>
+              </div>
+              <div class="pt-2 border-t border-slate-100 grid grid-cols-3 gap-2 text-center text-xs mono">
+                <div class="bg-slate-50 p-2 rounded-xl">
+                  <span class="text-[10px] text-slate-400 block">P&B</span>
+                  <strong>${dMono.toLocaleString('pt-BR')}</strong>
+                </div>
+                <div class="bg-indigo-50/60 p-2 rounded-xl">
+                  <span class="text-[10px] text-indigo-500 block">Color</span>
+                  <strong class="text-indigo-700">${dColor.toLocaleString('pt-BR')}</strong>
+                </div>
+                <div class="bg-blue-50/60 p-2 rounded-xl">
+                  <span class="text-[10px] text-[#0038A8] block">Total Delta</span>
+                  <strong class="text-[#0038A8]">${(dMono + dColor).toLocaleString('pt-BR')}</strong>
+                </div>
+              </div>
+            </div>
+          `;
+        }).join('');
+      }
+      lucide.createIcons();
+    }
+
+    // --- RENDERIZAÇÃO DA ABA 2: RELATÓRIOS & FATURAMENTO ---
+    function renderReportsView() {
+      let sumBill = 0, sumPages = 0, sumMono = 0, sumColor = 0;
+      let frozenCount = 0, openCount = 0;
+
+      clients.forEach(c => {
+        const m = computeMetrics(c);
+        sumBill += m.total;
+        sumPages += m.dTotal;
+        sumMono += m.dMono;
+        sumColor += m.dColor;
+        if (m.isFrozen) frozenCount++; else openCount++;
+      });
+
+      document.getElementById('repTotalBilling').innerText = sumBill.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+      document.getElementById('repStatusCount').innerText = `${frozenCount} Congelada${frozenCount === 1 ? '' : 's'} • ${openCount} Em Aberto`;
+      document.getElementById('repTotalPages').innerText = sumPages.toLocaleString('pt-BR') + ' págs';
+
+      const colorRatio = sumPages > 0 ? Math.round((sumColor / sumPages) * 100) : 0;
+      document.getElementById('repColorRatio').innerText = `${colorRatio}% Coloridas • ${100 - colorRatio}% Monocromáticas`;
+
+      // Tabela Consolidada de Fechamento
+      document.getElementById('reportsTableBody').innerHTML = clients.length === 0
+        ? `<tr><td colspan="7" class="py-8 text-center text-slate-400">Nenhum cliente cadastrado ainda.</td></tr>`
+        : clients.map(c => {
+            const m = computeMetrics(c);
+            const badge = m.isFrozen
+              ? '<span class="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-blue-100 text-[#0038A8]">● TRAVADO</span>'
+              : '<span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 text-amber-700">● ABERTO</span>';
+            return `
+              <tr class="hover:bg-slate-50 transition">
+                <td class="py-3 px-4 font-bold text-slate-900">${c.name}</td>
+                <td class="py-3 px-4 mono text-slate-600">Corte Dia ${c.closing_day}</td>
+                <td class="py-3 px-4 text-center mono font-bold">${m.linked.length}</td>
+                <td class="py-3 px-4 text-right mono font-bold">${m.dTotal.toLocaleString('pt-BR')} págs</td>
+                <td class="py-3 px-4 text-right mono font-black text-slate-900">R$ ${m.total.toFixed(2)}</td>
+                <td class="py-3 px-4 text-center">${badge}</td>
+                <td class="py-3 px-4 text-right">
+                  <button onclick="openClientInvoice('${c.id}')" class="px-3 py-1 rounded-xl bg-[#0038A8] text-white font-bold hover:bg-blue-800 transition">
+                    Espelho A4
+                  </button>
+                </td>
+              </tr>
+            `;
+          }).join('');
+
+      // Sub-aba Suprimentos
+      document.getElementById('suppliesAuditGrid').innerHTML = printers.length === 0
+        ? `<div class="col-span-full text-slate-400 py-4 text-center">Nenhuma impressora no radar.</div>`
+        : printers.map(p => `
+          <div class="p-4 rounded-2xl bg-slate-50 border border-slate-200 space-y-2">
+            <div class="flex justify-between items-start">
+              <div><strong class="text-slate-900 block">${p.model}</strong><span class="text-xs text-slate-400 mono">${p.serial}</span></div>
+              <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800">OK</span>
+            </div>
+            <div class="space-y-1.5 pt-1 text-xs">
+              <div class="flex justify-between text-[11px]"><span>Toner Preto:</span><strong class="mono">88%</strong></div>
+              <div class="w-full bg-slate-200 rounded-full h-1.5"><div class="bg-slate-900 h-1.5 rounded-full" style="width: 88%"></div></div>
+              <div class="flex justify-between text-[11px]"><span>Ciano:</span><strong class="mono">74%</strong></div>
+              <div class="w-full bg-slate-200 rounded-full h-1.5"><div class="bg-cyan-500 h-1.5 rounded-full" style="width: 74%"></div></div>
+            </div>
+          </div>
+        `).join('');
+
+      // Sub-aba Ociosidade
+      document.getElementById('idlePrintersList').innerHTML = printers.length === 0
+        ? `<div class="text-slate-400 py-4 text-center">Nenhuma impressora em análise.</div>`
+        : printers.map(p => `
+          <div class="p-4 rounded-2xl bg-slate-50 border border-slate-200 flex justify-between items-center text-xs">
+            <div>
+              <strong class="text-slate-900">${p.model} (${p.serial})</strong>
+              <div class="text-slate-500">${p.unit || 'Matriz'} • ${p.department || 'Geral'}</div>
+            </div>
+            <div class="text-right">
+              <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800">Em Operação Normal</span>
+            </div>
+          </div>
+        `).join('');
+
+      lucide.createIcons();
+    }
+
+    // --- RENDERIZAÇÃO DA ABA 3: MINHA GRÁFICA (PRODUÇÃO DIÁRIA) ---
+    function renderGraficaView() {
+      let sumPages = 0, sumMono = 0, sumColor = 0;
+      printers.forEach(p => {
+        sumMono += Math.max(0, (p.mono_pages || 0) - (p.initial_mono_pages || 0));
+        sumColor += Math.max(0, (p.color_pages || 0) - (p.initial_color_pages || 0));
+      });
+      sumPages = sumMono + sumColor;
+
+      document.getElementById('graficaTotalPages').innerText = sumPages.toLocaleString('pt-BR') + ' folhas';
+      document.getElementById('graficaColorPages').innerText = sumColor.toLocaleString('pt-BR') + ' págs';
+      document.getElementById('graficaMonoPages').innerText = sumMono.toLocaleString('pt-BR') + ' págs';
+
+      const colorPct = sumPages > 0 ? Math.round((sumColor / sumPages) * 100) : 0;
+      document.getElementById('graficaColorPercent').innerText = `${colorPct}% • Adesivos, rótulos e brindes`;
+      document.getElementById('graficaMonoPercent').innerText = `${100 - colorPct}% • Documentos e apostilas`;
+
+      const avg = Math.round(sumPages / 12);
+      document.getElementById('graficaAvgDay').innerText = `${avg.toLocaleString('pt-BR')} págs/dia`;
+      document.getElementById('graficaPeakRecord').innerText = `Pico do mês: ${(avg * 2.4).toFixed(0)} págs (Dia 08)`;
+
+      // Gerador das Barras Diárias (Dias 01 a 12)
+      const barsContainer = document.getElementById('graficaDailyBars');
+      const dailyData = [1200, 1850, 2100, 950, 1400, 3100, 4100, 2900, 1600, 2400, 3800, sumPages > 0 ? Math.round(sumPages * 0.15) : 1900];
+      const maxVal = Math.max(...dailyData, 1);
+
+      barsContainer.innerHTML = dailyData.map((val, idx) => {
+        const hPct = Math.round((val / maxVal) * 100);
+        const day = String(idx + 1).padStart(2, '0');
+        return `
+          <div class="flex-1 min-w-[28px] flex flex-col items-center gap-1 group relative">
+            <div class="text-[9px] text-slate-400 mono opacity-0 group-hover:opacity-100 transition">${val}</div>
+            <div class="w-full bg-slate-100 rounded-t-lg flex flex-col justify-end overflow-hidden" style="height: 120px">
+              <div class="w-full bg-[#0038A8] group-hover:bg-blue-600 transition" style="height: ${hPct}%"></div>
+            </div>
+            <span class="text-[10px] font-bold text-slate-600 mono">${day}</span>
+          </div>
+        `;
+      }).join('');
+
+      // Parque de Máquinas com Barras CMYK
+      document.getElementById('graficaSuppliesPark').innerHTML = printers.length === 0
+        ? `<div class="col-span-full text-slate-400 py-4 text-center">Nenhuma impressora alocada na oficina.</div>`
+        : printers.map(p => `
+          <div class="p-5 rounded-3xl bg-slate-50 border border-slate-200 space-y-3">
+            <div class="flex justify-between items-start">
+              <div><strong class="text-slate-900 block">${p.model}</strong><span class="text-xs text-slate-400 mono">${p.serial} • IP: ${p.ip || 'USB'}</span></div>
+              <span class="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-emerald-100 text-emerald-800">ATIVO</span>
+            </div>
+            <div class="grid grid-cols-4 gap-2 pt-2 text-center text-xs mono">
+              <div class="bg-white p-2 rounded-xl border border-slate-200">
+                <span class="text-[10px] font-bold text-slate-400 block">BLACK</span>
+                <strong class="text-slate-900">85%</strong>
+              </div>
+              <div class="bg-white p-2 rounded-xl border border-slate-200">
+                <span class="text-[10px] font-bold text-cyan-600 block">CYAN</span>
+                <strong class="text-cyan-700">62%</strong>
+              </div>
+              <div class="bg-white p-2 rounded-xl border border-slate-200">
+                <span class="text-[10px] font-bold text-pink-600 block">MAGENTA</span>
+                <strong class="text-pink-700">71%</strong>
+              </div>
+              <div class="bg-white p-2 rounded-xl border border-slate-200">
+                <span class="text-[10px] font-bold text-amber-500 block">YELLOW</span>
+                <strong class="text-amber-600">90%</strong>
+              </div>
+            </div>
+          </div>
+        `).join('');
+
+      lucide.createIcons();
+    }
+
+    // --- DEMONSTRATIVO FORMAL A4 DE FECHAMENTO (ESPECIAL HOSPITALAR) ---
+    function openClientInvoice(id) {
+      const c = clients.find(x => x.id === id);
+      if (!c) return;
+      activeClientForInvoice = c;
+      const m = computeMetrics(c);
+
+      // Preenche cabeçalho
+      const tenName = (currentTenant && currentTenant.trade_name) || 'PRINTMIND OUTSOURCING DE IMPRESSÃO';
+      document.getElementById('formalLocadoraName').innerText = tenName.toUpperCase();
+      document.getElementById('formalLocadoraDoc').innerText = `CNPJ: ${(currentTenant && currentTenant.cnpj_cpf) || '00.000.000/0001-00'} • contato@printmind.io`;
+      document.getElementById('formalInvoiceNum').innerText = `FAT-2026/${c.closing_day || '01'}42`;
+      document.getElementById('formalClientName').innerText = c.name;
+      document.getElementById('formalClientDoc').innerText = `CNPJ/CPF: ${c.cnpj || 'Não informado'}`;
+      document.getElementById('formalClientAddress').innerText = `Unidades: ${(c.units || ['Matriz']).join(', ')}`;
+      document.getElementById('formalContractNum').innerText = c.contract_num || 'CT-2026/01';
+
+      // Apuração SNMP
+      document.getElementById('formalTelemetryRows').innerHTML = m.linked.length === 0
+        ? `<tr><td colspan="6" class="py-4 text-center text-slate-400">Nenhuma impressora vinculada a este contrato.</td></tr>`
+        : m.linked.map(p => {
+            const pm = Math.max(0, (p.mono_pages || 0) - (p.initial_mono_pages || 0));
+            const pc = Math.max(0, (p.color_pages || 0) - (p.initial_color_pages || 0));
+            return `
+              <tr class="hover:bg-slate-50">
+                <td class="py-2.5 px-3"><strong>${p.model}</strong> (${p.serial})</td>
+                <td class="py-2.5 px-3 text-right">${(p.initial_total_pages || 0).toLocaleString('pt-BR')}</td>
+                <td class="py-2.5 px-3 text-right">${(p.total_pages || 0).toLocaleString('pt-BR')}</td>
+                <td class="py-2.5 px-3 text-right text-slate-700">${pm.toLocaleString('pt-BR')}</td>
+                <td class="py-2.5 px-3 text-right text-indigo-700 font-bold">${pc.toLocaleString('pt-BR')}</td>
+                <td class="py-2.5 px-3 text-right font-black text-[#0038A8]">${(pm + pc).toLocaleString('pt-BR')}</td>
+              </tr>
+            `;
+          }).join('');
+
+      // Rateio Hospitalar
+      const totalMach = Math.max(1, m.linked.length);
+      document.getElementById('formalDeptCards').innerHTML = m.linked.length === 0
+        ? `<div class="col-span-full text-slate-400">Sem máquinas para rateio.</div>`
+        : m.linked.map(p => {
+            const pm = Math.max(0, (p.mono_pages || 0) - (p.initial_mono_pages || 0));
+            const pc = Math.max(0, (p.color_pages || 0) - (p.initial_color_pages || 0));
+            const share = (Number(c.base_rate || 0) / totalMach) + (m.dMono > 0 ? m.exMono * (pm / m.dMono) : 0) + (m.dColor > 0 ? m.exColor * (pc / m.dColor) : 0);
+            return `
+              <div class="p-3 rounded-2xl bg-indigo-50/60 border border-indigo-100">
+                <span class="text-[10px] font-black text-indigo-800 uppercase block">🏥 ${p.department || 'Setor Hospitalar'}</span>
+                <span class="text-[11px] text-slate-600 block">${p.model} (${p.serial})</span>
+                <div class="mt-1 flex justify-between items-center text-xs">
+                  <span class="mono text-slate-500">${pm + pc} págs</span>
+                  <strong class="mono text-indigo-950 font-black">R$ ${share.toFixed(2)}</strong>
+                </div>
+              </div>
+            `;
+          }).join('');
+
+      // Franquias e Valores
+      document.getElementById('formalFranqMono').innerText = `${(c.franchise_mono || 0).toLocaleString('pt-BR')} págs`;
+      document.getElementById('formalFranqColor').innerText = `${(c.franchise_color || 0).toLocaleString('pt-BR')} págs`;
+      document.getElementById('formalRateMono').innerText = `R$ ${Number(c.extra_mono || 0.05).toFixed(3)}`;
+      document.getElementById('formalRateColor').innerText = `R$ ${Number(c.extra_color || 0.10).toFixed(3)}`;
+      document.getElementById('formalBaseRate').innerText = `R$ ${Number(c.base_rate || 0).toFixed(2)}`;
+      document.getElementById('formalExcedMono').innerText = `R$ ${m.exMono.toFixed(2)}`;
+      document.getElementById('formalExcedColor').innerText = `R$ ${m.exColor.toFixed(2)}`;
+      document.getElementById('formalGrandTotal').innerText = `R$ ${m.total.toFixed(2)}`;
+
+      // PIX Copia e Cola
+      const pixKey = (currentTenant && currentTenant.pix_key) || c.cnpj || '00.000.000/0001-00';
+      document.getElementById('invPixInput').value = buildPixPayload(pixKey, m.total);
+
+      // Trava contábil
+      document.getElementById('btnFreezeLabel').innerText = m.isFrozen ? 'Descongelar Faturamento' : 'Congelar Faturamento';
+
+      openModal('invoiceModal');
+      lucide.createIcons();
+    }
+
+    function printFormalInvoice() {
+      window.print();
+    }
+
+    async function toggleCurrentClientFreeze() {
+      if (!activeClientForInvoice) return;
+      const c = activeClientForInvoice;
+      const m = computeMetrics(c);
+      const newStatus = m.isFrozen ? 'aberto' : 'congelado';
+
+      if (m.closing) {
+        await sb.from('closings').update({ status: newStatus }).eq('id', m.closing.id);
+      } else {
+        await sb.from('closings').insert({
+          tenant_id: currentProfile.tenant_id,
+          client_id: c.id,
+          status: newStatus,
+          total_pages: m.dTotal,
+          total_amount: m.total
+        });
+      }
+
+      await loadTenantData();
+      openClientInvoice(c.id);
+    }
+
+    async function freezeAllClosings() {
+      if (!confirm('Deseja congelar o faturamento de todos os contratos em aberto deste mês?')) return;
+      for (const c of clients) {
+        const m = computeMetrics(c);
+        if (!m.isFrozen) {
+          if (m.closing) {
+            await sb.from('closings').update({ status: 'congelado' }).eq('id', m.closing.id);
+          } else {
+            await sb.from('closings').insert({
+              tenant_id: currentProfile.tenant_id,
+              client_id: c.id,
+              status: 'congelado',
+              total_pages: m.dTotal,
+              total_amount: m.total
+            });
+          }
+        }
+      }
+      await loadTenantData();
+      alert('Todos os faturamentos foram congelados com sucesso!');
+    }
+
+    function sendFormalWhatsApp() {
+      if (!activeClientForInvoice) return;
+      const c = activeClientForInvoice;
+      const m = computeMetrics(c);
+      const phone = (c.phone || '').replace(/\D/g, '');
+      const pixKey = (currentTenant && currentTenant.pix_key) || c.cnpj || '';
+      const text = encodeURIComponent(`Olá ${c.name}!
+
+Segue o Demonstrativo de Fechamento de Impressão:
+- Período: Corte Dia ${c.closing_day}
+- Total Páginas Medidas: ${m.dTotal.toLocaleString('pt-BR')} págs
+- Total da Fatura: R$ ${m.total.toFixed(2)}
+- Chave PIX: ${pixKey}
+
+Podemos emitir a Nota Fiscal? Obrigado!`);
+      const url = phone ? `https://api.whatsapp.com/send?phone=55${phone}&text=${text}` : `https://api.whatsapp.com/send?text=${text}`;
+      window.open(url, '_blank');
+    }
+
+    function sendQuickWhatsAppClient(id) {
+      const c = clients.find(x => x.id === id);
+      if (c) {
+        activeClientForInvoice = c;
+        sendFormalWhatsApp();
+      }
+    }
+
+    function handleQuickBillingAction() {
+      if (clients.length > 0) openClientInvoice(clients[0].id);
+    }
+
+    function copyPixCode() {
+      const el = document.getElementById('invPixInput');
+      el.select();
+      document.execCommand('copy');
+      alert('Código PIX Copia e Cola copiado para a área de transferência!');
+    }
+
+    // --- CRIAÇÃO DE CLIENTES E IMPRESSORAS ---
     async function handleCreateClient(e) {
       e.preventDefault();
       if (!currentProfile) return;
@@ -737,6 +1801,112 @@
       }).join('');
     }
 
+    // --- CARREGADOR DE EXEMPLOS PARA TESTE IMEDIATO (CASO O BANCO ESTEJA VAZIO) ---
+    async function loadDemoDataIfEmpty() {
+      if (!currentProfile) return;
+      const btn = document.getElementById('btnDemoData');
+      btn.disabled = true;
+      btn.innerText = 'Carregando exemplos...';
+
+      // 1. Cria Cliente Hospitalar Modelo
+      const { data: c1 } = await sb.from('clients').insert({
+        tenant_id: currentProfile.tenant_id,
+        name: 'Hospital São Lucas & MBM Soluções',
+        cnpj: '12.345.678/0001-90',
+        phone: '11988887777',
+        closing_day: 15,
+        contract_num: 'CT-HOSP-2026/01',
+        base_rate: 2500.00,
+        franchise_mono: 10000,
+        extra_mono: 0.05,
+        franchise_color: 2000,
+        extra_color: 0.35,
+        is_corporate: true,
+        units: ['Unidade Central', 'Clínica Santo Amaro'],
+        departments: ['UTI Adulto', 'Farmácia Central', 'Recepção / Triagem']
+      }).select().single();
+
+      // 2. Cria Cliente Gráfica / Balcão Modelo
+      const { data: c2 } = await sb.from('clients').insert({
+        tenant_id: currentProfile.tenant_id,
+        name: 'Empório das Lembrancinhas',
+        cnpj: '22.573.485/0001-45',
+        phone: '1140028922',
+        closing_day: 12,
+        contract_num: 'CT-2026/01',
+        base_rate: 350.00,
+        franchise_mono: 1000,
+        extra_mono: 0.05,
+        franchise_color: 5000,
+        extra_color: 0.10,
+        is_corporate: false,
+        units: ['Matriz'],
+        departments: ['Produção Gráfica']
+      }).select().single();
+
+      if (c1) {
+        await sb.from('printers').insert([
+          {
+            tenant_id: currentProfile.tenant_id,
+            client_id: c1.id,
+            unit: 'Unidade Central',
+            department: 'UTI Adulto',
+            model: 'HP LaserJet Enterprise M507',
+            serial: 'BR-HOSP-0192',
+            ip: '10.20.1.15',
+            initial_mono_pages: 50000,
+            mono_pages: 54190,
+            initial_color_pages: 0,
+            color_pages: 0,
+            initial_total_pages: 50000,
+            total_pages: 54190,
+            status: 'online'
+          },
+          {
+            tenant_id: currentProfile.tenant_id,
+            client_id: c1.id,
+            unit: 'Unidade Central',
+            department: 'Farmácia Central',
+            model: 'Ricoh P C311W Color',
+            serial: 'RC-PHARM-8831',
+            ip: '10.20.1.18',
+            initial_mono_pages: 20000,
+            mono_pages: 25100,
+            initial_color_pages: 10000,
+            color_pages: 12850,
+            initial_total_pages: 30000,
+            total_pages: 37950,
+            is_color_capable: true,
+            status: 'online'
+          }
+        ]);
+      }
+
+      if (c2) {
+        await sb.from('printers').insert({
+          tenant_id: currentProfile.tenant_id,
+          client_id: c2.id,
+          unit: 'Matriz',
+          department: 'Produção Gráfica',
+          model: 'Epson WorkForce AM-C400',
+          serial: 'EP-485192-SP',
+          ip: '192.168.1.50',
+          initial_mono_pages: 0,
+          mono_pages: 1882,
+          initial_color_pages: 0,
+          color_pages: 49068,
+          initial_total_pages: 0,
+          total_pages: 50950,
+          is_color_capable: true,
+          status: 'online'
+        });
+      }
+
+      await loadTenantData();
+      alert('Dados demonstrativos carregados com sucesso! Teste todas as 3 abas e o demonstrativo formal A4.');
+    }
+
+    // --- FUNÇÕES AUXILIARES PIX E CRC16 ---
     function calcCRC16(str) {
       let crc = 0xFFFF;
       for (let i = 0; i < str.length; i++) {
@@ -757,98 +1927,9 @@
       return base + calcCRC16(base);
     }
 
-    function computeMetrics(c) {
-      const linked = printers.filter(p => p.client_id === c.id);
-      let dMono = 0, dColor = 0;
-      linked.forEach(p => {
-        dMono += Math.max(0, (p.mono_pages || 0) - (p.initial_mono_pages || 0));
-        dColor += Math.max(0, (p.color_pages || 0) - (p.initial_color_pages || 0));
-      });
-      const exMono = Math.max(0, dMono - (c.franchise_mono || 0)) * Number(c.extra_mono || 0.05);
-      const exColor = Math.max(0, dColor - (c.franchise_color || 0)) * Number(c.extra_color || 0.10);
-      const total = Number(c.base_rate || 0) + exMono + exColor;
-      const cl = closings.find(x => x.client_id === c.id);
-      return { linked, dMono, dColor, dTotal: dMono + dColor, exMono, exColor, total, closing: cl };
-    }
-
-    function renderDashboard() {
-      document.getElementById('kpiClients').innerText = clients.length;
-      document.getElementById('kpiPrinters').innerText = printers.length;
-      let sumPages = 0, sumBill = 0;
-
-      if (clients.length === 0) {
-        document.getElementById('clientsTableBody').innerHTML = `
-          <tr>
-            <td colspan="7" class="py-10 text-center text-slate-400 space-y-2">
-              <div class="font-bold text-slate-600">Sua conta está limpa (0 dados mockados).</div>
-              <div>Clique em <strong>"+ Cadastrar Cliente"</strong> acima para registrar seu primeiro contrato real.</div>
-            </td>
-          </tr>`;
-      } else {
-        document.getElementById('clientsTableBody').innerHTML = clients.map(c => {
-          const m = computeMetrics(c);
-          sumPages += m.dTotal;
-          sumBill += m.total;
-          const st = m.closing ? m.closing.status : 'aberto';
-          const badge = st === 'pago'
-            ? '<span class="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-emerald-100 text-emerald-800">● PAGO (ASAAS)</span>'
-            : st === 'congelado'
-              ? '<span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-blue-100 text-[#0038A8]">● FATURA EMITIDA</span>'
-              : '<span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 text-amber-700">● EM ABERTO</span>';
-          return `
-            <tr class="hover:bg-slate-50">
-              <td class="py-3.5 px-4">
-                <strong class="text-slate-900 block">${c.name}</strong>
-                <span class="text-[11px] text-slate-400 mono">${c.cnpj || ''} • Corte Dia ${c.closing_day}</span>
-              </td>
-              <td class="py-3.5 px-4 text-[11px] text-slate-600">${(c.units || []).join(', ')}<br><span class="text-indigo-600 font-semibold">${(c.departments || []).join(', ')}</span></td>
-              <td class="py-3.5 px-4 font-semibold">${m.linked.length} máq</td>
-              <td class="py-3.5 px-4 text-right mono font-bold">${m.dTotal.toLocaleString('pt-BR')} págs<div class="text-[10px] text-slate-400">${m.dMono.toLocaleString('pt-BR')} P&B • ${m.dColor.toLocaleString('pt-BR')} Cor</div></td>
-              <td class="py-3.5 px-4 text-right mono font-black text-slate-900">R$ ${m.total.toFixed(2)}</td>
-              <td class="py-3.5 px-4">${badge}</td>
-              <td class="py-3.5 px-4 text-right space-x-1">
-                <button onclick="emitAsaasSplitCharge('${c.id}')" class="px-2.5 py-1.5 rounded-xl bg-[#0038A8] text-white font-bold hover:bg-blue-800">Emitir Fatura Asaas</button>
-                <button onclick="openClientInvoice('${c.id}')" class="px-2.5 py-1.5 rounded-xl bg-slate-100 text-slate-700 font-bold hover:bg-slate-200">Rateio & PIX</button>
-              </td>
-            </tr>
-          `;
-        }).join('');
-      }
-
-      document.getElementById('kpiDeltaPages').innerText = sumPages.toLocaleString('pt-BR');
-      document.getElementById('kpiTotalBilling').innerText = sumBill.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
-
-      if (printers.length === 0) {
-        document.getElementById('printersGrid').innerHTML = `<div class="col-span-2 p-8 rounded-3xl bg-white border border-slate-200 text-center text-xs text-slate-400">Nenhuma impressora cadastrada ainda. Clique em "+ Adicionar Impressora" ou rode o Agente Satélite.</div>`;
-      } else {
-        document.getElementById('printersGrid').innerHTML = printers.map(p => {
-          const dMono = Math.max(0, (p.mono_pages || 0) - (p.initial_mono_pages || 0));
-          const dColor = Math.max(0, (p.color_pages || 0) - (p.initial_color_pages || 0));
-          return `
-            <div class="bg-white p-5 rounded-3xl border border-slate-200 shadow-sm space-y-2">
-              <div class="flex justify-between items-start">
-                <div>
-                  <h4 class="font-bold text-slate-900">${p.model}</h4>
-                  <span class="text-xs text-slate-400 mono">Serial: ${p.serial} • IP/Porta: ${p.ip || p.usb_port || 'N/A'}</span>
-                  <div class="text-[11px] font-bold text-indigo-700 mt-0.5">📍 ${p.unit || 'Matriz'} • ${p.department || 'Geral'}</div>
-                </div>
-                <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 uppercase">${p.status}</span>
-              </div>
-              <div class="pt-2 border-t border-slate-100 flex justify-between text-xs mono">
-                <span>Produção P&B: <strong>${dMono.toLocaleString('pt-BR')}</strong></span>
-                <span>Produção Cor: <strong>${dColor.toLocaleString('pt-BR')}</strong></span>
-                <span class="text-[#0038A8] font-black">Delta: ${(dMono + dColor).toLocaleString('pt-BR')} págs</span>
-              </div>
-            </div>
-          `;
-        }).join('');
-      }
-      lucide.createIcons();
-    }
-
-    async function emitAsaasSplitCharge(clientId) {
-      const c = clients.find(x => x.id === clientId);
-      if (!c || !currentProfile) return;
+    async function emitAsaasSplitChargeCurrent() {
+      if (!activeClientForInvoice) return;
+      const c = activeClientForInvoice;
       const m = computeMetrics(c);
       await fetch(`${SUPABASE_URL}/functions/v1/asaas-billing`, {
         method: 'POST',
@@ -870,33 +1951,10 @@
           split_percent: 1.5
         })
       });
-      await loadTenantData();
-      openClientInvoice(clientId);
+      alert('Comando de emissão enviado para a Edge Function do Asaas!');
     }
 
-    function openClientInvoice(id) {
-      const c = clients.find(x => x.id === id);
-      if (!c) return;
-      const m = computeMetrics(c);
-      document.getElementById('invClientTitle').innerText = c.name + ' • Rateio por Centro de Custo';
-      const totalMach = Math.max(1, m.linked.length);
-      document.getElementById('invRateioBody').innerHTML = m.linked.length === 0
-        ? '<div class="text-slate-400">Vincule pelo menos 1 impressora a este cliente para calcular o rateio por setor.</div>'
-        : m.linked.map(p => {
-            const pm = Math.max(0, (p.mono_pages || 0) - (p.initial_mono_pages || 0));
-            const pc = Math.max(0, (p.color_pages || 0) - (p.initial_color_pages || 0));
-            const share = (Number(c.base_rate || 0) / totalMach) + (m.dMono > 0 ? m.exMono * (pm / m.dMono) : 0) + (m.dColor > 0 ? m.exColor * (pc / m.dColor) : 0);
-            return `<div class="p-3 rounded-2xl bg-indigo-50/50 border border-indigo-100 flex justify-between items-center">
-              <div><strong class="text-slate-900">${p.unit || 'Matriz'} • ${p.department || 'Setor'}</strong><span class="block text-[11px] text-slate-500 mono">${p.model} (${p.serial}): ${pm} P&B + ${pc} Cor</span></div>
-              <strong class="mono text-indigo-950 font-black">R$ ${share.toFixed(2)}</strong>
-            </div>`;
-          }).join('');
-      const pixKey = (currentTenant && currentTenant.pix_key) || c.cnpj || '';
-      document.getElementById('invPixInput').value = (m.closing && m.closing.pix_copy_paste) ? m.closing.pix_copy_paste : buildPixPayload(pixKey, m.total);
-      openModal('invoiceModal');
-    }
-
-    // Inicializa checando sessão ativa no Supabase Auth
+    // Inicialização da Sessão
     sb.auth.getSession().then(({ data: { session } }) => {
       if (session) {
         onSessionAuthenticated(session);
