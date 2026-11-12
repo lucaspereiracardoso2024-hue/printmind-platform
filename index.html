@@ -155,7 +155,7 @@
             <i data-lucide="printer" class="w-3.5 h-3.5"></i>
             <span>Minha Gráfica</span>
           </button>
-          <button id="navTabMaster" onclick="switchTab('master')" class="px-3.5 py-1.5 rounded-xl bg-amber-400/20 text-amber-200 border border-amber-300/30 hover:bg-amber-400/30 transition flex items-center space-x-1.5 font-bold">
+          <button id="navTabMaster" onclick="switchTab('master')" class="hidden px-3.5 py-1.5 rounded-xl bg-amber-400/20 text-amber-200 border border-amber-300/30 hover:bg-amber-400/30 transition flex items-center space-x-1.5 font-bold">
             <i data-lucide="crown" class="w-3.5 h-3.5 text-amber-400"></i>
             <span>👑 Painel Master</span>
           </button>
@@ -1202,7 +1202,47 @@
     function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
 
     // --- COMUTAÇÃO DE ABAS SERENAS ---
+    // =========================================================================
+    // CONTROLE DE ACESSO EXCLUSIVO: SUPER ADMIN / DONO DA PLATAFORMA (LUCAS)
+    // =========================================================================
+    const MASTER_ADMIN_EMAILS = ['lucaspereiracardoso2024@gmail.com'];
+
+    function isMasterAdminUser() {
+      const sessionEmail = (currentSession && currentSession.user && currentSession.user.email) ? currentSession.user.email.toLowerCase().trim() : '';
+      const topEmail = (document.getElementById('topUserEmail') && document.getElementById('topUserEmail').innerText) ? document.getElementById('topUserEmail').innerText.toLowerCase().trim() : '';
+      const profileRole = (currentProfile && currentProfile.role) ? currentProfile.role.toLowerCase().trim() : '';
+      
+      return MASTER_ADMIN_EMAILS.includes(sessionEmail) || 
+             MASTER_ADMIN_EMAILS.includes(topEmail) || 
+             profileRole === 'super_admin' || 
+             profileRole === 'platform_owner';
+    }
+
+    function updateMasterNavVisibility() {
+      const btnMaster = document.getElementById('navTabMaster');
+      const isMaster = isMasterAdminUser();
+      if (btnMaster) {
+        if (isMaster) {
+          btnMaster.classList.remove('hidden');
+        } else {
+          btnMaster.classList.add('hidden');
+          const secMaster = document.getElementById('sectionMaster');
+          if (secMaster && !secMaster.classList.contains('hidden')) {
+            switchTab('clients');
+          }
+        }
+      }
+    }
+
     function switchTab(tabId) {
+      // Bloqueio rigoroso: Apenas Lucas (dono da plataforma) pode acessar a aba Master
+      if (tabId === 'master') {
+        if (!isMasterAdminUser()) {
+          alert('🔒 Acesso Restrito: O Painel Master é exclusivo de Lucas (dono da plataforma PrintMind).');
+          switchTab('clients');
+          return;
+        }
+      }
       currentTab = tabId;
       const secClients = document.getElementById('sectionClients');
       const secReports = document.getElementById('sectionReports');
@@ -1466,6 +1506,7 @@
       currentSession = null;
       currentProfile = null;
       currentTenant = null;
+      updateMasterNavVisibility();
       document.getElementById('appScreen').classList.add('hidden');
       document.getElementById('authScreen').classList.remove('hidden');
     }
@@ -1495,6 +1536,7 @@
       }
 
       await loadTenantData();
+      updateMasterNavVisibility();
       lucide.createIcons();
     }
 
@@ -2265,6 +2307,10 @@ Podemos emitir a Nota Fiscal? Obrigado!`);
     let allPlatformTenants = [];
 
     async function loadMasterTenants() {
+      if (!isMasterAdminUser()) {
+        console.warn('Tentativa não autorizada de acessar dados administrativos da plataforma.');
+        return;
+      }
       // Carrega todas as locadoras
       const { data: tenList, error } = await sb.from('tenants').select('*').order('created_at', { ascending: false });
       allPlatformTenants = tenList || [];
