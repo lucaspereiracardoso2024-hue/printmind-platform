@@ -1,0 +1,57 @@
+version: "3.9"
+
+services:
+  printmind-server:
+    build: .
+    container_name: printmind-server
+    restart: always
+    environment:
+      PORT: "8090"
+      SUPABASE_URL: "https://zbsmzcbcivhzslcnfxmq.supabase.co"
+      SUPABASE_PUBLISHABLE_KEY: "sb_publishable_7ZOdmWOGLJuAZlOicuROVA_Hd0U63zz"
+      EVOLUTION_API_URL: "http://whatsapp-gateway:8080"
+      EVOLUTION_API_KEY: "${EVOLUTION_API_KEY:-printmind_master_key_2026}"
+      ASAAS_API_URL: "https://api.asaas.com/v3"
+      ASAAS_API_KEY: "${ASAAS_API_KEY:-}"
+    ports:
+      - "8090:8090"
+    depends_on:
+      - whatsapp-gateway
+
+  postgres-evolution:
+    image: postgres:16-alpine
+    container_name: printmind-wa-db
+    restart: always
+    environment:
+      POSTGRES_USER: evolution
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-printmind_wa_pass}
+      POSTGRES_DB: evolution_db
+    volumes:
+      - wa_pgdata:/var/lib/postgresql/data
+
+  redis:
+    image: redis:7-alpine
+    container_name: printmind-redis
+    restart: always
+    command: redis-server --appendonly yes
+
+  whatsapp-gateway:
+    image: atendai/evolution-api:latest
+    container_name: printmind-whatsapp
+    restart: always
+    environment:
+      SERVER_URL: "${WHATSAPP_PUBLIC_URL:-http://localhost:8085}"
+      AUTHENTICATION_API_KEY: "${EVOLUTION_API_KEY:-printmind_master_key_2026}"
+      DATABASE_ENABLED: "true"
+      DATABASE_PROVIDER: "postgresql"
+      DATABASE_CONNECTION_URI: "postgresql://evolution:${DB_PASSWORD:-printmind_wa_pass}@postgres-evolution:5432/evolution_db?schema=public"
+      CACHE_REDIS_ENABLED: "true"
+      CACHE_REDIS_URI: "redis://redis:6379/1"
+    ports:
+      - "8085:8080"
+    depends_on:
+      - postgres-evolution
+      - redis
+
+volumes:
+  wa_pgdata:
