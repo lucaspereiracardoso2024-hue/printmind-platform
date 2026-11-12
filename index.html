@@ -155,6 +155,10 @@
             <i data-lucide="printer" class="w-3.5 h-3.5"></i>
             <span>Minha Gráfica</span>
           </button>
+          <button id="navTabMaster" onclick="switchTab('master')" class="px-3.5 py-1.5 rounded-xl bg-amber-400/20 text-amber-200 border border-amber-300/30 hover:bg-amber-400/30 transition flex items-center space-x-1.5 font-bold">
+            <i data-lucide="crown" class="w-3.5 h-3.5 text-amber-400"></i>
+            <span>👑 Painel Master</span>
+          </button>
         </nav>
 
         <!-- BOTÕES DE AÇÃO RÁPIDA -->
@@ -474,6 +478,186 @@
           <h3 class="text-base font-black text-slate-900">Níveis de Consumíveis CMYK das Máquinas de Produção</h3>
           <p class="text-xs text-slate-500">Leitura em tempo real do nível de toners/tintas via SNMP Printer-MIB RFC 3805</p>
           <div id="graficaSuppliesPark" class="grid grid-cols-1 md:grid-cols-2 gap-4 pt-1"></div>
+        </div>
+      </section>
+
+      <!-- =====================================================================
+           ABA 4: PAINEL MASTER (SUPER ADMIN / DONA DA PLATAFORMA SAAS)
+           ===================================================================== -->
+      <section id="sectionMaster" class="hidden space-y-6">
+        <div class="text-center py-1">
+          <span class="inline-block px-3 py-1 rounded-full text-xs font-bold bg-amber-50 text-amber-900 border border-amber-200 mb-1 flex items-center space-x-1.5 justify-center mx-auto w-fit">
+            <i data-lucide="shield-check" class="w-3.5 h-3.5 text-amber-600"></i>
+            <span>Área Exclusiva da Proprietária SaaS • PrintMind Cloud</span>
+          </span>
+          <h2 class="text-2xl font-black text-slate-900 tracking-tight">👑 Console Master da Plataforma</h2>
+          <p class="text-xs text-slate-500 mt-0.5">Controle global de locadoras assinantes, faturamento de mensalidades SaaS e integração Asaas Master.</p>
+        </div>
+
+        <!-- 4 KPIS GLOBAIS DA PLATAFORMA -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div class="bg-white p-5 rounded-3xl border border-slate-200 shadow-sm flex items-center justify-between">
+            <div>
+              <span class="text-[11px] font-bold uppercase text-slate-400">Locadoras na Plataforma</span>
+              <div id="kpiMasterTenants" class="text-3xl font-black text-slate-900 mt-1 mono">1</div>
+              <span class="text-xs text-slate-500">Empresas assinantes</span>
+            </div>
+            <div class="w-10 h-10 rounded-2xl bg-indigo-50 text-indigo-700 flex items-center justify-center">
+              <i data-lucide="building-2" class="w-5 h-5"></i>
+            </div>
+          </div>
+
+          <div class="bg-white p-5 rounded-3xl border border-slate-200 shadow-sm flex items-center justify-between">
+            <div>
+              <span class="text-[11px] font-bold uppercase text-slate-400">Impressoras Globais</span>
+              <div id="kpiMasterPrinters" class="text-3xl font-black text-emerald-600 mt-1 mono">0</div>
+              <span class="text-xs text-slate-500">Parque total monitorado</span>
+            </div>
+            <div class="w-10 h-10 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center">
+              <i data-lucide="printer" class="w-5 h-5"></i>
+            </div>
+          </div>
+
+          <div class="bg-white p-5 rounded-3xl border border-slate-200 shadow-sm flex items-center justify-between">
+            <div>
+              <span class="text-[11px] font-bold uppercase text-slate-400">Seu Faturamento SaaS (MRR)</span>
+              <div id="kpiMasterMRR" class="text-3xl font-black text-[#0038A8] mt-1 mono">R$ 0,00</div>
+              <span class="text-xs text-[#0038A8] font-semibold">Mensalidades a receber</span>
+            </div>
+            <div class="w-10 h-10 rounded-2xl bg-blue-50 text-[#0038A8] flex items-center justify-center">
+              <i data-lucide="wallet" class="w-5 h-5"></i>
+            </div>
+          </div>
+
+          <div class="bg-white p-5 rounded-3xl border border-slate-200 shadow-sm flex items-center justify-between">
+            <div>
+              <span class="text-[11px] font-bold uppercase text-slate-400">Gateway Asaas</span>
+              <div id="kpiMasterAsaasStatus" class="text-sm font-black text-emerald-700 mt-1 flex items-center space-x-1">
+                <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                <span>Configuração Ativa</span>
+              </div>
+              <span class="text-xs text-slate-500" id="kpiMasterAsaasSub">Chave conectada</span>
+            </div>
+            <div class="w-10 h-10 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center">
+              <i data-lucide="key" class="w-5 h-5"></i>
+            </div>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <!-- CARD 1: CONFIGURAÇÃO DA CHAVE ASAAS MASTER -->
+          <div class="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm space-y-4">
+            <div class="flex items-center space-x-3">
+              <div class="w-10 h-10 rounded-2xl bg-blue-50 text-[#0038A8] flex items-center justify-center">
+                <i data-lucide="key-round" class="w-5 h-5"></i>
+              </div>
+              <div>
+                <h3 class="font-black text-base text-slate-900">Sua Chave de API Asaas (Master)</h3>
+                <p class="text-xs text-slate-500">Usada para faturar as mensalidades das locadoras no cartão de crédito ou PIX.</p>
+              </div>
+            </div>
+
+            <form onsubmit="saveMasterAsaasKey(event)" class="space-y-3 text-xs">
+              <div>
+                <label class="block font-bold text-slate-700 mb-1">Chave de API do Asaas (Produção ou Sandbox)</label>
+                <div class="relative">
+                  <input id="masterAsaasKeyInput" type="password" required placeholder="$aact_YTU5YTE0M2M6N2Zm..." class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-xs mono focus:outline-none focus:border-[#0038A8] pr-20" />
+                  <button type="button" onclick="toggleAsaasKeyVisibility()" class="absolute right-2.5 top-2.5 text-xs text-slate-400 hover:text-slate-600 font-bold">Mostrar</button>
+                </div>
+                <span class="text-[10px] text-slate-400 mt-1 block">A chave fica gravada com segurança nas credenciais master da sua conta.</span>
+              </div>
+
+              <div class="grid grid-cols-2 gap-3">
+                <div>
+                  <label class="block font-bold text-slate-700 mb-1">Ambiente da Chave</label>
+                  <select id="masterAsaasEnv" class="w-full px-3 py-2 rounded-xl border border-slate-300 bg-white text-xs">
+                    <option value="production">🚀 Produção (asaas.com)</option>
+                    <option value="sandbox">🧪 Sandbox (sandbox.asaas.com)</option>
+                  </select>
+                </div>
+                <div>
+                  <label class="block font-bold text-slate-700 mb-1">Taxa Split da Plataforma</label>
+                  <input type="text" value="1.5% (Automático)" readonly class="w-full px-3 py-2 rounded-xl border border-slate-200 bg-slate-50 mono text-slate-500 text-xs" />
+                </div>
+              </div>
+
+              <div id="masterAsaasFeedback" class="hidden p-3 rounded-xl text-xs font-semibold"></div>
+
+              <button type="submit" class="w-full py-2.5 rounded-xl bg-[#0038A8] hover:bg-blue-800 text-white font-black text-xs transition shadow-md flex items-center justify-center space-x-1.5">
+                <i data-lucide="check-circle" class="w-4 h-4"></i>
+                <span>Salvar & Validar Chave Asaas</span>
+              </button>
+            </form>
+          </div>
+
+          <!-- CARD 2: CONVIDAR NOVA LOCADORA (LINK COMPARTILHÁVEL) -->
+          <div class="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm space-y-4 flex flex-col justify-between">
+            <div class="space-y-2">
+              <div class="flex items-center space-x-3">
+                <div class="w-10 h-10 rounded-2xl bg-emerald-50 text-emerald-700 flex items-center justify-center">
+                  <i data-lucide="user-plus" class="w-5 h-5"></i>
+                </div>
+                <div>
+                  <h3 class="font-black text-base text-slate-900">Convidar Nova Locadora / Cliente</h3>
+                  <p class="text-xs text-slate-500">Envie o link de cadastro direto para o dono da locadora criar a conta dele.</p>
+                </div>
+              </div>
+
+              <div class="pt-2">
+                <label class="block font-bold text-slate-700 mb-1 text-xs">Link Oficial de Inscrição da sua Plataforma</label>
+                <div class="flex gap-2">
+                  <input id="masterInviteLink" type="text" readonly value="https://lucaspereiracardoso2024-hue.github.io/printmind-platform/" class="w-full px-3 py-2 rounded-xl border border-slate-300 mono text-xs bg-slate-50 text-slate-700 select-all" />
+                  <button onclick="copyMasterInviteLink()" class="px-3.5 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs transition flex items-center space-x-1 whitespace-nowrap">
+                    <i data-lucide="copy" class="w-3.5 h-3.5"></i>
+                    <span>Copiar</span>
+                  </button>
+                </div>
+              </div>
+
+              <div class="p-3.5 rounded-2xl bg-blue-50/60 border border-blue-200 text-[#0038A8] text-xs space-y-1">
+                <strong>💡 O que acontece quando ele clica no link:</strong>
+                <p class="text-[11px] text-slate-600">
+                  A locadora faz o cadastro dela, escolhe o Módulo 1 (R$ 1,00/mês por impressora) e já pode baixar o agente satélite para conectar os equipamentos.
+                </p>
+              </div>
+            </div>
+
+            <button onclick="shareInviteWhatsApp()" class="w-full py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs transition shadow-md flex items-center justify-center space-x-1.5">
+              <i data-lucide="message-circle" class="w-4 h-4"></i>
+              <span>Enviar Convite Pronto no WhatsApp</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- TABELA DE GESTÃO DAS LOCADORAS CADASTRADAS -->
+        <div class="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden space-y-2">
+          <div class="p-5 border-b border-slate-100 flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <h3 class="text-base font-black text-slate-900">Locadoras & Empresas Assinantes do seu SaaS</h3>
+              <p class="text-xs text-slate-500">Acompanhamento do número de impressoras de cada locadora e valor mensal devido a você</p>
+            </div>
+            <button onclick="loadMasterTenants()" class="px-3.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition flex items-center space-x-1">
+              <i data-lucide="rotate-cw" class="w-3.5 h-3.5"></i>
+              <span>Atualizar Lista</span>
+            </button>
+          </div>
+
+          <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs">
+              <thead class="bg-slate-50 text-slate-500 uppercase text-[10px] font-bold border-b border-slate-200">
+                <tr>
+                  <th class="py-3 px-4">Locadora / Empresa</th>
+                  <th class="py-3 px-4">CNPJ / CPF</th>
+                  <th class="py-3 px-4 text-center">Módulo Contratado</th>
+                  <th class="py-3 px-4 text-center">Máquinas Ativas</th>
+                  <th class="py-3 px-4 text-right">Mensalidade a te Pagar</th>
+                  <th class="py-3 px-4 text-center">Status</th>
+                  <th class="py-3 px-4 text-right">Ações</th>
+                </tr>
+              </thead>
+              <tbody id="masterTenantsTableBody" class="divide-y divide-slate-100"></tbody>
+            </table>
+          </div>
         </div>
       </section>
 
@@ -970,8 +1154,24 @@
         </div>
         <button onclick="closeModal('agentModal')" class="text-slate-400 hover:text-slate-600">✕</button>
       </div>
+      <!-- BOTÃO OFICIAL DE DOWNLOAD DO EXECUTÁVEL COMPILADO -->
+      <div class="p-4 rounded-2xl bg-gradient-to-r from-blue-900 to-[#0038A8] text-white flex flex-wrap items-center justify-between gap-3 shadow-md">
+        <div>
+          <div class="flex items-center space-x-2">
+            <span class="px-2 py-0.5 rounded-full text-[10px] font-black bg-emerald-400/20 text-emerald-300 border border-emerald-400/30">BINÁRIO OFICIAL COMPILADO</span>
+            <span class="text-xs text-blue-200">Windows 64-bit • Go Nativo</span>
+          </div>
+          <h4 class="text-sm font-black text-white mt-1">printmind-agent.exe (6.9 MB)</h4>
+          <p class="text-[11px] text-blue-200">Zero instalação pesada. Não precisa de Java nem .NET. Roda em segundo plano consumindo &lt;15 MB de RAM.</p>
+        </div>
+        <a href="./printmind-agent.exe" download="printmind-agent.exe" class="px-4 py-2.5 rounded-xl bg-white text-[#0038A8] font-black text-xs hover:bg-blue-50 transition shadow-md flex items-center space-x-1.5">
+          <i data-lucide="download" class="w-4 h-4"></i>
+          <span>Baixar printmind-agent.exe</span>
+        </a>
+      </div>
+
       <p class="text-xs text-slate-600">
-        Cada unidade física cadastrada recebe um token único no Supabase (`public.client_units`). O executável Go de 12 MB roda como serviço silencioso com consumo de &lt;15 MB de RAM:
+        Cada unidade física cadastrada recebe um token único no Supabase (`public.client_units`). Basta rodar o comando abaixo no terminal da recepção do cliente:
       </p>
       <div id="unitsTokensList" class="space-y-2.5 text-xs"></div>
     </div>
@@ -1007,23 +1207,30 @@
       const secClients = document.getElementById('sectionClients');
       const secReports = document.getElementById('sectionReports');
       const secGrafica = document.getElementById('sectionGrafica');
+      const secMaster = document.getElementById('sectionMaster');
       const btnClients = document.getElementById('navTabClients');
       const btnReports = document.getElementById('navTabReports');
       const btnGrafica = document.getElementById('navTabGrafica');
+      const btnMaster = document.getElementById('navTabMaster');
 
       secClients.classList.toggle('hidden', tabId !== 'clients');
       secReports.classList.toggle('hidden', tabId !== 'reports');
       secGrafica.classList.toggle('hidden', tabId !== 'grafica');
+      if (secMaster) secMaster.classList.toggle('hidden', tabId !== 'master');
 
       const activeClasses = 'px-3.5 py-1.5 rounded-xl bg-white text-[#0038A8] shadow-sm transition flex items-center space-x-1.5';
       const inactiveClasses = 'px-3.5 py-1.5 rounded-xl text-white/80 hover:text-white hover:bg-white/10 transition flex items-center space-x-1.5';
+      const masterActive = 'px-3.5 py-1.5 rounded-xl bg-amber-400 text-slate-950 font-black shadow-md transition flex items-center space-x-1.5';
+      const masterInactive = 'px-3.5 py-1.5 rounded-xl bg-amber-400/20 text-amber-200 border border-amber-300/30 hover:bg-amber-400/30 transition flex items-center space-x-1.5 font-bold';
 
       btnClients.className = tabId === 'clients' ? activeClasses : inactiveClasses;
       btnReports.className = tabId === 'reports' ? activeClasses : inactiveClasses;
       btnGrafica.className = tabId === 'grafica' ? activeClasses : inactiveClasses;
+      if (btnMaster) btnMaster.className = tabId === 'master' ? masterActive : masterInactive;
 
       if (tabId === 'reports') renderReportsView();
       if (tabId === 'grafica') renderGraficaView();
+      if (tabId === 'master') loadMasterTenants();
       lucide.createIcons();
     }
 
@@ -2051,6 +2258,126 @@ Podemos emitir a Nota Fiscal? Obrigado!`);
         lucide.createIcons();
       }
     });
+
+    // =========================================================================
+    // JAVASCRIPT: PAINEL MASTER (SUPER ADMIN / DONA DO SAAS)
+    // =========================================================================
+    let allPlatformTenants = [];
+
+    async function loadMasterTenants() {
+      // Carrega todas as locadoras
+      const { data: tenList, error } = await sb.from('tenants').select('*').order('created_at', { ascending: false });
+      allPlatformTenants = tenList || [];
+
+      // Carrega todas as impressoras para somatório global
+      const { data: allPrinters } = await sb.from('printers').select('id, tenant_id');
+      const prtList = allPrinters || [];
+
+      document.getElementById('kpiMasterTenants').innerText = allPlatformTenants.length;
+      document.getElementById('kpiMasterPrinters').innerText = prtList.length;
+
+      let totalMRR = 0;
+      const tbody = document.getElementById('masterTenantsTableBody');
+
+      if (allPlatformTenants.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="7" class="py-8 text-center text-slate-400">Nenhuma locadora registrada ainda.</td></tr>`;
+      } else {
+        tbody.innerHTML = allPlatformTenants.map(t => {
+          const tenantPrinters = prtList.filter(p => p.tenant_id === t.id);
+          const pTier = t.plan_tier || 'modulo_1';
+          const rate = pTier.includes('5') ? 6 : pTier.includes('4') ? 4 : pTier.includes('3') ? 3 : pTier.includes('2') ? 2 : 1;
+          const monthlyMRR = tenantPrinters.length * rate;
+          totalMRR += monthlyMRR;
+
+          return `
+            <tr class="hover:bg-slate-50 transition">
+              <td class="py-3.5 px-4">
+                <strong class="text-slate-900 block text-xs">${t.trade_name || 'Locadora'}</strong>
+                <span class="text-[11px] text-slate-400 mono">${t.email || ''}</span>
+              </td>
+              <td class="py-3.5 px-4 mono text-slate-600">${t.cnpj_cpf || 'Não informado'}</td>
+              <td class="py-3.5 px-4 text-center">
+                <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-blue-50 text-[#0038A8] border border-blue-200 uppercase">
+                  ${pTier.replace('_', ' ')} (R$ ${rate},00/máq)
+                </span>
+              </td>
+              <td class="py-3.5 px-4 text-center font-black mono text-emerald-700">${tenantPrinters.length} máq</td>
+              <td class="py-3.5 px-4 text-right font-black mono text-slate-900 text-sm">
+                R$ ${monthlyMRR.toFixed(2)}/mês
+              </td>
+              <td class="py-3.5 px-4 text-center">
+                <span class="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-emerald-100 text-emerald-800">● ATIVO</span>
+              </td>
+              <td class="py-3.5 px-4 text-right space-x-1">
+                <button onclick="sendLocadoraWhatsApp('${t.id}')" class="px-2.5 py-1.5 rounded-xl bg-emerald-50 text-emerald-700 hover:bg-emerald-100 font-bold transition text-xs" title="Cobrar mensalidade">
+                  WhatsApp
+                </button>
+              </td>
+            </tr>
+          `;
+        }).join('');
+      }
+
+      document.getElementById('kpiMasterMRR').innerText = totalMRR.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+
+      // Preenche chave se já estiver salva localmente ou no tenant master
+      const savedKey = localStorage.getItem('printmind_master_asaas_key') || (currentTenant && currentTenant.baas_api_key_encrypted) || '';
+      if (savedKey) {
+        document.getElementById('masterAsaasKeyInput').value = savedKey;
+        document.getElementById('kpiMasterAsaasSub').innerText = 'Chave ativa: ' + savedKey.slice(0, 10) + '...';
+      }
+      lucide.createIcons();
+    }
+
+    function toggleAsaasKeyVisibility() {
+      const inp = document.getElementById('masterAsaasKeyInput');
+      inp.type = inp.type === 'password' ? 'text' : 'password';
+    }
+
+    async function saveMasterAsaasKey(e) {
+      e.preventDefault();
+      const keyVal = document.getElementById('masterAsaasKeyInput').value.trim();
+      const envVal = document.getElementById('masterAsaasEnv').value;
+      const feedback = document.getElementById('masterAsaasFeedback');
+
+      if (!keyVal.startsWith('$aact_')) {
+        feedback.className = "p-3 rounded-xl text-xs font-semibold bg-rose-50 border border-rose-200 text-rose-800 block";
+        feedback.innerText = "⚠️ Atenção: A chave de API do Asaas geralmente começa com '$aact_'. Verifique se você copiou a chave completa.";
+        return;
+      }
+
+      // Salva no localStorage e no tenant master no Supabase
+      localStorage.setItem('printmind_master_asaas_key', keyVal);
+      if (currentTenant && currentTenant.id) {
+        await sb.from('tenants').update({ baas_api_key_encrypted: keyVal }).eq('id', currentTenant.id);
+      }
+
+      feedback.className = "p-3 rounded-xl text-xs font-semibold bg-emerald-50 border border-emerald-200 text-emerald-800 block";
+      feedback.innerText = "✓ Chave Master do Asaas salva com sucesso! Todas as assinaturas e splits agora serão roteados pela sua conta.";
+      document.getElementById('kpiMasterAsaasSub').innerText = 'Chave ativa: ' + keyVal.slice(0, 10) + '...';
+    }
+
+    function copyMasterInviteLink() {
+      const inp = document.getElementById('masterInviteLink');
+      inp.select();
+      document.execCommand('copy');
+      alert('Link de convite copiado para a área de transferência! Envie para o dono da locadora.');
+    }
+
+    function shareInviteWhatsApp() {
+      const text = encodeURIComponent(`Olá! Conheça o PrintMind: nossa plataforma de telemetria SNMP RFC 3805 e gestão de outsourcing de impressão sem mensalidades mínimas abusivas (a partir de R$ 1,00/mês por impressora!).\n\nCadastre sua locadora agora mesmo:\nhttps://lucaspereiracardoso2024-hue.github.io/printmind-platform/`);
+      window.open(`https://api.whatsapp.com/send?text=${text}`, '_blank');
+    }
+
+    function sendLocadoraWhatsApp(tenantId) {
+      const t = allPlatformTenants.find(x => x.id === tenantId);
+      if (!t) return;
+      const phone = (t.phone || '').replace(/\D/g, '');
+      const text = encodeURIComponent(`Olá ${t.trade_name}!\n\nSegue o demonstrativo de assinatura da plataforma PrintMind referente às impressoras monitoradas.\nTotal a liquidar: R$ ...\nPodemos emitir a fatura? Obrigado!`);
+      const url = phone ? `https://api.whatsapp.com/send?phone=55${phone}&text=${text}` : `https://api.whatsapp.com/send?text=${text}`;
+      window.open(url, '_blank');
+    }
+
   </script>
 </body>
 </html>
