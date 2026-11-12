@@ -499,7 +499,7 @@
        MODAL 1: TABELA DE MÓDULOS & PREÇOS (R$ 1 A R$ 6) + SIMULADOR INTERATIVO
        ========================================================================= -->
   <div id="pricingModal" class="hidden fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
-    <div class="bg-white rounded-3xl max-w-4xl w-full p-6 space-y-6 shadow-2xl max-h-[92vh] overflow-y-auto">
+    <div class="bg-white rounded-3xl max-w-4xl w-full p-6 space-y-5 shadow-2xl max-h-[92vh] overflow-y-auto">
       <div class="flex justify-between items-center border-b border-slate-100 pb-3">
         <div class="flex items-center space-x-3">
           <div class="w-10 h-10 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center">
@@ -513,12 +513,18 @@
         <button onclick="closeModal('pricingModal')" class="text-slate-400 hover:text-slate-600 text-lg">✕</button>
       </div>
 
-      <!-- GRID DOS 5 MÓDULOS -->
-      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 text-xs">
+      <!-- Banner de Confirmação Instantânea -->
+      <div id="moduleSuccessBanner" class="hidden p-3 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-900 text-xs font-semibold flex items-center space-x-2 transition-all"></div>
+
+      <!-- GRID DOS 5 MÓDULOS COM FOCO VISUAL ATIVO -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 text-xs" id="modulesCardsContainer">
         <!-- Módulo 1 -->
-        <div class="p-4 rounded-2xl border-2 border-slate-200 bg-slate-50 flex flex-col justify-between hover:border-slate-400 transition">
+        <div id="moduleCard1" class="p-4 rounded-2xl border-2 border-slate-200 bg-slate-50 flex flex-col justify-between transition-all duration-200">
           <div class="space-y-2">
-            <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">Módulo 1</span>
+            <div class="flex justify-between items-center">
+              <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">Módulo 1</span>
+              <div id="moduleBadge1"></div>
+            </div>
             <strong class="block text-slate-900 font-extrabold text-sm">Contador Essencial</strong>
             <div class="text-2xl font-black text-slate-900 mono">R$ 1,00<span class="text-[10px] text-slate-400 block font-normal">/máq/mês</span></div>
             <ul class="text-[11px] text-slate-600 space-y-1 pt-1">
@@ -527,13 +533,16 @@
               <li>✓ Zero visita técnica</li>
             </ul>
           </div>
-          <button onclick="selectModularPlan(1, 'Contador Essencial')" class="mt-4 w-full py-1.5 rounded-xl bg-white border border-slate-300 hover:bg-slate-100 text-slate-900 font-bold transition">Escolher</button>
+          <button id="moduleBtn1" onclick="selectModularPlan(1, 'Contador Essencial')" class="mt-4 w-full py-2 rounded-xl bg-white border border-slate-200 hover:bg-slate-100 text-slate-800 font-bold transition">Escolher</button>
         </div>
 
         <!-- Módulo 2 -->
-        <div class="p-4 rounded-2xl border-2 border-slate-200 bg-slate-50 flex flex-col justify-between hover:border-cyan-400 transition">
+        <div id="moduleCard2" class="p-4 rounded-2xl border-2 border-slate-200 bg-slate-50 flex flex-col justify-between transition-all duration-200">
           <div class="space-y-2">
-            <span class="text-[10px] font-bold uppercase tracking-wider text-cyan-600 block">Módulo 2</span>
+            <div class="flex justify-between items-center">
+              <span class="text-[10px] font-bold uppercase tracking-wider text-cyan-600 block">Módulo 2</span>
+              <div id="moduleBadge2"></div>
+            </div>
             <strong class="block text-slate-900 font-extrabold text-sm">Suprimentos & Insumos</strong>
             <div class="text-2xl font-black text-slate-900 mono">R$ 2,00<span class="text-[10px] text-slate-400 block font-normal">/máq/mês</span></div>
             <ul class="text-[11px] text-slate-600 space-y-1 pt-1">
@@ -542,15 +551,15 @@
               <li>✓ Alerta preventivo</li>
             </ul>
           </div>
-          <button onclick="selectModularPlan(2, 'Suprimentos & Insumos')" class="mt-4 w-full py-1.5 rounded-xl bg-cyan-50 hover:bg-cyan-100 text-cyan-800 font-bold transition">Escolher</button>
+          <button id="moduleBtn2" onclick="selectModularPlan(2, 'Suprimentos & Insumos')" class="mt-4 w-full py-2 rounded-xl bg-white border border-slate-200 hover:bg-slate-100 text-slate-800 font-bold transition">Escolher</button>
         </div>
 
         <!-- Módulo 3 -->
-        <div class="p-4 rounded-2xl border-2 border-[#0038A8] bg-blue-50/40 flex flex-col justify-between relative shadow-sm">
+        <div id="moduleCard3" class="p-4 rounded-2xl border-2 border-slate-200 bg-slate-50 flex flex-col justify-between transition-all duration-200">
           <div class="space-y-2">
             <div class="flex justify-between items-center">
               <span class="text-[10px] font-bold uppercase tracking-wider text-[#0038A8] block">Módulo 3</span>
-              <span class="px-1.5 py-0.5 rounded text-[9px] font-bold bg-[#0038A8] text-white uppercase">Recomendado</span>
+              <div id="moduleBadge3"></div>
             </div>
             <strong class="block text-[#0038A8] font-extrabold text-sm">Telemetria & Gráficos</strong>
             <div class="text-2xl font-black text-[#0038A8] mono">R$ 3,00<span class="text-[10px] text-slate-400 block font-normal">/máq/mês</span></div>
@@ -560,13 +569,16 @@
               <li>✓ Picos e médias</li>
             </ul>
           </div>
-          <button onclick="selectModularPlan(3, 'Telemetria & Gráficos')" class="mt-4 w-full py-1.5 rounded-xl bg-[#0038A8] hover:bg-blue-800 text-white font-bold transition">Escolher</button>
+          <button id="moduleBtn3" onclick="selectModularPlan(3, 'Telemetria & Gráficos')" class="mt-4 w-full py-2 rounded-xl bg-white border border-slate-200 hover:bg-slate-100 text-slate-800 font-bold transition">Escolher</button>
         </div>
 
         <!-- Módulo 4 -->
-        <div class="p-4 rounded-2xl border-2 border-slate-200 bg-slate-50 flex flex-col justify-between hover:border-amber-400 transition">
+        <div id="moduleCard4" class="p-4 rounded-2xl border-2 border-slate-200 bg-slate-50 flex flex-col justify-between transition-all duration-200">
           <div class="space-y-2">
-            <span class="text-[10px] font-bold uppercase tracking-wider text-amber-600 block">Módulo 4</span>
+            <div class="flex justify-between items-center">
+              <span class="text-[10px] font-bold uppercase tracking-wider text-amber-600 block">Módulo 4</span>
+              <div id="moduleBadge4"></div>
+            </div>
             <strong class="block text-slate-900 font-extrabold text-sm">Gestão & Auditoria</strong>
             <div class="text-2xl font-black text-slate-900 mono">R$ 4,00<span class="text-[10px] text-slate-400 block font-normal">/máq/mês</span></div>
             <ul class="text-[11px] text-slate-600 space-y-1 pt-1">
@@ -575,13 +587,16 @@
               <li>✓ Auditoria Troca Prematura</li>
             </ul>
           </div>
-          <button onclick="selectModularPlan(4, 'Gestão & Auditoria')" class="mt-4 w-full py-1.5 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-800 font-bold transition">Escolher</button>
+          <button id="moduleBtn4" onclick="selectModularPlan(4, 'Gestão & Auditoria')" class="mt-4 w-full py-2 rounded-xl bg-white border border-slate-200 hover:bg-slate-100 text-slate-800 font-bold transition">Escolher</button>
         </div>
 
         <!-- Módulo 5 -->
-        <div class="p-4 rounded-2xl border-2 border-slate-200 bg-slate-50 flex flex-col justify-between hover:border-emerald-400 transition">
+        <div id="moduleCard5" class="p-4 rounded-2xl border-2 border-slate-200 bg-slate-50 flex flex-col justify-between transition-all duration-200">
           <div class="space-y-2">
-            <span class="text-[10px] font-bold uppercase tracking-wider text-emerald-600 block">Módulo 5</span>
+            <div class="flex justify-between items-center">
+              <span class="text-[10px] font-bold uppercase tracking-wider text-emerald-600 block">Módulo 5</span>
+              <div id="moduleBadge5"></div>
+            </div>
             <strong class="block text-slate-900 font-extrabold text-sm">Full Automation</strong>
             <div class="text-2xl font-black text-slate-900 mono">R$ 6,00<span class="text-[10px] text-slate-400 block font-normal">/máq/mês</span></div>
             <ul class="text-[11px] text-slate-600 space-y-1 pt-1">
@@ -590,7 +605,7 @@
               <li>✓ PIX Dinâmico com QR Code</li>
             </ul>
           </div>
-          <button onclick="selectModularPlan(5, 'Full Automation')" class="mt-4 w-full py-1.5 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-800 font-bold transition">Escolher</button>
+          <button id="moduleBtn5" onclick="selectModularPlan(5, 'Full Automation')" class="mt-4 w-full py-2 rounded-xl bg-white border border-slate-200 hover:bg-slate-100 text-slate-800 font-bold transition">Escolher</button>
         </div>
       </div>
 
@@ -615,7 +630,7 @@
 
           <div>
             <label class="block text-slate-700 font-semibold mb-1">Módulo Selecionado:</label>
-            <select id="simPlanRate" onchange="updatePricingSimulation()" class="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-xs text-slate-800">
+            <select id="simPlanRate" onchange="onSimPlanRateChange(this.value)" class="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-xs text-slate-800">
               <option value="1">Módulo 1: Contador Essencial (R$ 1,00/mês)</option>
               <option value="2">Módulo 2: Suprimentos & Insumos (R$ 2,00/mês)</option>
               <option value="3" selected>Módulo 3: Telemetria & Gráficos (R$ 3,00/mês)</option>
@@ -635,26 +650,40 @@
         </div>
       </div>
 
-      <!-- CONFIGURAÇÃO DA CHAVE PIX & CARTEIRA ASAAS -->
-      <form onsubmit="saveModularPlanAndPix(event)" class="space-y-3 pt-2 text-xs border-t border-slate-100">
-        <h4 class="font-bold text-slate-900 text-xs">Dados de Recebimento da sua Locadora</h4>
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-          <div>
-            <label class="block font-bold text-slate-700 mb-1">Sua Chave PIX (Para receber dos seus clientes)</label>
-            <input id="tenantPixKey" type="text" required placeholder="CNPJ, E-mail ou Celular" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300" />
+      <!-- CONFIGURAÇÃO OPCIONAL DA CHAVE PIX & CARTEIRA ASAAS -->
+      <div class="pt-3 border-t border-slate-100 space-y-3 text-xs">
+        <div>
+          <div class="flex items-center space-x-2">
+            <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 text-slate-600 uppercase">Opcional</span>
+            <h4 class="font-bold text-slate-900 text-xs">Chave PIX para Receber dos seus Clientes</h4>
           </div>
-          <div>
-            <label class="block font-bold text-slate-700 mb-1">Carteira / Subconta Asaas (Opcional para Split)</label>
-            <input id="tenantWalletId" type="text" placeholder="wal_..." class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 mono" />
+          <p class="text-[11px] text-slate-500 mt-0.5">
+            Esta chave PIX é para que os <strong>seus clientes (hospitais, clínicas)</strong> façam o pagamento das faturas emitidas por você. <em>Não é obrigatória para usar os módulos do PrintMind.</em>
+          </p>
+        </div>
+
+        <form onsubmit="saveOptionalTenantPix(event)" class="space-y-3">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <div>
+              <label class="block font-semibold text-slate-700 mb-1">Sua Chave PIX de Cobrança (Opcional)</label>
+              <input id="tenantPixKey" type="text" placeholder="CNPJ, E-mail, Celular ou Aleatória" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-xs" />
+            </div>
+            <div>
+              <label class="block font-semibold text-slate-700 mb-1">Carteira / Subconta Asaas (Opcional)</label>
+              <input id="tenantWalletId" type="text" placeholder="wal_... (deixe em branco se não usar)" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 mono text-xs" />
+            </div>
           </div>
-        </div>
-        <div class="flex justify-end gap-2 pt-2">
-          <button type="button" onclick="closeModal('pricingModal')" class="px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold transition">Fechar</button>
-          <button type="submit" class="px-5 py-2.5 rounded-xl bg-[#0038A8] hover:bg-blue-800 text-white font-black shadow transition">
-            Salvar Módulo e Preferências
-          </button>
-        </div>
-      </form>
+          <div class="flex justify-between items-center pt-1">
+            <span id="pixSavedMsg" class="text-emerald-700 font-bold hidden">✓ Chave PIX salva para suas faturas!</span>
+            <div class="flex gap-2 ml-auto">
+              <button type="button" onclick="closeModal('pricingModal')" class="px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold transition">Fechar</button>
+              <button type="submit" class="px-5 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold transition">
+                Salvar Chave PIX
+              </button>
+            </div>
+          </div>
+        </form>
+      </div>
     </div>
   </div>
 
@@ -968,7 +997,7 @@
       document.getElementById(id).classList.remove('hidden');
       if (id === 'newPrinterModal') populateClientSelect();
       if (id === 'agentModal') renderUnitsTokens();
-      if (id === 'pricingModal') updatePricingSimulation();
+      if (id === 'pricingModal') { updatePricingSimulation(); applyModuleVisualFocus(activeModuleTier); }
     }
     function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
 
@@ -1041,7 +1070,49 @@
       lucide.createIcons();
     }
 
-    // --- SIMULADOR INTERATIVO DE MÓDULOS (R$ 1 A R$ 6) ---
+    // --- SIMULADOR INTERATIVO DE MÓDULOS (R$ 1 A R$ 6) & FOCO VISUAL ATIVO ---
+    let activeModuleTier = 1;
+
+    function applyModuleVisualFocus(tierNum) {
+      activeModuleTier = tierNum;
+      for (let i = 1; i <= 5; i++) {
+        const card = document.getElementById(`moduleCard${i}`);
+        const badge = document.getElementById(`moduleBadge${i}`);
+        const btn = document.getElementById(`moduleBtn${i}`);
+        if (!card || !btn) continue;
+
+        if (i === tierNum) {
+          // Visual Ativo em Destaque
+          card.className = "p-4 rounded-2xl border-2 border-[#0038A8] bg-blue-50/50 flex flex-col justify-between relative shadow-lg ring-2 ring-blue-500/20 transition-all duration-200";
+          if (badge) badge.innerHTML = `<span class="px-2 py-0.5 rounded-full text-[9px] font-black bg-[#0038A8] text-white uppercase shadow-sm">✓ Ativo</span>`;
+          btn.className = "mt-4 w-full py-2 rounded-xl bg-[#0038A8] text-white font-black text-xs shadow-md transition";
+          btn.innerText = "✓ Módulo Ativo";
+        } else {
+          // Inativo / Selecionável
+          card.className = "p-4 rounded-2xl border-2 border-slate-200 bg-slate-50 flex flex-col justify-between hover:border-slate-300 transition-all duration-200";
+          if (badge) badge.innerHTML = "";
+          btn.className = "mt-4 w-full py-2 rounded-xl bg-white border border-slate-200 hover:bg-slate-100 text-slate-800 font-bold text-xs transition";
+          btn.innerText = "Escolher";
+        }
+      }
+
+      // Sincroniza o seletor do simulador
+      const select = document.getElementById('simPlanRate');
+      if (select) {
+        select.value = String(tierNum === 5 ? 6 : tierNum);
+        updatePricingSimulation();
+      }
+    }
+
+    function onSimPlanRateChange(rateVal) {
+      const tier = rateVal == '1' ? 1 : rateVal == '2' ? 2 : rateVal == '3' ? 3 : rateVal == '4' ? 4 : 5;
+      selectModularPlan(tier, getTierName(tier), false);
+    }
+
+    function getTierName(tier) {
+      return tier === 1 ? 'Contador Essencial' : tier === 2 ? 'Suprimentos & Insumos' : tier === 3 ? 'Telemetria & Gráficos' : tier === 4 ? 'Gestão & Auditoria' : 'Full Automation';
+    }
+
     function updatePricingSimulation() {
       const count = Math.max(1, parseInt(document.getElementById('simPrintersCount').value || 15));
       const rate = parseFloat(document.getElementById('simPlanRate').value || 3);
@@ -1057,35 +1128,53 @@
       updatePricingSimulation();
     }
 
-    function selectModularPlan(tierNum, tierName) {
-      const select = document.getElementById('simPlanRate');
-      if (select) {
-        select.value = String(tierNum === 5 ? 6 : tierNum);
-        updatePricingSimulation();
+    // 1-Clique para Escolher Módulo (Foco Visual Imediato + Zero Obrigação de PIX)
+    async function selectModularPlan(tierNum, tierName, notify = true) {
+      applyModuleVisualFocus(tierNum);
+
+      const rateVal = tierNum === 5 ? 6 : tierNum;
+      const planName = `modulo_${tierNum}`;
+
+      // Atualiza badge no topo imediatamente
+      const badgeText = `MÓDULO ${tierNum}: R$ ${rateVal},00/MÊS`;
+      document.getElementById('topPlanBadge').innerText = badgeText;
+
+      // Feedback visual dentro do modal (sem alert bloqueante)
+      const banner = document.getElementById('moduleSuccessBanner');
+      if (banner && notify) {
+        banner.classList.remove('hidden');
+        banner.innerHTML = `✓ <strong>Módulo ${tierNum} (${tierName} • R$ ${rateVal},00/máq/mês)</strong> ativado com sucesso! Não exige chave PIX nem fidelidade.`;
+        setTimeout(() => { if (banner) banner.classList.add('hidden'); }, 3500);
       }
-      alert(`Você escolheu o Módulo ${tierNum}: ${tierName}! Atualize sua chave PIX abaixo para confirmar.`);
+
+      // Persiste no Supabase tenants sem bloquear a usuária
+      if (currentTenant && currentTenant.id) {
+        currentTenant.plan_tier = planName;
+        await sb.from('tenants').update({
+          plan_tier: planName,
+          subscription_status: 'active'
+        }).eq('id', currentTenant.id);
+      }
     }
 
-    async function saveModularPlanAndPix(e) {
+    // Salva a chave PIX de recebimento (Totalmente Opcional)
+    async function saveOptionalTenantPix(e) {
       e.preventDefault();
       if (!currentTenant || !currentProfile) return;
-      const rateVal = document.getElementById('simPlanRate').value;
       const pixKey = document.getElementById('tenantPixKey').value.trim();
       const walletId = document.getElementById('tenantWalletId').value.trim();
-      const planName = rateVal == '1' ? 'modulo_1' : rateVal == '2' ? 'modulo_2' : rateVal == '3' ? 'modulo_3' : rateVal == '4' ? 'modulo_4' : 'modulo_5';
 
       await sb.from('tenants').update({
-        plan_tier: planName,
         pix_key: pixKey,
-        baas_wallet_id: walletId,
-        subscription_status: 'active'
+        baas_wallet_id: walletId
       }).eq('id', currentTenant.id);
 
-      await sb.from('profiles').update({ onboarding_completed: true }).eq('id', currentProfile.id);
-      document.getElementById('topPlanBadge').innerText = (planName.replace('_', ' ') + ` (R$ ${rateVal}/MÊS)`).toUpperCase();
       currentTenant.pix_key = pixKey;
-      closeModal('pricingModal');
-      alert('Preferências comerciais e Módulo atualizados com sucesso!');
+      const msg = document.getElementById('pixSavedMsg');
+      if (msg) {
+        msg.classList.remove('hidden');
+        setTimeout(() => msg.classList.add('hidden'), 3000);
+      }
     }
 
     // --- AUTENTICAÇÃO REAL SUPABASE ---
