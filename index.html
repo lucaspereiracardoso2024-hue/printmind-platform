@@ -215,12 +215,7 @@
           <div>
             <div class="flex items-center space-x-2">
               <span id="topTenantName" class="font-black text-base tracking-tight">PrintMind</span>
-              <!-- Seletor Modo Híbrido / Locadora / Gráfica -->
-              <select id="operationModeSelect" onchange="switchOperationMode(this.value)" class="bg-blue-900/60 hover:bg-blue-900/90 text-white text-[11px] font-bold px-2 py-0.5 rounded-lg border border-blue-400/30 cursor-pointer focus:outline-none">
-                <option value="hibrido">⚡ Modo Híbrido (Ambos)</option>
-                <option value="locacao">🏢 Modo Locadora (Outsourcing)</option>
-                <option value="grafica">🖨️ Modo Gráfica Própria</option>
-              </select>
+
               <button onclick="openModal('pricingModal')" id="topPlanBadge" class="text-[10px] font-bold uppercase px-2 py-0.5 rounded-full bg-emerald-400/20 text-emerald-200 border border-emerald-300/30 hover:bg-emerald-400/30 transition">
                 MÓDULO 1 (R$ 1/MÊS)
               </button>
@@ -239,10 +234,7 @@
             <i data-lucide="file-check-2" class="w-3.5 h-3.5"></i>
             <span>Relatórios & Faturamento</span>
           </button>
-          <button id="navTabGrafica" onclick="switchTab('grafica')" class="px-3.5 py-1.5 rounded-xl text-white/80 hover:text-white hover:bg-white/10 transition flex items-center space-x-1.5">
-            <i data-lucide="printer" class="w-3.5 h-3.5"></i>
-            <span>Minha Gráfica</span>
-          </button>
+
         </nav>
 
         <!-- BOTÕES DE AÇÃO RÁPIDA -->
@@ -275,11 +267,11 @@
         <!-- Subtítulo e Descrição de Contexto -->
         <div class="text-center py-1">
           <span class="inline-block px-3 py-1 rounded-full text-xs font-bold bg-blue-50 text-[#0038A8] border border-blue-100 mb-1">
-            Gestão Completa de Telemetria & Custos de Impressão
+            Plataforma de Outsourcing & Gestão de Impressão
           </span>
-          <h2 class="text-2xl font-black text-slate-900 tracking-tight" id="mainSectionTitle">Controle Inteligente de Impressão</h2>
+          <h2 class="text-2xl font-black text-slate-900 tracking-tight" id="mainSectionTitle">Painel de Controle & Telemetria</h2>
           <p class="text-xs text-slate-500 mt-0.5" id="mainSectionSubtitle">
-            Seja para alugar impressoras para seus clientes ou para gerenciar os custos e a produção da sua própria gráfica.
+            Telemetria automática SNMP/USB, rateio por centro de custo hospitalar e fechamentos contratuais inteligentes.
           </p>
         </div>
 
@@ -333,6 +325,69 @@
         <!-- =====================================================================
              SETUP INICIAL GUIADO (ONBOARDING EM 3 PASSOS COM 2 MÁQUINAS GRÁTIS)
              ===================================================================== -->
+        <!-- =====================================================================
+             GUIA DE INÍCIO RÁPIDO INTERATIVO COM FOCO & SETA DINÂMICA
+             ===================================================================== -->
+        <div id="walkthroughCard" class="bg-white rounded-3xl p-6 border-2 shadow-lg transition-all space-y-4">
+          <div class="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 pb-3">
+            <div class="flex items-center space-x-2.5">
+              <span class="w-8 h-8 rounded-xl bg-blue-50 text-[#0038A8] flex items-center justify-center font-black text-sm">
+                <i data-lucide="compass" class="w-4 h-4"></i>
+              </span>
+              <div>
+                <h3 class="text-sm font-black text-slate-900 flex items-center gap-2">
+                  <span>Guia de Início Rápido</span>
+                  <span id="wtStepBadge" class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-100 text-[#0038A8] uppercase">Passo 1 de 2</span>
+                </h3>
+                <p id="wtDesc" class="text-xs text-slate-500">Siga as etapas abaixo para ativar o monitoramento em tempo real.</p>
+              </div>
+            </div>
+            <span class="text-xs font-bold text-slate-400" id="wtStatusIndicator">Configuração Inicial</span>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <!-- ETAPA 1: CADASTRAR 1º CLIENTE -->
+            <div id="wtStep1Card" class="p-4 rounded-2xl border-2 transition-all flex flex-col justify-between space-y-3 bg-blue-50/40 border-blue-400 shadow-md">
+              <div class="space-y-1.5">
+                <div class="flex items-center justify-between">
+                  <div class="flex items-center space-x-2">
+                    <span id="wtStep1Num" class="w-6 h-6 rounded-full bg-[#0038A8] text-white font-black text-xs flex items-center justify-center">1</span>
+                    <strong class="text-xs font-black text-slate-900">Cadastrar Primeiro Cliente</strong>
+                  </div>
+                  <span id="wtStep1Pill" class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-600 text-white animate-pulse">👉 COMECE POR AQUI</span>
+                </div>
+                <p class="text-[11px] text-slate-600 leading-relaxed">
+                  Cadastre o contrato da empresa, hospital ou filial onde suas impressoras estão alocadas com valor fixo e franquias.
+                </p>
+              </div>
+              <button id="wtStep1Btn" onclick="openModal('newClientModal')" class="w-full py-2.5 rounded-xl bg-[#0038A8] hover:bg-blue-800 text-white font-black text-xs shadow-sm transition flex items-center justify-center space-x-2">
+                <i data-lucide="plus-circle" class="w-4 h-4"></i>
+                <span>👉 Cadastrar 1º Cliente Agora</span>
+              </button>
+            </div>
+
+            <!-- ETAPA 2: CONECTAR IMPRESSORAS VIA ROBÔ -->
+            <div id="wtStep2Card" class="p-4 rounded-2xl border-2 transition-all flex flex-col justify-between space-y-3 bg-slate-50 border-slate-200 opacity-80">
+              <div class="space-y-1.5">
+                <div class="flex items-center justify-between">
+                  <div class="flex items-center space-x-2">
+                    <span id="wtStep2Num" class="w-6 h-6 rounded-full bg-slate-300 text-slate-700 font-black text-xs flex items-center justify-center">2</span>
+                    <strong class="text-xs font-black text-slate-900">Conectar Robô Satélite</strong>
+                  </div>
+                  <span id="wtStep2Pill" class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-200 text-slate-600">Aguardando Passo 1</span>
+                </div>
+                <p class="text-[11px] text-slate-600 leading-relaxed">
+                  Execute o <code class="text-blue-700 font-bold">printmind-agent.exe</code> na rede local ou no PC da impressora USB. O robô detecta e puxa os contadores sozinho!
+                </p>
+              </div>
+              <button id="wtStep2Btn" onclick="openModal('newPrinterModal')" class="w-full py-2.5 rounded-xl bg-slate-200 text-slate-500 font-bold text-xs transition flex items-center justify-center space-x-2" disabled>
+                <i data-lucide="cpu" class="w-4 h-4"></i>
+                <span>Conectar Impressoras via Robô</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
         <div id="onboardingCard" class="bg-gradient-to-r from-blue-950 via-[#002266] to-[#0038A8] text-white rounded-3xl p-6 shadow-xl space-y-4">
           <div class="flex flex-wrap items-center justify-between gap-3">
             <div class="flex items-center space-x-3">
@@ -1315,78 +1370,169 @@
   </div>
 
   <!-- =========================================================================
-       MODAL 4: CADASTRAR IMPRESSORA
+       MODAL 4: CONECTAR IMPRESSORAS (PADRÃO AUTOMÁTICO VIA ROBÔ SATÉLITE)
        ========================================================================= -->
   <div id="newPrinterModal" class="hidden fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
-    <div class="bg-white rounded-3xl max-w-lg w-full p-6 space-y-4 shadow-2xl max-h-[90vh] overflow-y-auto">
+    <div class="bg-white rounded-3xl max-w-2xl w-full p-6 space-y-4 shadow-2xl max-h-[92vh] overflow-y-auto">
       <div class="flex justify-between items-center border-b border-slate-100 pb-3">
-        <h3 class="font-black text-base text-slate-900">Cadastrar / Alocar Impressora</h3>
-        <button onclick="closeModal('newPrinterModal')" class="text-slate-400 hover:text-slate-600">✕</button>
+        <div class="flex items-center space-x-3">
+          <div class="w-10 h-10 rounded-2xl bg-blue-50 text-[#0038A8] flex items-center justify-center font-black">
+            <i data-lucide="cpu" class="w-5 h-5"></i>
+          </div>
+          <div>
+            <h3 class="font-black text-base text-slate-900">Conectar Impressoras ao Sistema</h3>
+            <p class="text-xs text-slate-500">Detecção 100% automatizada pelo Agente Satélite PrintMind (Go)</p>
+          </div>
+        </div>
+        <button onclick="closeModal('newPrinterModal')" class="text-slate-400 hover:text-slate-600 text-lg">✕</button>
       </div>
 
-      <!-- AVISO EXPLICATIVO: ROBÔ SATÉLITE VS CADASTRO MANUAL -->
-      <div class="p-3.5 rounded-2xl bg-blue-50/70 border border-blue-200 text-[#0038A8] text-xs space-y-1">
-        <div class="flex items-center space-x-1.5 font-bold">
-          <i data-lucide="info" class="w-3.5 h-3.5 text-[#0038A8]"></i>
-          <span>Como o sistema faz a leitura dos contadores?</span>
-        </div>
-        <p class="text-[11px] text-slate-600">
-          Para coletar contadores invioláveis de páginas e níveis de toner <strong>automaticamente em tempo real</strong>, execute o <strong>Agente Satélite (printmind-agent.exe)</strong> na sua rede local. O formulário manual abaixo é indicado para impressoras antigas sem placa de rede.
-        </p>
-      </div>
-      <form onsubmit="handleCreatePrinter(event)" class="space-y-3 text-xs">
-        <div>
-          <label class="block font-bold text-slate-700 mb-1">Vincular ao Cliente</label>
-          <select id="prtClientSelect" onchange="populateUnitAndDeptSelects()" required class="w-full px-3 py-2 rounded-xl border border-slate-300 bg-white"></select>
-        </div>
-        <div class="grid grid-cols-2 gap-3">
-          <div>
-            <label class="block font-bold text-slate-700 mb-1">Unidade / Filial</label>
-            <input id="prtUnit" type="text" placeholder="Ex: Hospital Central" class="w-full px-3 py-2 rounded-xl border border-slate-300" />
-          </div>
-          <div>
-            <label class="block font-bold text-slate-700 mb-1">Setor / Centro de Custo</label>
-            <input id="prtDept" type="text" placeholder="Ex: UTI Adulto" class="w-full px-3 py-2 rounded-xl border border-slate-300" />
-          </div>
-        </div>
-        <div class="grid grid-cols-2 gap-3">
-          <div>
-            <label class="block font-bold text-slate-700 mb-1">Modelo da Impressora</label>
-            <input id="prtModel" type="text" required placeholder="Ex: Brother DCP-L5652DN" class="w-full px-3 py-2 rounded-xl border border-slate-300" />
-          </div>
-          <div>
-            <label class="block font-bold text-slate-700 mb-1">Nº de Série (Hardware)</label>
-            <input id="prtSerial" type="text" required placeholder="Ex: BR98765432" class="w-full px-3 py-2 rounded-xl border border-slate-300 mono" />
-          </div>
-        </div>
-        <div class="grid grid-cols-3 gap-2.5">
-          <div>
-            <label class="block font-bold text-slate-700 mb-1">IP Local ou Porta USB</label>
-            <input id="prtIp" type="text" required placeholder="192.168.1.50" class="w-full px-3 py-2 rounded-xl border border-slate-300 mono" />
-          </div>
-          <div>
-            <label class="block font-bold text-slate-700 mb-1">Cont. Inicial P&B</label>
-            <input id="prtInitMono" type="number" value="0" required class="w-full px-2.5 py-2 rounded-xl border border-slate-300 mono" />
-          </div>
-          <div>
-            <label class="block font-bold text-slate-700 mb-1">Cont. Atual P&B</label>
-            <input id="prtCurMono" type="number" value="0" required class="w-full px-2.5 py-2 rounded-xl border border-slate-300 mono" />
-          </div>
-        </div>
-        <div class="grid grid-cols-2 gap-2.5">
-          <div>
-            <label class="block font-bold text-slate-700 mb-1">Cont. Inicial Colorido</label>
-            <input id="prtInitColor" type="number" value="0" required class="w-full px-2.5 py-2 rounded-xl border border-slate-300 mono" />
-          </div>
-          <div>
-            <label class="block font-bold text-slate-700 mb-1">Cont. Atual Colorido</label>
-            <input id="prtCurColor" type="number" value="0" required class="w-full px-2.5 py-2 rounded-xl border border-slate-300 mono" />
-          </div>
-        </div>
-        <button type="submit" class="w-full py-3 rounded-2xl bg-[#0038A8] hover:bg-blue-800 text-white font-black transition">
-          Salvar Impressora no Banco
+      <!-- SELETOR DE MODO: AUTOMÁTICO (PADRÃO) vs MANUAL (CONTINGÊNCIA) -->
+      <div class="flex bg-slate-100 p-1 rounded-2xl text-xs font-bold">
+        <button id="tabPrinterAuto" onclick="switchPrinterAddMode('auto')" class="flex-1 py-2 rounded-xl bg-white text-[#0038A8] shadow-sm transition flex items-center justify-center space-x-1.5">
+          <i data-lucide="sparkles" class="w-3.5 h-3.5 text-amber-500"></i>
+          <span>Automático via Robô Satélite (Recomendado)</span>
         </button>
-      </form>
+        <button id="tabPrinterManual" onclick="switchPrinterAddMode('manual')" class="flex-1 py-2 rounded-xl text-slate-600 hover:text-slate-900 transition flex items-center justify-center space-x-1.5">
+          <i data-lucide="edit-3" class="w-3.5 h-3.5"></i>
+          <span>Cadastro Manual (Sem PC / Sem Rede)</span>
+        </button>
+      </div>
+
+      <!-- =====================================================================
+           VISÃO 1: CONEXÃO AUTOMÁTICA VIA ROBÔ (O PADRÃO INDUSTRIAL ENTERPRISE)
+           ===================================================================== -->
+      <div id="viewPrinterAuto" class="space-y-4">
+        <!-- PASSO 1: VINCULAR AO CLIENTE -->
+        <div class="p-3.5 rounded-2xl bg-slate-50 border border-slate-200 space-y-1.5">
+          <label class="block text-xs font-bold text-slate-700">1. Para qual Cliente / Unidade essas impressoras pertencem?</label>
+          <select id="autoPrtClientSelect" onchange="syncAutoSelectedClientToken()" class="w-full px-3 py-2 rounded-xl border border-slate-300 bg-white text-xs"></select>
+        </div>
+
+        <!-- PASSO 2 E 3: DOWNLOAD DO AGENTE & EXECUÇÃO COM TOKEN -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+          <div class="p-4 rounded-2xl bg-blue-50/70 border border-blue-200 flex flex-col justify-between space-y-2.5">
+            <div class="space-y-1">
+              <div class="flex items-center space-x-1.5">
+                <span class="w-5 h-5 rounded-full bg-[#0038A8] text-white text-[11px] font-black flex items-center justify-center">2</span>
+                <strong class="text-xs font-black text-slate-900">Baixar o Executável Go</strong>
+              </div>
+              <p class="text-[11px] text-slate-600">
+                Arquivo único e leve (6.9 MB). Não precisa instalar nada, basta abrir no computador.
+              </p>
+            </div>
+            <a href="https://github.com/lucaspereiracardoso2024-hue/printmind-platform/raw/main/printmind-agent.exe" download="printmind-agent.exe" class="w-full py-2.5 rounded-xl bg-[#0038A8] hover:bg-blue-800 text-white font-black text-xs transition shadow-sm flex items-center justify-center space-x-1.5">
+              <i data-lucide="download" class="w-4 h-4"></i>
+              <span>Baixar printmind-agent.exe</span>
+            </a>
+          </div>
+
+          <div class="p-4 rounded-2xl bg-indigo-50/70 border border-indigo-200 flex flex-col justify-between space-y-2.5">
+            <div class="space-y-1">
+              <div class="flex items-center space-x-1.5">
+                <span class="w-5 h-5 rounded-full bg-indigo-700 text-white text-[11px] font-black flex items-center justify-center">3</span>
+                <strong class="text-xs font-black text-slate-900">Executar no PC da Rede / USB</strong>
+              </div>
+              <p class="text-[11px] text-slate-600">
+                Rode no terminal ou dê dois cliques com seu token de vinculação:
+              </p>
+            </div>
+            <button onclick="copyAutoAgentCommand()" class="w-full py-2.5 rounded-xl bg-white hover:bg-indigo-100 text-indigo-900 border border-indigo-300 font-bold text-xs transition flex items-center justify-center space-x-1.5 shadow-sm">
+              <i data-lucide="copy" class="w-3.5 h-3.5"></i>
+              <span id="btnCopyCmdText">Copiar Comando com Token</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- RADAR DE VARREDURA AO VIVO -->
+        <div class="p-4 rounded-2xl bg-emerald-50/70 border-2 border-emerald-300 flex flex-wrap items-center justify-between gap-3 shadow-sm">
+          <div class="flex items-center space-x-3">
+            <div class="w-10 h-10 rounded-2xl bg-emerald-500 text-white flex items-center justify-center font-black animate-pulse">
+              <i data-lucide="radar" class="w-5 h-5"></i>
+            </div>
+            <div>
+              <div class="flex items-center space-x-2">
+                <span class="text-xs font-black text-emerald-950 uppercase tracking-wide">Scanner SNMP/USB Aguardando Sinal...</span>
+                <span class="px-2 py-0.5 rounded-full text-[10px] font-black bg-emerald-200 text-emerald-900">AO VIVO</span>
+              </div>
+              <p class="text-xs text-emerald-800 mt-0.5">
+                Assim que o robô iniciar na sua rede, todas as impressoras Brother, HP, Ricoh e Epson aparecerão aqui automaticamente com contadores reais de hardware.
+              </p>
+            </div>
+          </div>
+          <button onclick="checkDetectedPrinters()" class="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs shadow-sm transition flex items-center space-x-1.5 whitespace-nowrap">
+            <i data-lucide="rotate-cw" class="w-3.5 h-3.5"></i>
+            <span>Verificar Se Já Encontrou</span>
+          </button>
+        </div>
+
+        <div class="flex justify-between items-center pt-2 text-xs text-slate-500">
+          <button onclick="openModal('printerTypesModal')" class="hover:text-[#0038A8] font-bold flex items-center space-x-1 text-slate-600">
+            <i data-lucide="help-circle" class="w-3.5 h-3.5 text-blue-600"></i>
+            <span>Dúvidas sobre como o robô lê USB ou rede?</span>
+          </button>
+          <button onclick="switchPrinterAddMode('manual')" class="text-slate-400 hover:text-slate-600 underline">
+            Cadastrar manualmente (último caso)
+          </button>
+        </div>
+      </div>
+
+      <!-- =====================================================================
+           VISÃO 2: CADASTRO MANUAL (ÚLTIMO CASO / MÁQUINAS ANTIGAS SEM PC)
+           ===================================================================== -->
+      <div id="viewPrinterManual" class="hidden space-y-3 text-xs">
+        <div class="p-3 rounded-2xl bg-amber-50 border border-amber-200 text-amber-900 flex items-center justify-between">
+          <div class="flex items-center space-x-2">
+            <i data-lucide="alert-circle" class="w-4 h-4 text-amber-600 flex-shrink-0"></i>
+            <span>O cadastro manual não possui telemetria automática por segundo. É indicado apenas para máquinas isoladas sem computador.</span>
+          </div>
+          <button onclick="switchPrinterAddMode('auto')" class="text-blue-700 font-bold hover:underline ml-2 whitespace-nowrap">← Voltar ao Robô</button>
+        </div>
+
+        <form onsubmit="handleCreatePrinter(event)" class="space-y-3">
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">Vincular ao Cliente</label>
+            <select id="prtClientSelect" onchange="populateUnitAndDeptSelects()" required class="w-full px-3 py-2 rounded-xl border border-slate-300 bg-white"></select>
+          </div>
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="block font-bold text-slate-700 mb-1">Unidade / Filial</label>
+              <input id="prtUnit" type="text" placeholder="Ex: Hospital Central" class="w-full px-3 py-2 rounded-xl border border-slate-300" />
+            </div>
+            <div>
+              <label class="block font-bold text-slate-700 mb-1">Setor / Centro de Custo</label>
+              <input id="prtDept" type="text" placeholder="Ex: UTI Adulto" class="w-full px-3 py-2 rounded-xl border border-slate-300" />
+            </div>
+          </div>
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="block font-bold text-slate-700 mb-1">Modelo da Impressora</label>
+              <input id="prtModel" type="text" required placeholder="Ex: Brother DCP-L5652DN" class="w-full px-3 py-2 rounded-xl border border-slate-300" />
+            </div>
+            <div>
+              <label class="block font-bold text-slate-700 mb-1">Nº de Série (Hardware)</label>
+              <input id="prtSerial" type="text" required placeholder="Ex: BR98765432" class="w-full px-3 py-2 rounded-xl border border-slate-300 mono" />
+            </div>
+          </div>
+          <div class="grid grid-cols-3 gap-2.5">
+            <div>
+              <label class="block font-bold text-slate-700 mb-1">IP Local ou Porta USB</label>
+              <input id="prtIp" type="text" required placeholder="192.168.1.50" class="w-full px-3 py-2 rounded-xl border border-slate-300 mono" />
+            </div>
+            <div>
+              <label class="block font-bold text-slate-700 mb-1">Cont. Inicial P&B</label>
+              <input id="prtInitMono" type="number" value="0" required class="w-full px-2.5 py-2 rounded-xl border border-slate-300 mono" />
+            </div>
+            <div>
+              <label class="block font-bold text-slate-700 mb-1">Cont. Inicial Cor</label>
+              <input id="prtInitColor" type="number" value="0" required class="w-full px-2.5 py-2 rounded-xl border border-slate-300 mono" />
+            </div>
+          </div>
+          <button type="submit" class="w-full py-3 rounded-2xl bg-[#0038A8] hover:bg-blue-800 text-white font-black transition">
+            Salvar Impressora Manualmente
+          </button>
+        </form>
+      </div>
     </div>
   </div>
 
@@ -1443,7 +1589,7 @@
 
     function openModal(id) {
       document.getElementById(id).classList.remove('hidden');
-      if (id === 'newPrinterModal') populateClientSelect();
+      if (id === 'newPrinterModal') { populateClientSelect(); if (typeof switchPrinterAddMode === 'function') switchPrinterAddMode('auto'); }
       if (id === 'agentModal') renderUnitsTokens();
       if (id === 'pricingModal') { updatePricingSimulation(); applyModuleVisualFocus(activeModuleTier); }
     }
@@ -1883,6 +2029,132 @@
       await handleLogout();
     }
 
+
+    // =========================================================================
+    // GUIA DE INÍCIO RÁPIDO INTERATIVO (WALKTHROUGH DINÂMICO COM FOCO E SETA)
+    // =========================================================================
+    function updateInteractiveWalkthrough() {
+      const card = document.getElementById('walkthroughCard');
+      const badge = document.getElementById('wtStepBadge');
+      const desc = document.getElementById('wtDesc');
+      const indicator = document.getElementById('wtStatusIndicator');
+
+      const s1Card = document.getElementById('wtStep1Card');
+      const s1Num = document.getElementById('wtStep1Num');
+      const s1Pill = document.getElementById('wtStep1Pill');
+      const s1Btn = document.getElementById('wtStep1Btn');
+
+      const s2Card = document.getElementById('wtStep2Card');
+      const s2Num = document.getElementById('wtStep2Num');
+      const s2Pill = document.getElementById('wtStep2Pill');
+      const s2Btn = document.getElementById('wtStep2Btn');
+
+      if (!card || !s1Card || !s2Card) return;
+
+      const hasClients = clients.length > 0;
+      const hasPrinters = printers.length > 0;
+
+      if (!hasClients) {
+        // CASO 1: CONTA NOVA (0 CLIENTES) -> FOCO TOTAL NO PASSO 1 COM SETA PULSANTE
+        badge.innerText = "Passo 1 de 2 • Obrigatório";
+        desc.innerText = "Para onde vão suas impressoras? Comece cadastrando seu primeiro cliente ou empresa.";
+        indicator.innerText = "Aguardando 1º Cliente";
+
+        // Passo 1 em Destaque
+        s1Card.className = "p-4 rounded-2xl border-2 transition-all flex flex-col justify-between space-y-3 bg-blue-50/60 border-blue-500 shadow-lg ring-2 ring-blue-300";
+        s1Num.className = "w-6 h-6 rounded-full bg-[#0038A8] text-white font-black text-xs flex items-center justify-center";
+        s1Pill.className = "text-[10px] font-black px-2 py-0.5 rounded-full bg-blue-600 text-white animate-pulse";
+        s1Pill.innerText = "👉 COMECE POR AQUI";
+        s1Btn.className = "w-full py-2.5 rounded-xl bg-[#0038A8] hover:bg-blue-800 text-white font-black text-xs shadow-md transition flex items-center justify-center space-x-2";
+        s1Btn.disabled = false;
+
+        // Passo 2 Aguardando
+        s2Card.className = "p-4 rounded-2xl border-2 transition-all flex flex-col justify-between space-y-3 bg-slate-50 border-slate-200 opacity-60";
+        s2Num.className = "w-6 h-6 rounded-full bg-slate-200 text-slate-500 font-black text-xs flex items-center justify-center";
+        s2Pill.className = "text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-200 text-slate-500";
+        s2Pill.innerText = "Aguardando Passo 1";
+        s2Btn.className = "w-full py-2.5 rounded-xl bg-slate-200 text-slate-400 font-bold text-xs transition flex items-center justify-center space-x-2";
+        s2Btn.disabled = true;
+
+      } else if (!hasPrinters) {
+        // CASO 2: CLIENTE JÁ CADASTRADO, 0 IMPRESSORAS -> FOCO VAI PARA O PASSO 2 (CONECTAR ROBÔ)
+        badge.innerText = "Passo 2 de 2 • Próximo Passo";
+        desc.innerText = "Cliente cadastrado com sucesso! Agora baixe e rode o robô para achar as impressoras.";
+        indicator.innerText = "Aguardando Conexão do Robô";
+
+        // Passo 1 Concluído
+        s1Card.className = "p-4 rounded-2xl border-2 transition-all flex flex-col justify-between space-y-3 bg-emerald-50/50 border-emerald-300 opacity-90";
+        s1Num.className = "w-6 h-6 rounded-full bg-emerald-600 text-white font-black text-xs flex items-center justify-center";
+        s1Pill.className = "text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800";
+        s1Pill.innerText = "✓ Concluído";
+        s1Btn.className = "w-full py-2.5 rounded-xl bg-white hover:bg-emerald-50 text-emerald-800 border border-emerald-300 font-bold text-xs transition flex items-center justify-center space-x-2";
+        s1Btn.disabled = false;
+
+        // Passo 2 em Foco Total com Seta
+        s2Card.className = "p-4 rounded-2xl border-2 transition-all flex flex-col justify-between space-y-3 bg-blue-50/60 border-blue-500 shadow-lg ring-2 ring-blue-300";
+        s2Num.className = "w-6 h-6 rounded-full bg-[#0038A8] text-white font-black text-xs flex items-center justify-center";
+        s2Pill.className = "text-[10px] font-black px-2 py-0.5 rounded-full bg-blue-600 text-white animate-pulse";
+        s2Pill.innerText = "👉 PRÓXIMO PASSO OBRIGATÓRIO";
+        s2Btn.className = "w-full py-2.5 rounded-xl bg-[#0038A8] hover:bg-blue-800 text-white font-black text-xs shadow-md transition flex items-center justify-center space-x-2";
+        s2Btn.disabled = false;
+        s2Btn.innerHTML = `<i data-lucide="cpu" class="w-4 h-4"></i><span>👉 Conectar Impressoras via Robô Agora</span>`;
+
+      } else {
+        // CASO 3: PARQUE ATIVO (CLIENTES E IMPRESSORAS OPERANDO)
+        badge.innerText = "✓ Setup Concluído";
+        desc.innerText = "Seu parque de impressão está configurado e monitorado em tempo real.";
+        indicator.innerText = "Operação Normal";
+
+        s1Card.className = "p-4 rounded-2xl border border-slate-200 bg-white space-y-2";
+        s1Pill.className = "text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-100 text-slate-700";
+        s1Pill.innerText = `${clients.length} cliente(s) ativo(s)`;
+
+        s2Card.className = "p-4 rounded-2xl border border-slate-200 bg-white space-y-2";
+        s2Pill.className = "text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-100 text-slate-700";
+        s2Pill.innerText = `${printers.length} impressora(s) conectada(s)`;
+      }
+      lucide.createIcons();
+    }
+
+    // Alternar entre Visão Automática e Manual no Modal de Impressora
+    function switchPrinterAddMode(mode) {
+      const isAuto = mode === 'auto';
+      document.getElementById('viewPrinterAuto').classList.toggle('hidden', !isAuto);
+      document.getElementById('viewPrinterManual').classList.toggle('hidden', isAuto);
+
+      const tabAuto = document.getElementById('tabPrinterAuto');
+      const tabManual = document.getElementById('tabPrinterManual');
+      if (tabAuto && tabManual) {
+        tabAuto.className = isAuto ? 'flex-1 py-2 rounded-xl bg-white text-[#0038A8] shadow-sm transition flex items-center justify-center space-x-1.5' : 'flex-1 py-2 rounded-xl text-slate-600 hover:text-slate-900 transition flex items-center justify-center space-x-1.5';
+        tabManual.className = !isAuto ? 'flex-1 py-2 rounded-xl bg-white text-[#0038A8] shadow-sm transition flex items-center justify-center space-x-1.5' : 'flex-1 py-2 rounded-xl text-slate-600 hover:text-slate-900 transition flex items-center justify-center space-x-1.5';
+      }
+      lucide.createIcons();
+    }
+
+    function syncAutoSelectedClientToken() {
+      // Popula dados do cliente no modo automático
+    }
+
+    function copyAutoAgentCommand() {
+      const select = document.getElementById('autoPrtClientSelect');
+      const cId = select ? select.value : '';
+      const c = clients.find(x => x.id === cId) || clients[0];
+      const token = c && c.agent_token ? c.agent_token : ('pm_live_' + (c ? c.id.slice(0, 8) : 'demo'));
+      const cmd = `.\printmind-agent.exe -token=${token}`;
+      navigator.clipboard.writeText(cmd);
+      const btnTxt = document.getElementById('btnCopyCmdText');
+      if (btnTxt) {
+        btnTxt.innerText = "✓ Comando Copiado!";
+        setTimeout(() => { btnTxt.innerText = "Copiar Comando com Token"; }, 2500);
+      }
+    }
+
+    async function checkDetectedPrinters() {
+      await loadTenantData();
+      alert(`Varredura concluída!\n\nTotal de impressoras conectadas: ${printers.length}\n\nSe o agente já está rodando, as impressoras foram sincronizadas na tela.`);
+      if (printers.length > 0) closeModal('newPrinterModal');
+    }
+
     async function loadTenantData() {
       if (!currentSession) return;
       const [cRes, uRes, pRes, clRes] = await Promise.all([
@@ -1897,6 +2169,7 @@
       closings = clRes.data || [];
 
       renderDashboard();
+      updateInteractiveWalkthrough();
       if (currentTab === 'reports') renderReportsView();
       if (currentTab === 'grafica') renderGraficaView();
     }
@@ -2417,6 +2690,10 @@ Podemos emitir a Nota Fiscal? Obrigado!`);
 
     function populateClientSelect() {
       const sel = document.getElementById('prtClientSelect');
+      const autoSel = document.getElementById('autoPrtClientSelect');
+      if (autoSel) {
+        autoSel.innerHTML = clients.length ? clients.map(c => `<option value="${c.id}">${c.name}</option>`).join('') : '<option value="">Nenhum cliente cadastrado ainda</option>';
+      }
       if (clients.length === 0) {
         sel.innerHTML = '<option value="">Cadastre um cliente primeiro</option>';
         return;
