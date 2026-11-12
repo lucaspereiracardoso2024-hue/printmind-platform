@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>PrintMind V3.0 • Telemetria SNMP/USB, Rateio Hospitalar & FinTech Split</title>
+  <title>PrintMind V3.0 • Telemetria SNMP/USB, Rateio Hospitalar & Asaas Split Ao Vivo</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://unpkg.com/lucide@latest"></script>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@500;700;800&display=swap" rel="stylesheet">
@@ -13,7 +13,6 @@
   </style>
 </head>
 <body class="min-h-screen flex flex-col">
-  <!-- TOPBAR -->
   <header class="bg-[#0038A8] text-white shadow-lg sticky top-0 z-40">
     <div class="max-w-7xl mx-auto px-4 py-3.5 flex flex-wrap items-center justify-between gap-3">
       <div class="flex items-center space-x-3">
@@ -23,9 +22,9 @@
         <div>
           <div class="flex items-center space-x-2">
             <span class="font-black text-lg tracking-tight">PrintMind</span>
-            <span class="text-[10px] font-bold uppercase px-2 py-0.5 rounded-full bg-emerald-400/20 text-emerald-200 border border-emerald-300/30">V3.0 Cloud + Split</span>
+            <span class="text-[10px] font-bold uppercase px-2 py-0.5 rounded-full bg-emerald-400/20 text-emerald-200 border border-emerald-300/30">V3.0 Live Cloud</span>
           </div>
-          <p class="text-[11px] text-blue-100">Supabase Multi-Tenant • Agente Multi-Local • WhatsApp Evolution API</p>
+          <p class="text-[11px] text-blue-100">Supabase Cloud (sa-east-1) • Agente Multi-Local • Asaas Webhook & Split Ativos</p>
         </div>
       </div>
 
@@ -33,8 +32,8 @@
         <button onclick="openModal('agentModal')" class="px-3 py-2 rounded-xl bg-white/10 hover:bg-white/20 text-xs font-bold flex items-center space-x-1.5 border border-white/15 transition">
           <i data-lucide="radar" class="w-4 h-4"></i><span>Agente Multi-Local</span>
         </button>
-        <button onclick="openModal('whatsappSplitModal')" class="px-3 py-2 rounded-xl bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-100 text-xs font-bold flex items-center space-x-1.5 border border-emerald-400/30 transition">
-          <i data-lucide="wallet" class="w-4 h-4"></i><span>WhatsApp & Split B2B2C</span>
+        <button onclick="openModal('asaasWebhookModal')" class="px-3 py-2 rounded-xl bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-100 text-xs font-bold flex items-center space-x-1.5 border border-emerald-400/30 transition">
+          <i data-lucide="webhook" class="w-4 h-4"></i><span>Testar Webhook Asaas Ao Vivo</span>
         </button>
         <button onclick="openModal('authModal')" class="px-3 py-2 rounded-xl bg-white text-[#0038A8] hover:bg-blue-50 text-xs font-black flex items-center space-x-1.5 shadow-sm transition">
           <i data-lucide="shield-check" class="w-4 h-4"></i><span id="authBtnLabel">Entrar / Google OAuth</span>
@@ -43,9 +42,20 @@
     </div>
   </header>
 
-  <!-- MAIN CONTENT -->
-  <main class="max-w-7xl mx-auto w-full px-4 py-8 space-y-8 flex-1">
-    <!-- KPI ROW -->
+  <main class="max-w-7xl mx-auto w-full px-4 py-7 space-y-7 flex-1">
+    <div class="bg-emerald-950 text-emerald-100 rounded-3xl p-4 px-5 flex flex-wrap items-center justify-between gap-3 border border-emerald-800 shadow-sm">
+      <div class="flex items-center space-x-3">
+        <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></span>
+        <div class="text-xs">
+          <strong class="text-white">Conectado em Tempo Real ao Supabase Cloud (zbsmzcbcivhzslcnfxmq)</strong>
+          <span class="block text-emerald-300 mono text-[11px]">Webhook Asaas Ativo: https://zbsmzcbcivhzslcnfxmq.supabase.co/functions/v1/asaas-webhook</span>
+        </div>
+      </div>
+      <button onclick="openModal('asaasWebhookModal')" class="px-3.5 py-1.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black text-xs transition">
+        ⚡ Simular Pagamento Asaas (Webhook)
+      </button>
+    </div>
+
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
       <div class="bg-white p-5 rounded-3xl border border-slate-200 shadow-sm">
         <span class="text-[11px] font-bold uppercase text-slate-400">Clientes / Contratos</span>
@@ -69,15 +79,14 @@
       </div>
     </div>
 
-    <!-- CLIENTS & RATEIO TABLE -->
     <div class="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden">
       <div class="p-5 border-b border-slate-100 flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h2 class="text-lg font-black text-slate-900">Fechamento Contábil, Rateio Hospitalar & Cobrança Automática</h2>
-          <p class="text-xs text-slate-500">Cálculo estrito de Delta Monotônico por Serial + MAC e separação financeira P&B vs. Colorido</p>
+          <h2 class="text-lg font-black text-slate-900">Fechamento Contábil, Rateio Hospitalar & Cobrança Asaas (Com Split)</h2>
+          <p class="text-xs text-slate-500">Clique em "Emitir Asaas + Split" para gravar a fatura no banco e depois teste o Webhook de liquidação</p>
         </div>
-        <button onclick="discoverLocalPrinters()" class="px-4 py-2 rounded-xl bg-[#0038A8] hover:bg-blue-800 text-white text-xs font-bold transition">
-          Auto-Scan SNMP (20 IPs/s)
+        <button onclick="loadAll()" class="px-3.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition">
+          ↻ Atualizar Dados do Banco
         </button>
       </div>
       <div class="overflow-x-auto">
@@ -87,8 +96,9 @@
               <th class="py-3 px-4">Cliente / Contrato</th>
               <th class="py-3 px-4">Equipamentos</th>
               <th class="py-3 px-4 text-right">Consumo Mês (Delta)</th>
-              <th class="py-3 px-4 text-right">Fixo + Excedentes</th>
+              <th class="py-3 px-4 text-right">Total Fatura</th>
               <th class="py-3 px-4 text-right">Líquido Locadora (98.5%)</th>
+              <th class="py-3 px-4">Status Asaas</th>
               <th class="py-3 px-4 text-right">Ações</th>
             </tr>
           </thead>
@@ -97,11 +107,46 @@
       </div>
     </div>
 
-    <!-- PRINTERS & CMYK TELEMETRY -->
     <div id="printersGrid" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
   </main>
 
-  <!-- MODAL: AUTH SUPABASE (EMAIL/PASSWORD + GOOGLE OAUTH) -->
+  <div id="asaasWebhookModal" class="hidden fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl max-w-3xl w-full p-6 space-y-4 shadow-2xl max-h-[90vh] overflow-y-auto">
+      <div class="flex justify-between items-center border-b border-slate-100 pb-3">
+        <div>
+          <span class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase bg-emerald-50 text-emerald-700">Edge Function Ativa em Produção</span>
+          <h3 class="font-black text-base text-slate-900 mt-1">Configuração & Simulador Ao Vivo do Webhook Asaas</h3>
+        </div>
+        <button onclick="closeModal('asaasWebhookModal')" class="text-slate-400 hover:text-slate-600">✕</button>
+      </div>
+      <div class="p-3.5 rounded-2xl bg-slate-900 text-slate-100 space-y-1.5 text-xs">
+        <span class="text-[10px] font-bold uppercase text-emerald-400 block">URL Oficial do Webhook (Para colar em Asaas -> Integrações -> Webhooks):</span>
+        <code class="mono text-[11px] text-white block select-all">https://zbsmzcbcivhzslcnfxmq.supabase.co/functions/v1/asaas-webhook</code>
+      </div>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
+        <div class="p-4 rounded-2xl bg-slate-50 border border-slate-200 space-y-2.5">
+          <strong class="text-slate-900 block">Disparar Evento Real para a Edge Function</strong>
+          <select id="simWebhookEvent" class="w-full px-3 py-2 rounded-xl border border-slate-300 bg-white font-semibold">
+            <option value="PAYMENT_RECEIVED">PAYMENT_RECEIVED (Fatura Paga via PIX/Boleto)</option>
+            <option value="PAYMENT_CONFIRMED">PAYMENT_CONFIRMED (Pagamento Confirmado)</option>
+            <option value="PAYMENT_OVERDUE">PAYMENT_OVERDUE (Fatura Vencida)</option>
+          </select>
+          <button id="btnFireWebhook" onclick="simulateAsaasWebhook()" class="w-full py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-black transition">
+            🚀 Disparar Webhook no Supabase Agora
+          </button>
+        </div>
+        <div class="p-4 rounded-2xl bg-indigo-50/50 border border-indigo-200 space-y-2">
+          <strong class="text-indigo-950 block">Resposta em Tempo Real do Servidor:</strong>
+          <pre id="webhookResponseBox" class="bg-slate-900 text-emerald-300 p-3 rounded-xl text-[11px] mono overflow-x-auto h-32">Clique no botão ao lado para testar o webhook ao vivo...</pre>
+        </div>
+      </div>
+      <div class="space-y-2">
+        <h4 class="text-xs font-bold text-slate-700 uppercase">Últimos Webhooks Processados no Banco (`public.payment_webhooks`):</h4>
+        <div id="webhookLogsList" class="space-y-1.5 text-xs max-h-40 overflow-y-auto"></div>
+      </div>
+    </div>
+  </div>
+
   <div id="authModal" class="hidden fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
     <div class="bg-white rounded-3xl max-w-md w-full p-6 space-y-4 shadow-2xl">
       <div class="flex justify-between items-center">
@@ -116,50 +161,23 @@
         <input id="passIn" type="password" value="••••••••••" class="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs" placeholder="Senha" />
         <button onclick="closeModal('authModal')" class="w-full py-2.5 rounded-xl bg-[#0038A8] text-white font-bold text-xs">Acessar Painel Pro (R$ 397/mês)</button>
       </div>
-      <p class="text-[11px] text-emerald-700 mono">● Supabase Project: zbsmzcbcivhzslcnfxmq (sa-east-1)</p>
     </div>
   </div>
 
-  <!-- MODAL: AGENTE MULTI-LOCAL -->
   <div id="agentModal" class="hidden fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
     <div class="bg-white rounded-3xl max-w-2xl w-full p-6 space-y-4 shadow-2xl">
       <div class="flex justify-between items-center">
         <h3 class="font-black text-base text-slate-900">Agente Satélite Multi-Local (printmind-agent.exe)</h3>
         <button onclick="closeModal('agentModal')" class="text-slate-400 hover:text-slate-600">✕</button>
       </div>
-      <p class="text-xs text-slate-600">Para clínicas isoladas, instale 1 agente por local físico. Para hospitais com várias VLANs ou VPN corporativa, cadastre as sub-redes remotas e um único agente varrerá todas as faixas a 20 IPs/s via Unicast SNMP:</p>
       <pre class="bg-slate-900 text-emerald-300 p-3.5 rounded-2xl text-[11px] mono overflow-x-auto">./printmind-agent.exe -server="http://localhost:8090" -token="pm_live_hosp_central_01" -subnets="192.168.1.0/24,10.20.1.0/24,10.20.2.0/24"</pre>
     </div>
   </div>
 
-  <!-- MODAL: WHATSAPP & SPLIT B2B2C -->
-  <div id="whatsappSplitModal" class="hidden fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
-    <div class="bg-white rounded-3xl max-w-2xl w-full p-6 space-y-4 shadow-2xl">
-      <div class="flex justify-between items-center">
-        <h3 class="font-black text-base text-slate-900">Servidor WhatsApp Open-Source + Split B2B2C</h3>
-        <button onclick="closeModal('whatsappSplitModal')" class="text-slate-400 hover:text-slate-600">✕</button>
-      </div>
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
-        <div class="p-4 rounded-2xl bg-slate-50 border border-slate-200 space-y-1">
-          <strong class="text-slate-900 block">Evolution API (Docker Auto-Hospedado)</strong>
-          <p class="text-slate-600">Custo R$ 0,00 por mensagem. Envia chave PIX CRC16 + Espelho A4 em PDF para o WhatsApp do cliente.</p>
-        </div>
-        <div class="p-4 rounded-2xl bg-emerald-50 border border-emerald-200 space-y-1">
-          <strong class="text-emerald-950 block">Asaas / Efí Subcontas + Split</strong>
-          <p class="text-emerald-800">Retém automaticamente 1,5% da fatura paga pelo hospital para a conta mãe do PrintMind e credita 98,5% líquido para a locadora.</p>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- MODAL: RATEIO HOSPITALAR & PIX CRC16 -->
   <div id="invoiceModal" class="hidden fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
     <div class="bg-white rounded-3xl max-w-3xl w-full p-6 space-y-4 shadow-2xl max-h-[90vh] overflow-y-auto">
       <div class="flex justify-between items-center border-b border-slate-100 pb-3">
-        <div>
-          <h3 id="invClientTitle" class="font-black text-lg text-slate-900">Demonstrativo de Fechamento & Rateio</h3>
-          <p class="text-xs text-slate-500">Rateio ponderado separando Franquia Fixa, P&B e Colorido por Centro de Custo</p>
-        </div>
+        <h3 id="invClientTitle" class="font-black text-lg text-slate-900">Demonstrativo de Fechamento & Rateio</h3>
         <button onclick="closeModal('invoiceModal')" class="text-slate-400 hover:text-slate-600">✕</button>
       </div>
       <div id="invRateioBody" class="space-y-2 text-xs"></div>
@@ -172,9 +190,13 @@
 
   <script>
     const SUPABASE_URL = 'https://zbsmzcbcivhzslcnfxmq.supabase.co';
-    let clients = [], printers = [];
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inpic216Y2JjaXZoenNsY25meG1xIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTQ0NDUxNTcsImV4cCI6MjExMDAyMTE1N30.U9F-EL3ddBBqEK0MqkNuZBC6ZvwtuEElN6Z_VpEGT7Q';
+    let clients = [], printers = [], closings = [];
 
-    function openModal(id) { document.getElementById(id).classList.remove('hidden'); }
+    function openModal(id) {
+      document.getElementById(id).classList.remove('hidden');
+      if (id === 'asaasWebhookModal') loadWebhookLogs();
+    }
     function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
     function loginGoogle() {
       window.open(`${SUPABASE_URL}/auth/v1/authorize?provider=google&redirect_to=${encodeURIComponent(window.location.origin)}`, '_blank');
@@ -208,13 +230,29 @@
         dMono += m;
         dColor += col;
       });
-      const exMono = Math.max(0, dMono - (c.franchise_mono || 0)) * (c.extra_mono || 0.05);
-      const exColor = Math.max(0, dColor - (c.franchise_color || 0)) * (c.extra_color || 0.10);
-      const total = (c.base_rate || 0) + exMono + exColor;
-      return { linked, dMono, dColor, dTotal: dMono + dColor, exMono, exColor, total, net: total * 0.985 };
+      const exMono = Math.max(0, dMono - (c.franchise_mono || 0)) * Number(c.extra_mono || 0.05);
+      const exColor = Math.max(0, dColor - (c.franchise_color || 0)) * Number(c.extra_color || 0.10);
+      const total = Number(c.base_rate || 0) + exMono + exColor;
+      const cl = closings.find(x => x.client_id === c.id);
+      return { linked, dMono, dColor, dTotal: dMono + dColor, exMono, exColor, total, net: total * 0.985, closing: cl };
     }
 
     async function loadAll() {
+      try {
+        const headers = { apikey: SUPABASE_ANON_KEY, Authorization: `Bearer ${SUPABASE_ANON_KEY}` };
+        const [cRes, pRes, clRes] = await Promise.all([
+          fetch(`${SUPABASE_URL}/rest/v1/clients?select=*&order=created_at.asc`, { headers }),
+          fetch(`${SUPABASE_URL}/rest/v1/printers?select=*`, { headers }),
+          fetch(`${SUPABASE_URL}/rest/v1/closings?select=*`, { headers })
+        ]);
+        if (cRes.ok && pRes.ok) {
+          clients = await cRes.json();
+          printers = await pRes.json();
+          closings = clRes.ok ? await clRes.json() : [];
+          render();
+          return;
+        }
+      } catch (_) {}
       const [cRes, pRes] = await Promise.all([fetch('/api/clients'), fetch('/api/printers')]);
       clients = await cRes.json();
       printers = await pRes.json();
@@ -230,18 +268,26 @@
         const m = computeMetrics(c);
         sumPages += m.dTotal;
         sumBill += m.total;
+        const st = m.closing ? m.closing.status : 'aberto';
+        const badge = st === 'pago'
+          ? '<span class="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-emerald-100 text-emerald-800">● PAGO (WEBHOOK ASAAS)</span>'
+          : st === 'congelado'
+            ? '<span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-blue-100 text-[#0038A8]">● FATURA EMITIDA</span>'
+            : '<span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 text-amber-700">● EM ABERTO</span>';
         return `
           <tr class="hover:bg-slate-50">
             <td class="py-3.5 px-4">
               <strong class="text-slate-900 block">${c.name}</strong>
-              <span class="text-[11px] text-slate-400 mono">${c.cnpj} • Corte Dia ${c.closing_day}</span>
+              <span class="text-[11px] text-slate-400 mono">${c.cnpj || ''} • Corte Dia ${c.closing_day}</span>
             </td>
             <td class="py-3.5 px-4">${m.linked.length} máquina(s)</td>
             <td class="py-3.5 px-4 text-right mono font-bold">${m.dTotal.toLocaleString('pt-BR')} págs<div class="text-[10px] text-slate-400">${m.dMono.toLocaleString('pt-BR')} P&B • ${m.dColor.toLocaleString('pt-BR')} Cor</div></td>
             <td class="py-3.5 px-4 text-right mono font-black text-slate-900">R$ ${m.total.toFixed(2)}</td>
             <td class="py-3.5 px-4 text-right mono font-bold text-emerald-700">R$ ${m.net.toFixed(2)}</td>
-            <td class="py-3.5 px-4 text-right">
-              <button onclick="openClientInvoice('${c.id}')" class="px-3 py-1.5 rounded-xl bg-blue-50 text-[#0038A8] font-bold hover:bg-blue-100">Ver Rateio & PIX</button>
+            <td class="py-3.5 px-4">${badge}</td>
+            <td class="py-3.5 px-4 text-right space-x-1">
+              <button onclick="emitAsaasSplitCharge('${c.id}')" class="px-2.5 py-1.5 rounded-xl bg-[#0038A8] text-white font-bold hover:bg-blue-800">Emitir Asaas + Split</button>
+              <button onclick="openClientInvoice('${c.id}')" class="px-2.5 py-1.5 rounded-xl bg-slate-100 text-slate-700 font-bold hover:bg-slate-200">Rateio & PIX</button>
             </td>
           </tr>
         `;
@@ -270,6 +316,81 @@
       lucide.createIcons();
     }
 
+    async function emitAsaasSplitCharge(clientId) {
+      const c = clients.find(x => x.id === clientId);
+      if (!c) return;
+      const m = computeMetrics(c);
+      await fetch(`${SUPABASE_URL}/functions/v1/asaas-billing`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'emit_split_charge',
+          client_id: c.id,
+          client_name: c.name,
+          month_year: '11/2026',
+          total_pages: m.dTotal,
+          mono_pages: m.dMono,
+          color_pages: m.dColor,
+          base_rate: c.base_rate,
+          extra_mono: m.exMono,
+          extra_color: m.exColor,
+          total_amount: m.total,
+          split_percent: 1.5
+        })
+      });
+      await loadAll();
+      openClientInvoice(clientId);
+    }
+
+    async function simulateAsaasWebhook() {
+      const btn = document.getElementById('btnFireWebhook');
+      const box = document.getElementById('webhookResponseBox');
+      const evType = document.getElementById('simWebhookEvent').value;
+      btn.disabled = true;
+      btn.innerText = 'Processando no Supabase...';
+
+      const hosp = clients[0];
+      if (hosp && !closings.find(x => x.client_id === hosp.id)) {
+        await emitAsaasSplitCharge(hosp.id);
+      }
+      const targetClosing = closings.find(x => hosp && x.client_id === hosp.id) || closings[0];
+
+      const res = await fetch(`${SUPABASE_URL}/functions/v1/asaas-webhook`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          id: 'evt_live_' + Date.now(),
+          event: evType,
+          payment: {
+            id: targetClosing ? targetClosing.baas_payment_id : 'pay_live_demo',
+            externalReference: targetClosing ? targetClosing.id : '',
+            value: targetClosing ? targetClosing.total_amount : 5113.20,
+            netValue: targetClosing ? targetClosing.net_tenant_amount : 5036.50,
+            billingType: 'PIX'
+          }
+        })
+      });
+      const result = await res.json();
+      box.innerText = JSON.stringify(result, null, 2);
+      btn.disabled = false;
+      btn.innerText = '🚀 Disparar Webhook no Supabase Agora';
+      await loadAll();
+      await loadWebhookLogs();
+    }
+
+    async function loadWebhookLogs() {
+      const res = await fetch(`${SUPABASE_URL}/functions/v1/asaas-webhook`);
+      if (!res.ok) return;
+      const data = await res.json();
+      const list = data.recent_webhooks || [];
+      document.getElementById('webhookLogsList').innerHTML = list.map(w => `
+        <div class="p-2.5 rounded-xl bg-slate-50 border border-slate-200 flex justify-between items-center">
+          <span class="mono font-bold text-slate-800">${w.event_type} (${w.event_id})</span>
+          <span class="text-slate-500 mono text-[11px]">${new Date(w.processed_at).toLocaleString('pt-BR')}</span>
+        </div>
+      `).join('') || '<div class="text-slate-400">Nenhum evento registrado ainda.</div>';
+    }
+
     function openClientInvoice(id) {
       const c = clients.find(x => x.id === id);
       if (!c) return;
@@ -279,20 +400,14 @@
       document.getElementById('invRateioBody').innerHTML = m.linked.map(p => {
         const pm = Math.max(0, (p.mono_pages || 0) - (p.initial_mono_pages || 0));
         const pc = Math.max(0, (p.color_pages || 0) - (p.initial_color_pages || 0));
-        const share = ((c.base_rate || 0) / totalMach) + (m.dMono > 0 ? m.exMono * (pm / m.dMono) : 0) + (m.dColor > 0 ? m.exColor * (pc / m.dColor) : 0);
+        const share = (Number(c.base_rate || 0) / totalMach) + (m.dMono > 0 ? m.exMono * (pm / m.dMono) : 0) + (m.dColor > 0 ? m.exColor * (pc / m.dColor) : 0);
         return `<div class="p-3 rounded-2xl bg-indigo-50/50 border border-indigo-100 flex justify-between items-center">
           <div><strong class="text-slate-900">${p.unit || 'Matriz'} • ${p.department || 'Setor'}</strong><span class="block text-[11px] text-slate-500 mono">${p.model} (${p.serial}): ${pm} P&B + ${pc} Cor</span></div>
           <strong class="mono text-indigo-950 font-black">R$ ${share.toFixed(2)}</strong>
         </div>`;
       }).join('');
-      document.getElementById('invPixInput').value = buildPixPayload(c.pix_key, m.total);
+      document.getElementById('invPixInput').value = (m.closing && m.closing.pix_copy_paste) ? m.closing.pix_copy_paste : buildPixPayload(c.pix_key, m.total);
       openModal('invoiceModal');
-    }
-
-    async function discoverLocalPrinters() {
-      const res = await fetch('/api/printers/discover');
-      const data = await res.json();
-      alert('Varredura SNMP concluída (20 IPs/s): ' + (data.count || 0) + ' dispositivos encontrados.');
     }
 
     loadAll();
