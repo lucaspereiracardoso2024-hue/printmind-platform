@@ -3,9 +3,10 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>PrintMind V3.0 • Telemetria SNMP/USB, Rateio Hospitalar & Asaas Split Ao Vivo</title>
+  <title>PrintMind • Plataforma SaaS de Outsourcing de Impressão & Telemetria SNMP</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://unpkg.com/lucide@latest"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@500;700;800&display=swap" rel="stylesheet">
   <style>
     body { font-family: 'Inter', sans-serif; background: #F8FAFC; color: #0F172A; }
@@ -13,167 +14,431 @@
   </style>
 </head>
 <body class="min-h-screen flex flex-col">
-  <header class="bg-[#0038A8] text-white shadow-lg sticky top-0 z-40">
-    <div class="max-w-7xl mx-auto px-4 py-3.5 flex flex-wrap items-center justify-between gap-3">
-      <div class="flex items-center space-x-3">
-        <div class="w-10 h-10 rounded-2xl bg-white/15 flex items-center justify-center border border-white/20">
-          <i data-lucide="printer" class="w-5 h-5 text-white"></i>
+
+  <!-- =========================================================================
+       TELA 1: PÁGINA INICIAL DE LOGIN & CADASTRO REAL (SUPABASE AUTH + GOOGLE)
+       ========================================================================= -->
+  <div id="authScreen" class="min-h-screen flex flex-col justify-center items-center px-4 py-10 bg-gradient-to-br from-slate-950 via-[#002266] to-[#0038A8]">
+    <div class="w-full max-w-md bg-white rounded-3xl shadow-2xl border border-slate-200 overflow-hidden">
+      <!-- Cabeçalho da Marca -->
+      <div class="p-7 pb-5 text-center border-b border-slate-100">
+        <div class="w-12 h-12 rounded-2xl bg-[#0038A8] text-white flex items-center justify-center mx-auto mb-3 shadow-md">
+          <i data-lucide="printer" class="w-6 h-6"></i>
         </div>
-        <div>
-          <div class="flex items-center space-x-2">
-            <span class="font-black text-lg tracking-tight">PrintMind</span>
-            <span class="text-[10px] font-bold uppercase px-2 py-0.5 rounded-full bg-emerald-400/20 text-emerald-200 border border-emerald-300/30">V3.0 Live Cloud</span>
+        <h1 class="text-2xl font-black text-slate-900 tracking-tight">PrintMind Cloud</h1>
+        <p class="text-xs text-slate-500 mt-1">Telemetria SNMP/USB, Rateio Hospitalar & Cobrança Automática</p>
+      </div>
+
+      <!-- Abas Entrar vs Criar Conta -->
+      <div class="grid grid-cols-2 bg-slate-100 p-1.5 m-6 mb-0 rounded-2xl text-xs font-bold">
+        <button id="tabBtnLogin" onclick="switchAuthTab('login')" class="py-2 rounded-xl bg-white text-slate-900 shadow-sm transition">
+          Entrar na Conta
+        </button>
+        <button id="tabBtnSignup" onclick="switchAuthTab('signup')" class="py-2 rounded-xl text-slate-600 hover:text-slate-900 transition">
+          Criar Conta Grátis
+        </button>
+      </div>
+
+      <div class="p-6 space-y-4">
+        <!-- Botão Oficial Google OAuth 2.0 -->
+        <button onclick="handleGoogleLogin()" class="w-full py-3 px-4 rounded-2xl bg-white hover:bg-slate-50 text-slate-800 font-bold text-xs border border-slate-300 shadow-sm flex items-center justify-center space-x-2.5 transition">
+          <svg class="w-4 h-4" viewBox="0 0 24 24">
+            <path fill="#EA4335" d="M12 5c1.6 0 3 .6 4.1 1.7l3.1-3.1C17.3 1.8 14.8 1 12 1 7.4 1 3.5 3.6 1.6 7.4l3.7 2.8C6.2 7.2 8.9 5 12 5z"/>
+            <path fill="#4285F4" d="M23.5 12.3c0-.8-.1-1.6-.2-2.3H12v4.5h6.5c-.3 1.5-1.1 2.8-2.4 3.6l3.7 2.9c2.2-2 3.7-5 3.7-8.7z"/>
+            <path fill="#FBBC05" d="M5.3 14.8c-.2-.8-.4-1.6-.4-2.5s.2-1.7.4-2.5L1.6 7C.6 9 0 11.2 0 13.5s.6 4.5 1.6 6.5l3.7-2.9z"/>
+            <path fill="#34A853" d="M12 24c3.2 0 6-1.1 8-3l-3.7-2.9c-1.1.7-2.5 1.2-4.3 1.2-3.1 0-5.8-2.1-6.7-5l-3.7 2.8C3.5 21.4 7.4 24 12 24z"/>
+          </svg>
+          <span>Continuar com o Google</span>
+        </button>
+
+        <div class="relative flex py-1 items-center">
+          <div class="flex-grow border-t border-slate-200"></div>
+          <span class="flex-shrink mx-3 text-[10px] font-bold uppercase text-slate-400">ou use seu e-mail</span>
+          <div class="flex-grow border-t border-slate-200"></div>
+        </div>
+
+        <!-- Alerta de Erro / Sucesso -->
+        <div id="authAlertBox" class="hidden p-3 rounded-xl text-xs font-semibold"></div>
+
+        <!-- FORMULÁRIO DE LOGIN -->
+        <form id="formLogin" onsubmit="handleEmailLogin(event)" class="space-y-3">
+          <div>
+            <label class="block text-[11px] font-bold text-slate-700 mb-1">E-mail Corporativo</label>
+            <input id="loginEmail" type="email" required placeholder="voce@sualocadora.com.br" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-xs focus:outline-none focus:ring-2 focus:ring-[#0038A8]" />
           </div>
-          <p class="text-[11px] text-blue-100">Supabase Cloud (sa-east-1) • Agente Multi-Local • Asaas Webhook & Split Ativos</p>
+          <div>
+            <label class="block text-[11px] font-bold text-slate-700 mb-1">Senha</label>
+            <input id="loginPassword" type="password" required minlength="6" placeholder="••••••••" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-xs focus:outline-none focus:ring-2 focus:ring-[#0038A8]" />
+          </div>
+          <button id="btnSubmitLogin" type="submit" class="w-full py-3 rounded-2xl bg-[#0038A8] hover:bg-blue-800 text-white font-black text-xs shadow-md transition">
+            Entrar no Painel
+          </button>
+        </form>
+
+        <!-- FORMULÁRIO DE CADASTRO (CRIAR CONTA) -->
+        <form id="formSignup" onsubmit="handleEmailSignup(event)" class="hidden space-y-3">
+          <div>
+            <label class="block text-[11px] font-bold text-slate-700 mb-1">Nome da Locadora / Gráfica</label>
+            <input id="signupTradeName" type="text" required placeholder="Ex: MBM Solução em Impressão" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-xs focus:outline-none focus:ring-2 focus:ring-[#0038A8]" />
+          </div>
+          <div class="grid grid-cols-2 gap-2.5">
+            <div>
+              <label class="block text-[11px] font-bold text-slate-700 mb-1">CNPJ ou CPF</label>
+              <input id="signupCnpj" type="text" required placeholder="00.000.000/0001-00" class="w-full px-3 py-2.5 rounded-xl border border-slate-300 text-xs" />
+            </div>
+            <div>
+              <label class="block text-[11px] font-bold text-slate-700 mb-1">WhatsApp</label>
+              <input id="signupPhone" type="text" required placeholder="11999999999" class="w-full px-3 py-2.5 rounded-xl border border-slate-300 text-xs" />
+            </div>
+          </div>
+          <div>
+            <label class="block text-[11px] font-bold text-slate-700 mb-1">E-mail de Acesso</label>
+            <input id="signupEmail" type="email" required placeholder="contato@sualocadora.com.br" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-xs" />
+          </div>
+          <div>
+            <label class="block text-[11px] font-bold text-slate-700 mb-1">Criar Senha (mín. 6 caracteres)</label>
+            <input id="signupPassword" type="password" required minlength="6" placeholder="••••••••" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-xs" />
+          </div>
+          <button id="btnSubmitSignup" type="submit" class="w-full py-3 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs shadow-md transition">
+            Criar Minha Conta & Escolher Plano
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- =========================================================================
+       TELA 2: PAINEL DE PRODUÇÃO (EXIBIDO APENAS APÓS AUTENTICAÇÃO REAL)
+       ========================================================================= -->
+  <div id="appScreen" class="hidden min-h-screen flex flex-col">
+    <!-- TOPBAR -->
+    <header class="bg-[#0038A8] text-white shadow-lg sticky top-0 z-40">
+      <div class="max-w-7xl mx-auto px-4 py-3.5 flex flex-wrap items-center justify-between gap-3">
+        <div class="flex items-center space-x-3">
+          <div class="w-10 h-10 rounded-2xl bg-white/15 flex items-center justify-center border border-white/20">
+            <i data-lucide="printer" class="w-5 h-5 text-white"></i>
+          </div>
+          <div>
+            <div class="flex items-center space-x-2">
+              <span id="topTenantName" class="font-black text-lg tracking-tight">PrintMind</span>
+              <span id="topPlanBadge" class="text-[10px] font-bold uppercase px-2 py-0.5 rounded-full bg-emerald-400/20 text-emerald-200 border border-emerald-300/30">PRO</span>
+            </div>
+            <p id="topUserEmail" class="text-[11px] text-blue-100 mono"></p>
+          </div>
+        </div>
+
+        <div class="flex flex-wrap items-center gap-2">
+          <button onclick="openModal('newClientModal')" class="px-3.5 py-2 rounded-xl bg-white text-[#0038A8] hover:bg-blue-50 text-xs font-black flex items-center space-x-1.5 shadow-sm transition">
+            <i data-lucide="plus" class="w-4 h-4"></i><span>Novo Cliente / Hospital</span>
+          </button>
+          <button onclick="openModal('newPrinterModal')" class="px-3 py-2 rounded-xl bg-white/10 hover:bg-white/20 text-xs font-bold flex items-center space-x-1.5 border border-white/15 transition">
+            <i data-lucide="cpu" class="w-4 h-4"></i><span>Cadastrar Impressora</span>
+          </button>
+          <button onclick="openModal('agentModal')" class="px-3 py-2 rounded-xl bg-white/10 hover:bg-white/20 text-xs font-bold flex items-center space-x-1.5 border border-white/15 transition">
+            <i data-lucide="radar" class="w-4 h-4"></i><span>Baixar Agente & Sub-redes</span>
+          </button>
+          <button onclick="openModal('planModal')" class="px-3 py-2 rounded-xl bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-100 text-xs font-bold flex items-center space-x-1.5 border border-emerald-400/30 transition">
+            <i data-lucide="credit-card" class="w-4 h-4"></i><span>Plano & Split Asaas</span>
+          </button>
+          <button onclick="handleLogout()" class="px-3 py-2 rounded-xl bg-rose-500/20 hover:bg-rose-500/30 text-rose-100 text-xs font-bold border border-rose-400/30 transition">
+            Sair
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto w-full px-4 py-7 space-y-7 flex-1">
+      <!-- KPI ROW -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div class="bg-white p-5 rounded-3xl border border-slate-200 shadow-sm">
+          <span class="text-[11px] font-bold uppercase text-slate-400">Clientes Cadastrados</span>
+          <div id="kpiClients" class="text-3xl font-black text-slate-900 mt-1 mono">0</div>
+          <span class="text-xs text-slate-500">Isolamento RLS no Supabase</span>
+        </div>
+        <div class="bg-white p-5 rounded-3xl border border-slate-200 shadow-sm">
+          <span class="text-[11px] font-bold uppercase text-slate-400">Impressoras no Parque</span>
+          <div id="kpiPrinters" class="text-3xl font-black text-emerald-600 mt-1 mono">0</div>
+          <span class="text-xs text-slate-500">SNMPv2c/v3 (RFC 3805) + USB</span>
+        </div>
+        <div class="bg-white p-5 rounded-3xl border border-slate-200 shadow-sm">
+          <span class="text-[11px] font-bold uppercase text-slate-400">Páginas no Ciclo (Delta)</span>
+          <div id="kpiDeltaPages" class="text-3xl font-black text-[#0038A8] mt-1 mono">0</div>
+          <span class="text-xs text-slate-500">Cont. Final − Cont. Inicial</span>
+        </div>
+        <div class="bg-white p-5 rounded-3xl border border-slate-200 shadow-sm">
+          <span class="text-[11px] font-bold uppercase text-slate-400">Faturamento Apurado</span>
+          <div id="kpiTotalBilling" class="text-3xl font-black text-amber-600 mt-1 mono">R$ 0,00</div>
+          <span class="text-xs text-slate-500">PIX CRC16 + Split Asaas</span>
         </div>
       </div>
 
-      <div class="flex flex-wrap items-center gap-2">
-        <button onclick="openModal('agentModal')" class="px-3 py-2 rounded-xl bg-white/10 hover:bg-white/20 text-xs font-bold flex items-center space-x-1.5 border border-white/15 transition">
-          <i data-lucide="radar" class="w-4 h-4"></i><span>Agente Multi-Local</span>
-        </button>
-        <button onclick="openModal('asaasWebhookModal')" class="px-3 py-2 rounded-xl bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-100 text-xs font-bold flex items-center space-x-1.5 border border-emerald-400/30 transition">
-          <i data-lucide="webhook" class="w-4 h-4"></i><span>Testar Webhook Asaas Ao Vivo</span>
-        </button>
-        <button onclick="openModal('authModal')" class="px-3 py-2 rounded-xl bg-white text-[#0038A8] hover:bg-blue-50 text-xs font-black flex items-center space-x-1.5 shadow-sm transition">
-          <i data-lucide="shield-check" class="w-4 h-4"></i><span id="authBtnLabel">Entrar / Google OAuth</span>
-        </button>
-      </div>
-    </div>
-  </header>
-
-  <main class="max-w-7xl mx-auto w-full px-4 py-7 space-y-7 flex-1">
-    <div class="bg-emerald-950 text-emerald-100 rounded-3xl p-4 px-5 flex flex-wrap items-center justify-between gap-3 border border-emerald-800 shadow-sm">
-      <div class="flex items-center space-x-3">
-        <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></span>
-        <div class="text-xs">
-          <strong class="text-white">Conectado em Tempo Real ao Supabase Cloud (zbsmzcbcivhzslcnfxmq)</strong>
-          <span class="block text-emerald-300 mono text-[11px]">Webhook Asaas Ativo: https://zbsmzcbcivhzslcnfxmq.supabase.co/functions/v1/asaas-webhook</span>
+      <!-- TABELA DE CLIENTES E FECHAMENTO -->
+      <div class="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden">
+        <div class="p-5 border-b border-slate-100 flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <h2 class="text-lg font-black text-slate-900">Clientes, Contratos & Fechamento Mensal</h2>
+            <p class="text-xs text-slate-500">Zero dados fictícios: todos os registros abaixo vêm exclusivamente da sua conta no banco PostgreSQL</p>
+          </div>
+          <div class="flex gap-2">
+            <button onclick="openModal('newClientModal')" class="px-3.5 py-2 rounded-xl bg-[#0038A8] hover:bg-blue-800 text-white text-xs font-bold transition">
+              + Cadastrar Cliente
+            </button>
+            <button onclick="loadTenantData()" class="px-3.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition">
+              ↻ Sincronizar
+            </button>
+          </div>
+        </div>
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-xs">
+            <thead class="bg-slate-50 text-slate-500 uppercase text-[10px] font-bold border-b border-slate-200">
+              <tr>
+                <th class="py-3 px-4">Cliente / Contrato</th>
+                <th class="py-3 px-4">Unidades / Setores</th>
+                <th class="py-3 px-4">Máquinas</th>
+                <th class="py-3 px-4 text-right">Consumo Mês (Delta)</th>
+                <th class="py-3 px-4 text-right">Total Fatura</th>
+                <th class="py-3 px-4">Status Cobrança</th>
+                <th class="py-3 px-4 text-right">Ações</th>
+              </tr>
+            </thead>
+            <tbody id="clientsTableBody" class="divide-y divide-slate-100"></tbody>
+          </table>
         </div>
       </div>
-      <button onclick="openModal('asaasWebhookModal')" class="px-3.5 py-1.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black text-xs transition">
-        ⚡ Simular Pagamento Asaas (Webhook)
-      </button>
-    </div>
 
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-      <div class="bg-white p-5 rounded-3xl border border-slate-200 shadow-sm">
-        <span class="text-[11px] font-bold uppercase text-slate-400">Clientes / Contratos</span>
-        <div id="kpiClients" class="text-3xl font-black text-slate-900 mt-1 mono">0</div>
-        <span class="text-xs text-slate-500">Isolados via Supabase RLS</span>
+      <!-- PARQUE DE IMPRESSORAS -->
+      <div class="space-y-3">
+        <div class="flex items-center justify-between">
+          <h3 class="text-base font-black text-slate-900">Parque de Impressoras & Telemetria de Suprimentos</h3>
+          <button onclick="openModal('newPrinterModal')" class="text-xs font-bold text-[#0038A8] hover:underline">+ Adicionar Impressora Manual ou via Agente</button>
+        </div>
+        <div id="printersGrid" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
       </div>
-      <div class="bg-white p-5 rounded-3xl border border-slate-200 shadow-sm">
-        <span class="text-[11px] font-bold uppercase text-slate-400">Máquinas Online</span>
-        <div id="kpiPrinters" class="text-3xl font-black text-emerald-600 mt-1 mono">0</div>
-        <span class="text-xs text-slate-500">SNMPv2c/v3 (RFC 3805) + USB</span>
-      </div>
-      <div class="bg-white p-5 rounded-3xl border border-slate-200 shadow-sm">
-        <span class="text-[11px] font-bold uppercase text-slate-400">Produção Mensal (Delta)</span>
-        <div id="kpiDeltaPages" class="text-3xl font-black text-[#0038A8] mt-1 mono">0</div>
-        <span class="text-xs text-slate-500">Cont. Final − Cont. Inicial</span>
-      </div>
-      <div class="bg-white p-5 rounded-3xl border border-slate-200 shadow-sm">
-        <span class="text-[11px] font-bold uppercase text-slate-400">Faturamento Consolidado</span>
-        <div id="kpiTotalBilling" class="text-3xl font-black text-amber-600 mt-1 mono">R$ 0,00</div>
-        <span class="text-xs text-slate-500">PIX CRC16 + Split Asaas 1.5%</span>
-      </div>
-    </div>
+    </main>
+  </div>
 
-    <div class="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden">
-      <div class="p-5 border-b border-slate-100 flex flex-wrap items-center justify-between gap-3">
+  <!-- =========================================================================
+       MODAL 1: ESCOLHA DO PLANO DE ASSINATURA & CHAVE PIX (ONBOARDING)
+       ========================================================================= -->
+  <div id="planModal" class="hidden fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl max-w-2xl w-full p-6 space-y-5 shadow-2xl max-h-[90vh] overflow-y-auto">
+      <div class="flex justify-between items-center border-b border-slate-100 pb-3">
         <div>
-          <h2 class="text-lg font-black text-slate-900">Fechamento Contábil, Rateio Hospitalar & Cobrança Asaas (Com Split)</h2>
-          <p class="text-xs text-slate-500">Clique em "Emitir Asaas + Split" para gravar a fatura no banco e depois teste o Webhook de liquidação</p>
+          <span class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase bg-blue-50 text-[#0038A8]">Configuração Comercial & Split B2B2C</span>
+          <h3 class="font-black text-lg text-slate-900 mt-1">Escolha seu Plano & Configure sua Chave PIX de Recebimento</h3>
         </div>
-        <button onclick="loadAll()" class="px-3.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition">
-          ↻ Atualizar Dados do Banco
+        <button onclick="closeModal('planModal')" class="text-slate-400 hover:text-slate-600">✕</button>
+      </div>
+
+      <form onsubmit="saveTenantPlanAndPix(event)" class="space-y-4 text-xs">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+          <label class="p-4 rounded-2xl border-2 border-slate-200 hover:border-[#0038A8] cursor-pointer space-y-1">
+            <input type="radio" name="plan_tier" value="starter" class="hidden" onchange="highlightPlan()" />
+            <strong class="block text-slate-900 text-sm">Starter</strong>
+            <span class="block mono font-black text-lg text-[#0038A8]">R$ 197/mês</span>
+            <span class="block text-[11px] text-slate-500">Até 30 impressoras • Fechamento PIX</span>
+          </label>
+          <label class="p-4 rounded-2xl border-2 border-[#0038A8] bg-blue-50/30 cursor-pointer space-y-1">
+            <input type="radio" name="plan_tier" value="pro" checked class="hidden" onchange="highlightPlan()" />
+            <strong class="block text-[#0038A8] text-sm">Pro Hospitalar ✓</strong>
+            <span class="block mono font-black text-lg text-[#0038A8]">R$ 397/mês</span>
+            <span class="block text-[11px] text-slate-600">Até 150 impressoras • Rateio A4 + WhatsApp + Split</span>
+          </label>
+          <label class="p-4 rounded-2xl border-2 border-slate-200 hover:border-[#0038A8] cursor-pointer space-y-1">
+            <input type="radio" name="plan_tier" value="enterprise" class="hidden" onchange="highlightPlan()" />
+            <strong class="block text-slate-900 text-sm">Enterprise</strong>
+            <span class="block mono font-black text-lg text-[#0038A8]">R$ 697/mês</span>
+            <span class="block text-[11px] text-slate-500">Máquinas ilimitadas • White-Label</span>
+          </label>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-3 pt-2">
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">Sua Chave PIX (Para receber dos seus clientes)</label>
+            <input id="tenantPixKey" type="text" required placeholder="CNPJ, E-mail ou Celular" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300" />
+          </div>
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">Carteira / Subconta Asaas (Opcional para Split)</label>
+            <input id="tenantWalletId" type="text" placeholder="wal_..." class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 mono" />
+          </div>
+        </div>
+
+        <div class="p-3.5 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-900 text-[11px]">
+          <strong>URL do Webhook Asaas da sua Plataforma:</strong>
+          <code class="block mono mt-1 select-all font-bold">https://zbsmzcbcivhzslcnfxmq.supabase.co/functions/v1/asaas-webhook</code>
+        </div>
+
+        <button type="submit" class="w-full py-3 rounded-2xl bg-[#0038A8] hover:bg-blue-800 text-white font-black transition">
+          Salvar Plano e Continuar para o Painel
         </button>
-      </div>
-      <div class="overflow-x-auto">
-        <table class="w-full text-left text-xs">
-          <thead class="bg-slate-50 text-slate-500 uppercase text-[10px] font-bold border-b border-slate-200">
-            <tr>
-              <th class="py-3 px-4">Cliente / Contrato</th>
-              <th class="py-3 px-4">Equipamentos</th>
-              <th class="py-3 px-4 text-right">Consumo Mês (Delta)</th>
-              <th class="py-3 px-4 text-right">Total Fatura</th>
-              <th class="py-3 px-4 text-right">Líquido Locadora (98.5%)</th>
-              <th class="py-3 px-4">Status Asaas</th>
-              <th class="py-3 px-4 text-right">Ações</th>
-            </tr>
-          </thead>
-          <tbody id="clientsTableBody" class="divide-y divide-slate-100"></tbody>
-        </table>
-      </div>
+      </form>
     </div>
+  </div>
 
-    <div id="printersGrid" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
-  </main>
+  <!-- =========================================================================
+       MODAL 2: CADASTRAR NOVO CLIENTE / HOSPITAL (GRAVA NO SUPABASE)
+       ========================================================================= -->
+  <div id="newClientModal" class="hidden fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl max-w-xl w-full p-6 space-y-4 shadow-2xl max-h-[90vh] overflow-y-auto">
+      <div class="flex justify-between items-center border-b border-slate-100 pb-3">
+        <h3 class="font-black text-base text-slate-900">Cadastrar Novo Cliente & Contrato</h3>
+        <button onclick="closeModal('newClientModal')" class="text-slate-400 hover:text-slate-600">✕</button>
+      </div>
+      <form onsubmit="handleCreateClient(event)" class="space-y-3 text-xs">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">Razão Social / Nome do Cliente</label>
+            <input id="cliName" type="text" required placeholder="Ex: Hospital Santa Casa" class="w-full px-3 py-2 rounded-xl border border-slate-300" />
+          </div>
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">CNPJ / CPF</label>
+            <input id="cliCnpj" type="text" required placeholder="00.000.000/0001-00" class="w-full px-3 py-2 rounded-xl border border-slate-300 mono" />
+          </div>
+        </div>
+        <div class="grid grid-cols-2 md:grid-cols-3 gap-3">
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">WhatsApp Financeiro</label>
+            <input id="cliPhone" type="text" required placeholder="11999999999" class="w-full px-3 py-2 rounded-xl border border-slate-300 mono" />
+          </div>
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">Dia de Corte Mensal</label>
+            <input id="cliClosingDay" type="number" min="1" max="31" value="15" required class="w-full px-3 py-2 rounded-xl border border-slate-300 mono" />
+          </div>
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">Nº do Contrato</label>
+            <input id="cliContract" type="text" placeholder="CT-2026/01" class="w-full px-3 py-2 rounded-xl border border-slate-300 mono" />
+          </div>
+        </div>
+        <div class="grid grid-cols-2 md:grid-cols-5 gap-2.5 pt-1">
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">Fixo Mensal (R$)</label>
+            <input id="cliBaseRate" type="number" step="0.01" value="1200.00" required class="w-full px-2.5 py-2 rounded-xl border border-slate-300 mono" />
+          </div>
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">Franq. P&B</label>
+            <input id="cliFranMono" type="number" value="5000" required class="w-full px-2.5 py-2 rounded-xl border border-slate-300 mono" />
+          </div>
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">Exced. P&B (R$)</label>
+            <input id="cliExtraMono" type="number" step="0.001" value="0.06" required class="w-full px-2.5 py-2 rounded-xl border border-slate-300 mono" />
+          </div>
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">Franq. Cor</label>
+            <input id="cliFranColor" type="number" value="1000" required class="w-full px-2.5 py-2 rounded-xl border border-slate-300 mono" />
+          </div>
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">Exced. Cor (R$)</label>
+            <input id="cliExtraColor" type="number" step="0.001" value="0.45" required class="w-full px-2.5 py-2 rounded-xl border border-slate-300 mono" />
+          </div>
+        </div>
+        <div class="p-3.5 rounded-2xl bg-indigo-50/60 border border-indigo-200 space-y-2.5">
+          <label class="flex items-center space-x-2 font-bold text-indigo-950 cursor-pointer">
+            <input id="cliIsCorp" type="checkbox" checked class="rounded text-indigo-600" />
+            <span>🏥 Cliente Multi-Unidade / Hospital (Habilitar Rateio por Centro de Custo)</span>
+          </label>
+          <div>
+            <label class="block text-[11px] font-bold text-indigo-900 mb-1">Unidades Físicas / Filiais (separadas por vírgula — gera Token de Agente para cada uma)</label>
+            <input id="cliUnits" type="text" placeholder="Ex: Hospital Central, Clínica Sul" class="w-full px-3 py-2 rounded-xl border border-indigo-200 bg-white" />
+          </div>
+          <div>
+            <label class="block text-[11px] font-bold text-indigo-900 mb-1">Setores / Centros de Custo (separados por vírgula)</label>
+            <input id="cliDepts" type="text" placeholder="Ex: UTI Adulto, Farmácia, Recepção" class="w-full px-3 py-2 rounded-xl border border-indigo-200 bg-white" />
+          </div>
+        </div>
+        <button type="submit" class="w-full py-3 rounded-2xl bg-[#0038A8] hover:bg-blue-800 text-white font-black transition">
+          Salvar Cliente e Gerar Tokens de Agente
+        </button>
+      </form>
+    </div>
+  </div>
 
-  <div id="asaasWebhookModal" class="hidden fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+  <!-- =========================================================================
+       MODAL 3: CADASTRAR IMPRESSORA NO CLIENTE / SETOR
+       ========================================================================= -->
+  <div id="newPrinterModal" class="hidden fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl max-w-lg w-full p-6 space-y-4 shadow-2xl max-h-[90vh] overflow-y-auto">
+      <div class="flex justify-between items-center border-b border-slate-100 pb-3">
+        <h3 class="font-black text-base text-slate-900">Cadastrar / Alocar Impressora</h3>
+        <button onclick="closeModal('newPrinterModal')" class="text-slate-400 hover:text-slate-600">✕</button>
+      </div>
+      <form onsubmit="handleCreatePrinter(event)" class="space-y-3 text-xs">
+        <div>
+          <label class="block font-bold text-slate-700 mb-1">Vincular ao Cliente</label>
+          <select id="prtClientSelect" onchange="populateUnitAndDeptSelects()" required class="w-full px-3 py-2 rounded-xl border border-slate-300 bg-white"></select>
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">Unidade / Filial</label>
+            <input id="prtUnit" type="text" placeholder="Ex: Hospital Central" class="w-full px-3 py-2 rounded-xl border border-slate-300" />
+          </div>
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">Setor / Centro de Custo</label>
+            <input id="prtDept" type="text" placeholder="Ex: UTI Adulto" class="w-full px-3 py-2 rounded-xl border border-slate-300" />
+          </div>
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">Modelo da Impressora</label>
+            <input id="prtModel" type="text" required placeholder="Ex: Brother DCP-L5652DN" class="w-full px-3 py-2 rounded-xl border border-slate-300" />
+          </div>
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">Nº de Série (Hardware)</label>
+            <input id="prtSerial" type="text" required placeholder="Ex: BR98765432" class="w-full px-3 py-2 rounded-xl border border-slate-300 mono" />
+          </div>
+        </div>
+        <div class="grid grid-cols-3 gap-2.5">
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">IP Local ou Porta USB</label>
+            <input id="prtIp" type="text" required placeholder="192.168.1.50" class="w-full px-3 py-2 rounded-xl border border-slate-300 mono" />
+          </div>
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">Cont. Inicial P&B</label>
+            <input id="prtInitMono" type="number" value="0" required class="w-full px-3 py-2 rounded-xl border border-slate-300 mono" />
+          </div>
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">Cont. Atual P&B</label>
+            <input id="prtCurMono" type="number" value="0" required class="w-full px-3 py-2 rounded-xl border border-slate-300 mono" />
+          </div>
+        </div>
+        <div class="grid grid-cols-2 gap-2.5">
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">Cont. Inicial Colorido</label>
+            <input id="prtInitColor" type="number" value="0" required class="w-full px-3 py-2 rounded-xl border border-slate-300 mono" />
+          </div>
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">Cont. Atual Colorido</label>
+            <input id="prtCurColor" type="number" value="0" required class="w-full px-3 py-2 rounded-xl border border-slate-300 mono" />
+          </div>
+        </div>
+        <button type="submit" class="w-full py-3 rounded-2xl bg-[#0038A8] hover:bg-blue-800 text-white font-black transition">
+          Salvar Impressora no Banco
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- =========================================================================
+       MODAL 4: AGENTE MULTI-LOCAL & TOKENS REAIS DAS UNIDADES
+       ========================================================================= -->
+  <div id="agentModal" class="hidden fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
     <div class="bg-white rounded-3xl max-w-3xl w-full p-6 space-y-4 shadow-2xl max-h-[90vh] overflow-y-auto">
       <div class="flex justify-between items-center border-b border-slate-100 pb-3">
         <div>
-          <span class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase bg-emerald-50 text-emerald-700">Edge Function Ativa em Produção</span>
-          <h3 class="font-black text-base text-slate-900 mt-1">Configuração & Simulador Ao Vivo do Webhook Asaas</h3>
+          <span class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase bg-indigo-50 text-indigo-700">Tokens Exclusivos por Unidade</span>
+          <h3 class="font-black text-base text-slate-900 mt-1">Implantação do Agente Satélite (`printmind-agent.exe`)</h3>
         </div>
-        <button onclick="closeModal('asaasWebhookModal')" class="text-slate-400 hover:text-slate-600">✕</button>
-      </div>
-      <div class="p-3.5 rounded-2xl bg-slate-900 text-slate-100 space-y-1.5 text-xs">
-        <span class="text-[10px] font-bold uppercase text-emerald-400 block">URL Oficial do Webhook (Para colar em Asaas -> Integrações -> Webhooks):</span>
-        <code class="mono text-[11px] text-white block select-all">https://zbsmzcbcivhzslcnfxmq.supabase.co/functions/v1/asaas-webhook</code>
-      </div>
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
-        <div class="p-4 rounded-2xl bg-slate-50 border border-slate-200 space-y-2.5">
-          <strong class="text-slate-900 block">Disparar Evento Real para a Edge Function</strong>
-          <select id="simWebhookEvent" class="w-full px-3 py-2 rounded-xl border border-slate-300 bg-white font-semibold">
-            <option value="PAYMENT_RECEIVED">PAYMENT_RECEIVED (Fatura Paga via PIX/Boleto)</option>
-            <option value="PAYMENT_CONFIRMED">PAYMENT_CONFIRMED (Pagamento Confirmado)</option>
-            <option value="PAYMENT_OVERDUE">PAYMENT_OVERDUE (Fatura Vencida)</option>
-          </select>
-          <button id="btnFireWebhook" onclick="simulateAsaasWebhook()" class="w-full py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-black transition">
-            🚀 Disparar Webhook no Supabase Agora
-          </button>
-        </div>
-        <div class="p-4 rounded-2xl bg-indigo-50/50 border border-indigo-200 space-y-2">
-          <strong class="text-indigo-950 block">Resposta em Tempo Real do Servidor:</strong>
-          <pre id="webhookResponseBox" class="bg-slate-900 text-emerald-300 p-3 rounded-xl text-[11px] mono overflow-x-auto h-32">Clique no botão ao lado para testar o webhook ao vivo...</pre>
-        </div>
-      </div>
-      <div class="space-y-2">
-        <h4 class="text-xs font-bold text-slate-700 uppercase">Últimos Webhooks Processados no Banco (`public.payment_webhooks`):</h4>
-        <div id="webhookLogsList" class="space-y-1.5 text-xs max-h-40 overflow-y-auto"></div>
-      </div>
-    </div>
-  </div>
-
-  <div id="authModal" class="hidden fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
-    <div class="bg-white rounded-3xl max-w-md w-full p-6 space-y-4 shadow-2xl">
-      <div class="flex justify-between items-center">
-        <h3 class="font-black text-base text-slate-900">Autenticação Supabase & Plano SaaS</h3>
-        <button onclick="closeModal('authModal')" class="text-slate-400 hover:text-slate-600">✕</button>
-      </div>
-      <button onclick="loginGoogle()" class="w-full py-2.5 px-4 rounded-xl border border-slate-300 hover:bg-slate-50 font-bold text-xs flex items-center justify-center space-x-2">
-        <span>🔐 Entrar com Google (OAuth 2.0)</span>
-      </button>
-      <div class="space-y-2">
-        <input id="emailIn" type="email" value="financeiro@starcopias.com.br" class="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs" placeholder="E-mail" />
-        <input id="passIn" type="password" value="••••••••••" class="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs" placeholder="Senha" />
-        <button onclick="closeModal('authModal')" class="w-full py-2.5 rounded-xl bg-[#0038A8] text-white font-bold text-xs">Acessar Painel Pro (R$ 397/mês)</button>
-      </div>
-    </div>
-  </div>
-
-  <div id="agentModal" class="hidden fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
-    <div class="bg-white rounded-3xl max-w-2xl w-full p-6 space-y-4 shadow-2xl">
-      <div class="flex justify-between items-center">
-        <h3 class="font-black text-base text-slate-900">Agente Satélite Multi-Local (printmind-agent.exe)</h3>
         <button onclick="closeModal('agentModal')" class="text-slate-400 hover:text-slate-600">✕</button>
       </div>
-      <pre class="bg-slate-900 text-emerald-300 p-3.5 rounded-2xl text-[11px] mono overflow-x-auto">./printmind-agent.exe -server="http://localhost:8090" -token="pm_live_hosp_central_01" -subnets="192.168.1.0/24,10.20.1.0/24,10.20.2.0/24"</pre>
+      <p class="text-xs text-slate-600">
+        Cada unidade física cadastrada nos seus clientes recebe um token único no Supabase (`public.client_units`). Para varrer múltiplos andares ou filiais interligadas por VLAN/VPN, informe as faixas CIDR separadas por vírgula:
+      </p>
+      <div id="unitsTokensList" class="space-y-2.5 text-xs"></div>
     </div>
   </div>
 
+  <!-- =========================================================================
+       MODAL 5: DEMONSTRATIVO DE RATEIO HOSPITALAR & PIX CRC16
+       ========================================================================= -->
   <div id="invoiceModal" class="hidden fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
     <div class="bg-white rounded-3xl max-w-3xl w-full p-6 space-y-4 shadow-2xl max-h-[90vh] overflow-y-auto">
       <div class="flex justify-between items-center border-b border-slate-100 pb-3">
@@ -191,15 +456,285 @@
   <script>
     const SUPABASE_URL = 'https://zbsmzcbcivhzslcnfxmq.supabase.co';
     const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inpic216Y2JjaXZoenNsY25meG1xIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTQ0NDUxNTcsImV4cCI6MjExMDAyMTE1N30.U9F-EL3ddBBqEK0MqkNuZBC6ZvwtuEElN6Z_VpEGT7Q';
-    let clients = [], printers = [], closings = [];
+    const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    let currentSession = null;
+    let currentProfile = null;
+    let currentTenant = null;
+    let clients = [], units = [], printers = [], closings = [];
 
     function openModal(id) {
       document.getElementById(id).classList.remove('hidden');
-      if (id === 'asaasWebhookModal') loadWebhookLogs();
+      if (id === 'newPrinterModal') populateClientSelect();
+      if (id === 'agentModal') renderUnitsTokens();
     }
     function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
-    function loginGoogle() {
-      window.open(`${SUPABASE_URL}/auth/v1/authorize?provider=google&redirect_to=${encodeURIComponent(window.location.origin)}`, '_blank');
+
+    function showAuthAlert(msg, isError = true) {
+      const box = document.getElementById('authAlertBox');
+      box.classList.remove('hidden', 'bg-rose-50', 'text-rose-700', 'border-rose-200', 'bg-emerald-50', 'text-emerald-700', 'border-emerald-200');
+      box.classList.add('border', isError ? 'bg-rose-50' : 'bg-emerald-50', isError ? 'text-rose-700' : 'text-emerald-700', isError ? 'border-rose-200' : 'border-emerald-200');
+      box.innerText = msg;
+    }
+
+    function switchAuthTab(tab) {
+      const isLogin = tab === 'login';
+      document.getElementById('formLogin').classList.toggle('hidden', !isLogin);
+      document.getElementById('formSignup').classList.toggle('hidden', isLogin);
+      document.getElementById('tabBtnLogin').className = isLogin ? 'py-2 rounded-xl bg-white text-slate-900 shadow-sm transition' : 'py-2 rounded-xl text-slate-600 hover:text-slate-900 transition';
+      document.getElementById('tabBtnSignup').className = !isLogin ? 'py-2 rounded-xl bg-white text-slate-900 shadow-sm transition' : 'py-2 rounded-xl text-slate-600 hover:text-slate-900 transition';
+      document.getElementById('authAlertBox').classList.add('hidden');
+    }
+
+    async function handleGoogleLogin() {
+      const redirectUrl = window.location.origin + window.location.pathname;
+      const { error } = await sb.auth.signInWithOAuth({
+        provider: 'google',
+        options: { redirectTo: redirectUrl }
+      });
+      if (error) showAuthAlert('Erro ao iniciar login com Google: ' + error.message, true);
+    }
+
+    async function handleEmailLogin(e) {
+      e.preventDefault();
+      const email = document.getElementById('loginEmail').value.trim();
+      const password = document.getElementById('loginPassword').value;
+      const btn = document.getElementById('btnSubmitLogin');
+      btn.disabled = true;
+      btn.innerText = 'Autenticando...';
+
+      const { data, error } = await sb.auth.signInWithPassword({ email, password });
+      btn.disabled = false;
+      btn.innerText = 'Entrar no Painel';
+
+      if (error) {
+        showAuthAlert('Falha no login: ' + error.message, true);
+        return;
+      }
+      if (data.session) onSessionAuthenticated(data.session);
+    }
+
+    async function handleEmailSignup(e) {
+      e.preventDefault();
+      const trade_name = document.getElementById('signupTradeName').value.trim();
+      const cnpj_cpf = document.getElementById('signupCnpj').value.trim();
+      const phone = document.getElementById('signupPhone').value.trim();
+      const email = document.getElementById('signupEmail').value.trim();
+      const password = document.getElementById('signupPassword').value;
+      const btn = document.getElementById('btnSubmitSignup');
+      btn.disabled = true;
+      btn.innerText = 'Criando conta no Supabase...';
+
+      const { data, error } = await sb.auth.signUp({
+        email,
+        password,
+        options: {
+          data: { trade_name, full_name: trade_name, cnpj_cpf, phone }
+        }
+      });
+      btn.disabled = false;
+      btn.innerText = 'Criar Minha Conta & Escolher Plano';
+
+      if (error) {
+        showAuthAlert('Erro ao criar conta: ' + error.message, true);
+        return;
+      }
+      if (data.session) {
+        onSessionAuthenticated(data.session);
+      } else {
+        showAuthAlert('Conta criada! Verifique a confirmação no seu e-mail ou faça login na aba ao lado.', false);
+      }
+    }
+
+    async function handleLogout() {
+      await sb.auth.signOut();
+      currentSession = null;
+      currentProfile = null;
+      currentTenant = null;
+      document.getElementById('appScreen').classList.add('hidden');
+      document.getElementById('authScreen').classList.remove('hidden');
+    }
+
+    async function onSessionAuthenticated(session) {
+      currentSession = session;
+      document.getElementById('authScreen').classList.add('hidden');
+      document.getElementById('appScreen').classList.remove('hidden');
+      document.getElementById('topUserEmail').innerText = session.user.email;
+
+      const { data: prof } = await sb.from('profiles').select('*').eq('id', session.user.id).maybeSingle();
+      currentProfile = prof;
+
+      if (prof && prof.tenant_id) {
+        const { data: ten } = await sb.from('tenants').select('*').eq('id', prof.tenant_id).maybeSingle();
+        currentTenant = ten;
+        if (ten) {
+          document.getElementById('topTenantName').innerText = ten.trade_name || 'PrintMind';
+          document.getElementById('topPlanBadge').innerText = (ten.plan_tier || 'trial').toUpperCase();
+          document.getElementById('tenantPixKey').value = ten.pix_key || ten.cnpj_cpf || '';
+          document.getElementById('tenantWalletId').value = ten.baas_wallet_id || '';
+        }
+        if (!prof.onboarding_completed) {
+          openModal('planModal');
+        }
+      }
+
+      await loadTenantData();
+    }
+
+    async function saveTenantPlanAndPix(e) {
+      e.preventDefault();
+      if (!currentTenant || !currentProfile) return;
+      const selectedPlan = document.querySelector('input[name="plan_tier"]:checked')?.value || 'pro';
+      const pixKey = document.getElementById('tenantPixKey').value.trim();
+      const walletId = document.getElementById('tenantWalletId').value.trim();
+      const maxPrt = selectedPlan === 'starter' ? 30 : selectedPlan === 'pro' ? 150 : 9999;
+
+      await sb.from('tenants').update({
+        plan_tier: selectedPlan,
+        subscription_status: 'active',
+        max_printers: maxPrt,
+        pix_key: pixKey,
+        baas_wallet_id: walletId
+      }).eq('id', currentTenant.id);
+
+      await sb.from('profiles').update({ onboarding_completed: true }).eq('id', currentProfile.id);
+      document.getElementById('topPlanBadge').innerText = selectedPlan.toUpperCase();
+      currentTenant.pix_key = pixKey;
+      closeModal('planModal');
+    }
+
+    async function loadTenantData() {
+      if (!currentSession) return;
+      const [cRes, uRes, pRes, clRes] = await Promise.all([
+        sb.from('clients').select('*').order('created_at', { ascending: false }),
+        sb.from('client_units').select('*').order('created_at', { ascending: false }),
+        sb.from('printers').select('*').order('created_at', { ascending: false }),
+        sb.from('closings').select('*').order('created_at', { ascending: false })
+      ]);
+      clients = cRes.data || [];
+      units = uRes.data || [];
+      printers = pRes.data || [];
+      closings = clRes.data || [];
+      renderDashboard();
+    }
+
+    async function handleCreateClient(e) {
+      e.preventDefault();
+      if (!currentProfile) return;
+      const name = document.getElementById('cliName').value.trim();
+      const cnpj = document.getElementById('cliCnpj').value.trim();
+      const phone = document.getElementById('cliPhone').value.trim();
+      const closing_day = Number(document.getElementById('cliClosingDay').value || 15);
+      const contract_num = document.getElementById('cliContract').value.trim();
+      const base_rate = Number(document.getElementById('cliBaseRate').value || 0);
+      const franchise_mono = Number(document.getElementById('cliFranMono').value || 0);
+      const extra_mono = Number(document.getElementById('cliExtraMono').value || 0.05);
+      const franchise_color = Number(document.getElementById('cliFranColor').value || 0);
+      const extra_color = Number(document.getElementById('cliExtraColor').value || 0.10);
+      const is_corporate = document.getElementById('cliIsCorp').checked;
+      const unitNames = document.getElementById('cliUnits').value.split(',').map(s => s.trim()).filter(Boolean);
+      const deptNames = document.getElementById('cliDepts').value.split(',').map(s => s.trim()).filter(Boolean);
+
+      const { data: newCli, error } = await sb.from('clients').insert({
+        tenant_id: currentProfile.tenant_id,
+        name, cnpj, phone, closing_day, contract_num,
+        base_rate, franchise_mono, extra_mono, franchise_color, extra_color,
+        is_corporate,
+        units: unitNames.length > 0 ? unitNames : ['Matriz'],
+        departments: deptNames.length > 0 ? deptNames : ['Geral']
+      }).select().single();
+
+      if (error) {
+        alert('Erro ao salvar cliente: ' + error.message);
+        return;
+      }
+
+      const unitsToCreate = (unitNames.length > 0 ? unitNames : ['Matriz']).map(uName => ({
+        tenant_id: currentProfile.tenant_id,
+        client_id: newCli.id,
+        unit_name: uName,
+        scan_subnets: ['192.168.1.0/24']
+      }));
+      await sb.from('client_units').insert(unitsToCreate);
+
+      e.target.reset();
+      closeModal('newClientModal');
+      await loadTenantData();
+    }
+
+    function populateClientSelect() {
+      const sel = document.getElementById('prtClientSelect');
+      if (clients.length === 0) {
+        sel.innerHTML = '<option value="">Cadastre um cliente primeiro</option>';
+        return;
+      }
+      sel.innerHTML = clients.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
+      populateUnitAndDeptSelects();
+    }
+
+    function populateUnitAndDeptSelects() {
+      const cid = document.getElementById('prtClientSelect').value;
+      const c = clients.find(x => x.id === cid);
+      if (c) {
+        document.getElementById('prtUnit').value = (c.units && c.units[0]) || 'Matriz';
+        document.getElementById('prtDept').value = (c.departments && c.departments[0]) || 'Geral';
+      }
+    }
+
+    async function handleCreatePrinter(e) {
+      e.preventDefault();
+      if (!currentProfile) return;
+      const client_id = document.getElementById('prtClientSelect').value;
+      const unit = document.getElementById('prtUnit').value.trim() || 'Matriz';
+      const department = document.getElementById('prtDept').value.trim() || 'Geral';
+      const model = document.getElementById('prtModel').value.trim();
+      const serial = document.getElementById('prtSerial').value.trim();
+      const ip = document.getElementById('prtIp').value.trim();
+      const initial_mono_pages = Number(document.getElementById('prtInitMono').value || 0);
+      const mono_pages = Number(document.getElementById('prtCurMono').value || 0);
+      const initial_color_pages = Number(document.getElementById('prtInitColor').value || 0);
+      const color_pages = Number(document.getElementById('prtCurColor').value || 0);
+
+      const { error } = await sb.from('printers').insert({
+        tenant_id: currentProfile.tenant_id,
+        client_id: client_id || null,
+        unit, department, model, serial, ip,
+        initial_mono_pages, mono_pages,
+        initial_color_pages, color_pages,
+        initial_total_pages: initial_mono_pages + initial_color_pages,
+        total_pages: mono_pages + color_pages,
+        is_color_capable: color_pages > 0,
+        status: 'online'
+      });
+
+      if (error) {
+        alert('Erro ao cadastrar impressora: ' + error.message);
+        return;
+      }
+      e.target.reset();
+      closeModal('newPrinterModal');
+      await loadTenantData();
+    }
+
+    function renderUnitsTokens() {
+      const container = document.getElementById('unitsTokensList');
+      if (units.length === 0) {
+        container.innerHTML = '<div class="p-4 rounded-2xl bg-slate-50 text-slate-500 text-center">Cadastre seu primeiro cliente para gerar automaticamente o Token de Pareamento do Agente Satélite.</div>';
+        return;
+      }
+      container.innerHTML = units.map(u => {
+        const cli = clients.find(c => c.id === u.client_id);
+        const subnetsStr = (u.scan_subnets || ['192.168.1.0/24']).join(',');
+        return `
+          <div class="p-4 rounded-2xl bg-slate-900 text-slate-100 space-y-2">
+            <div class="flex justify-between items-center">
+              <strong class="text-white">${cli ? cli.name : 'Cliente'} • Unidade: ${u.unit_name}</strong>
+              <span class="px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 mono text-[10px]">${u.pairing_token}</span>
+            </div>
+            <pre class="bg-black/40 p-2.5 rounded-xl text-[11px] mono text-emerald-300 overflow-x-auto select-all">./printmind-agent.exe -server="https://zbsmzcbcivhzslcnfxmq.supabase.co" -token="${u.pairing_token}" -subnets="${subnetsStr}"</pre>
+          </div>
+        `;
+      }).join('');
     }
 
     function calcCRC16(str) {
@@ -216,115 +751,111 @@
 
     function buildPixPayload(key, amount) {
       const f = (id, v) => id + String(v.length).padStart(2, '0') + v;
-      const gui = f('00', 'br.gov.bcb.pix') + f('01', key || '18.234.567/0001-89');
-      const base = '000201010212' + f('26', gui) + '520400005303986' + f('54', amount.toFixed(2)) + '5802BR' + f('59', 'STAR COPIAS OUTSOURCING') + f('60', 'SAO PAULO') + f('62', f('05', 'PRINTMIND')) + '6304';
+      const gui = f('00', 'br.gov.bcb.pix') + f('01', key || '00.000.000/0001-00');
+      const mName = ((currentTenant && currentTenant.trade_name) || 'PRINTMIND LOCADORA').slice(0, 25).toUpperCase();
+      const base = '000201010212' + f('26', gui) + '520400005303986' + f('54', amount.toFixed(2)) + '5802BR' + f('59', mName) + f('60', 'SAO PAULO') + f('62', f('05', 'PRINTMIND')) + '6304';
       return base + calcCRC16(base);
     }
 
     function computeMetrics(c) {
-      const linked = printers.filter(p => (c.printer_ids || []).includes(p.id) || p.client_id === c.id);
+      const linked = printers.filter(p => p.client_id === c.id);
       let dMono = 0, dColor = 0;
       linked.forEach(p => {
-        const m = Math.max(0, (p.mono_pages || 0) - (p.initial_mono_pages || 0));
-        const col = Math.max(0, (p.color_pages || 0) - (p.initial_color_pages || 0));
-        dMono += m;
-        dColor += col;
+        dMono += Math.max(0, (p.mono_pages || 0) - (p.initial_mono_pages || 0));
+        dColor += Math.max(0, (p.color_pages || 0) - (p.initial_color_pages || 0));
       });
       const exMono = Math.max(0, dMono - (c.franchise_mono || 0)) * Number(c.extra_mono || 0.05);
       const exColor = Math.max(0, dColor - (c.franchise_color || 0)) * Number(c.extra_color || 0.10);
       const total = Number(c.base_rate || 0) + exMono + exColor;
       const cl = closings.find(x => x.client_id === c.id);
-      return { linked, dMono, dColor, dTotal: dMono + dColor, exMono, exColor, total, net: total * 0.985, closing: cl };
+      return { linked, dMono, dColor, dTotal: dMono + dColor, exMono, exColor, total, closing: cl };
     }
 
-    async function loadAll() {
-      try {
-        const headers = { apikey: SUPABASE_ANON_KEY, Authorization: `Bearer ${SUPABASE_ANON_KEY}` };
-        const [cRes, pRes, clRes] = await Promise.all([
-          fetch(`${SUPABASE_URL}/rest/v1/clients?select=*&order=created_at.asc`, { headers }),
-          fetch(`${SUPABASE_URL}/rest/v1/printers?select=*`, { headers }),
-          fetch(`${SUPABASE_URL}/rest/v1/closings?select=*`, { headers })
-        ]);
-        if (cRes.ok && pRes.ok) {
-          clients = await cRes.json();
-          printers = await pRes.json();
-          closings = clRes.ok ? await clRes.json() : [];
-          render();
-          return;
-        }
-      } catch (_) {}
-      const [cRes, pRes] = await Promise.all([fetch('/api/clients'), fetch('/api/printers')]);
-      clients = await cRes.json();
-      printers = await pRes.json();
-      render();
-    }
-
-    function render() {
+    function renderDashboard() {
       document.getElementById('kpiClients').innerText = clients.length;
       document.getElementById('kpiPrinters').innerText = printers.length;
       let sumPages = 0, sumBill = 0;
 
-      document.getElementById('clientsTableBody').innerHTML = clients.map(c => {
-        const m = computeMetrics(c);
-        sumPages += m.dTotal;
-        sumBill += m.total;
-        const st = m.closing ? m.closing.status : 'aberto';
-        const badge = st === 'pago'
-          ? '<span class="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-emerald-100 text-emerald-800">● PAGO (WEBHOOK ASAAS)</span>'
-          : st === 'congelado'
-            ? '<span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-blue-100 text-[#0038A8]">● FATURA EMITIDA</span>'
-            : '<span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 text-amber-700">● EM ABERTO</span>';
-        return `
-          <tr class="hover:bg-slate-50">
-            <td class="py-3.5 px-4">
-              <strong class="text-slate-900 block">${c.name}</strong>
-              <span class="text-[11px] text-slate-400 mono">${c.cnpj || ''} • Corte Dia ${c.closing_day}</span>
+      if (clients.length === 0) {
+        document.getElementById('clientsTableBody').innerHTML = `
+          <tr>
+            <td colspan="7" class="py-10 text-center text-slate-400 space-y-2">
+              <div class="font-bold text-slate-600">Sua conta está limpa (0 dados mockados).</div>
+              <div>Clique em <strong>"+ Cadastrar Cliente"</strong> acima para registrar seu primeiro contrato real.</div>
             </td>
-            <td class="py-3.5 px-4">${m.linked.length} máquina(s)</td>
-            <td class="py-3.5 px-4 text-right mono font-bold">${m.dTotal.toLocaleString('pt-BR')} págs<div class="text-[10px] text-slate-400">${m.dMono.toLocaleString('pt-BR')} P&B • ${m.dColor.toLocaleString('pt-BR')} Cor</div></td>
-            <td class="py-3.5 px-4 text-right mono font-black text-slate-900">R$ ${m.total.toFixed(2)}</td>
-            <td class="py-3.5 px-4 text-right mono font-bold text-emerald-700">R$ ${m.net.toFixed(2)}</td>
-            <td class="py-3.5 px-4">${badge}</td>
-            <td class="py-3.5 px-4 text-right space-x-1">
-              <button onclick="emitAsaasSplitCharge('${c.id}')" class="px-2.5 py-1.5 rounded-xl bg-[#0038A8] text-white font-bold hover:bg-blue-800">Emitir Asaas + Split</button>
-              <button onclick="openClientInvoice('${c.id}')" class="px-2.5 py-1.5 rounded-xl bg-slate-100 text-slate-700 font-bold hover:bg-slate-200">Rateio & PIX</button>
-            </td>
-          </tr>
-        `;
-      }).join('');
+          </tr>`;
+      } else {
+        document.getElementById('clientsTableBody').innerHTML = clients.map(c => {
+          const m = computeMetrics(c);
+          sumPages += m.dTotal;
+          sumBill += m.total;
+          const st = m.closing ? m.closing.status : 'aberto';
+          const badge = st === 'pago'
+            ? '<span class="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-emerald-100 text-emerald-800">● PAGO (ASAAS)</span>'
+            : st === 'congelado'
+              ? '<span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-blue-100 text-[#0038A8]">● FATURA EMITIDA</span>'
+              : '<span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 text-amber-700">● EM ABERTO</span>';
+          return `
+            <tr class="hover:bg-slate-50">
+              <td class="py-3.5 px-4">
+                <strong class="text-slate-900 block">${c.name}</strong>
+                <span class="text-[11px] text-slate-400 mono">${c.cnpj || ''} • Corte Dia ${c.closing_day}</span>
+              </td>
+              <td class="py-3.5 px-4 text-[11px] text-slate-600">${(c.units || []).join(', ')}<br><span class="text-indigo-600 font-semibold">${(c.departments || []).join(', ')}</span></td>
+              <td class="py-3.5 px-4 font-semibold">${m.linked.length} máq</td>
+              <td class="py-3.5 px-4 text-right mono font-bold">${m.dTotal.toLocaleString('pt-BR')} págs<div class="text-[10px] text-slate-400">${m.dMono.toLocaleString('pt-BR')} P&B • ${m.dColor.toLocaleString('pt-BR')} Cor</div></td>
+              <td class="py-3.5 px-4 text-right mono font-black text-slate-900">R$ ${m.total.toFixed(2)}</td>
+              <td class="py-3.5 px-4">${badge}</td>
+              <td class="py-3.5 px-4 text-right space-x-1">
+                <button onclick="emitAsaasSplitCharge('${c.id}')" class="px-2.5 py-1.5 rounded-xl bg-[#0038A8] text-white font-bold hover:bg-blue-800">Emitir Fatura Asaas</button>
+                <button onclick="openClientInvoice('${c.id}')" class="px-2.5 py-1.5 rounded-xl bg-slate-100 text-slate-700 font-bold hover:bg-slate-200">Rateio & PIX</button>
+              </td>
+            </tr>
+          `;
+        }).join('');
+      }
 
       document.getElementById('kpiDeltaPages').innerText = sumPages.toLocaleString('pt-BR');
       document.getElementById('kpiTotalBilling').innerText = sumBill.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 
-      document.getElementById('printersGrid').innerHTML = printers.map(p => {
-        const sups = Array.isArray(p.supplies) ? p.supplies : [];
-        return `
-          <div class="bg-white p-5 rounded-3xl border border-slate-200 shadow-sm space-y-3">
-            <div class="flex justify-between items-start">
-              <div>
-                <h4 class="font-bold text-slate-900">${p.model}</h4>
-                <span class="text-xs text-slate-400 mono">Serial: ${p.serial} • IP: ${p.ip || p.usb_port} • ${p.unit || 'Oficina'} (${p.department || 'Geral'})</span>
+      if (printers.length === 0) {
+        document.getElementById('printersGrid').innerHTML = `<div class="col-span-2 p-8 rounded-3xl bg-white border border-slate-200 text-center text-xs text-slate-400">Nenhuma impressora cadastrada ainda. Clique em "+ Adicionar Impressora" ou rode o Agente Satélite.</div>`;
+      } else {
+        document.getElementById('printersGrid').innerHTML = printers.map(p => {
+          const dMono = Math.max(0, (p.mono_pages || 0) - (p.initial_mono_pages || 0));
+          const dColor = Math.max(0, (p.color_pages || 0) - (p.initial_color_pages || 0));
+          return `
+            <div class="bg-white p-5 rounded-3xl border border-slate-200 shadow-sm space-y-2">
+              <div class="flex justify-between items-start">
+                <div>
+                  <h4 class="font-bold text-slate-900">${p.model}</h4>
+                  <span class="text-xs text-slate-400 mono">Serial: ${p.serial} • IP/Porta: ${p.ip || p.usb_port || 'N/A'}</span>
+                  <div class="text-[11px] font-bold text-indigo-700 mt-0.5">📍 ${p.unit || 'Matriz'} • ${p.department || 'Geral'}</div>
+                </div>
+                <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 uppercase">${p.status}</span>
               </div>
-              <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 uppercase">${p.status}</span>
+              <div class="pt-2 border-t border-slate-100 flex justify-between text-xs mono">
+                <span>Produção P&B: <strong>${dMono.toLocaleString('pt-BR')}</strong></span>
+                <span>Produção Cor: <strong>${dColor.toLocaleString('pt-BR')}</strong></span>
+                <span class="text-[#0038A8] font-black">Delta: ${(dMono + dColor).toLocaleString('pt-BR')} págs</span>
+              </div>
             </div>
-            <div class="grid grid-cols-4 gap-2 text-center text-[11px]">
-              ${sups.map(s => `<div class="p-2 rounded-xl bg-slate-50 border border-slate-100"><span class="block text-slate-500 truncate">${s.name}</span><strong class="mono text-slate-900">${s.percent}%</strong></div>`).join('')}
-            </div>
-          </div>
-        `;
-      }).join('');
+          `;
+        }).join('');
+      }
       lucide.createIcons();
     }
 
     async function emitAsaasSplitCharge(clientId) {
       const c = clients.find(x => x.id === clientId);
-      if (!c) return;
+      if (!c || !currentProfile) return;
       const m = computeMetrics(c);
       await fetch(`${SUPABASE_URL}/functions/v1/asaas-billing`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           action: 'emit_split_charge',
+          tenant_id: currentProfile.tenant_id,
           client_id: c.id,
           client_name: c.name,
           month_year: '11/2026',
@@ -335,60 +866,12 @@
           extra_mono: m.exMono,
           extra_color: m.exColor,
           total_amount: m.total,
+          pix_key: (currentTenant && currentTenant.pix_key) || c.cnpj || '',
           split_percent: 1.5
         })
       });
-      await loadAll();
+      await loadTenantData();
       openClientInvoice(clientId);
-    }
-
-    async function simulateAsaasWebhook() {
-      const btn = document.getElementById('btnFireWebhook');
-      const box = document.getElementById('webhookResponseBox');
-      const evType = document.getElementById('simWebhookEvent').value;
-      btn.disabled = true;
-      btn.innerText = 'Processando no Supabase...';
-
-      const hosp = clients[0];
-      if (hosp && !closings.find(x => x.client_id === hosp.id)) {
-        await emitAsaasSplitCharge(hosp.id);
-      }
-      const targetClosing = closings.find(x => hosp && x.client_id === hosp.id) || closings[0];
-
-      const res = await fetch(`${SUPABASE_URL}/functions/v1/asaas-webhook`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          id: 'evt_live_' + Date.now(),
-          event: evType,
-          payment: {
-            id: targetClosing ? targetClosing.baas_payment_id : 'pay_live_demo',
-            externalReference: targetClosing ? targetClosing.id : '',
-            value: targetClosing ? targetClosing.total_amount : 5113.20,
-            netValue: targetClosing ? targetClosing.net_tenant_amount : 5036.50,
-            billingType: 'PIX'
-          }
-        })
-      });
-      const result = await res.json();
-      box.innerText = JSON.stringify(result, null, 2);
-      btn.disabled = false;
-      btn.innerText = '🚀 Disparar Webhook no Supabase Agora';
-      await loadAll();
-      await loadWebhookLogs();
-    }
-
-    async function loadWebhookLogs() {
-      const res = await fetch(`${SUPABASE_URL}/functions/v1/asaas-webhook`);
-      if (!res.ok) return;
-      const data = await res.json();
-      const list = data.recent_webhooks || [];
-      document.getElementById('webhookLogsList').innerHTML = list.map(w => `
-        <div class="p-2.5 rounded-xl bg-slate-50 border border-slate-200 flex justify-between items-center">
-          <span class="mono font-bold text-slate-800">${w.event_type} (${w.event_id})</span>
-          <span class="text-slate-500 mono text-[11px]">${new Date(w.processed_at).toLocaleString('pt-BR')}</span>
-        </div>
-      `).join('') || '<div class="text-slate-400">Nenhum evento registrado ainda.</div>';
     }
 
     function openClientInvoice(id) {
@@ -397,20 +880,30 @@
       const m = computeMetrics(c);
       document.getElementById('invClientTitle').innerText = c.name + ' • Rateio por Centro de Custo';
       const totalMach = Math.max(1, m.linked.length);
-      document.getElementById('invRateioBody').innerHTML = m.linked.map(p => {
-        const pm = Math.max(0, (p.mono_pages || 0) - (p.initial_mono_pages || 0));
-        const pc = Math.max(0, (p.color_pages || 0) - (p.initial_color_pages || 0));
-        const share = (Number(c.base_rate || 0) / totalMach) + (m.dMono > 0 ? m.exMono * (pm / m.dMono) : 0) + (m.dColor > 0 ? m.exColor * (pc / m.dColor) : 0);
-        return `<div class="p-3 rounded-2xl bg-indigo-50/50 border border-indigo-100 flex justify-between items-center">
-          <div><strong class="text-slate-900">${p.unit || 'Matriz'} • ${p.department || 'Setor'}</strong><span class="block text-[11px] text-slate-500 mono">${p.model} (${p.serial}): ${pm} P&B + ${pc} Cor</span></div>
-          <strong class="mono text-indigo-950 font-black">R$ ${share.toFixed(2)}</strong>
-        </div>`;
-      }).join('');
-      document.getElementById('invPixInput').value = (m.closing && m.closing.pix_copy_paste) ? m.closing.pix_copy_paste : buildPixPayload(c.pix_key, m.total);
+      document.getElementById('invRateioBody').innerHTML = m.linked.length === 0
+        ? '<div class="text-slate-400">Vincule pelo menos 1 impressora a este cliente para calcular o rateio por setor.</div>'
+        : m.linked.map(p => {
+            const pm = Math.max(0, (p.mono_pages || 0) - (p.initial_mono_pages || 0));
+            const pc = Math.max(0, (p.color_pages || 0) - (p.initial_color_pages || 0));
+            const share = (Number(c.base_rate || 0) / totalMach) + (m.dMono > 0 ? m.exMono * (pm / m.dMono) : 0) + (m.dColor > 0 ? m.exColor * (pc / m.dColor) : 0);
+            return `<div class="p-3 rounded-2xl bg-indigo-50/50 border border-indigo-100 flex justify-between items-center">
+              <div><strong class="text-slate-900">${p.unit || 'Matriz'} • ${p.department || 'Setor'}</strong><span class="block text-[11px] text-slate-500 mono">${p.model} (${p.serial}): ${pm} P&B + ${pc} Cor</span></div>
+              <strong class="mono text-indigo-950 font-black">R$ ${share.toFixed(2)}</strong>
+            </div>`;
+          }).join('');
+      const pixKey = (currentTenant && currentTenant.pix_key) || c.cnpj || '';
+      document.getElementById('invPixInput').value = (m.closing && m.closing.pix_copy_paste) ? m.closing.pix_copy_paste : buildPixPayload(pixKey, m.total);
       openModal('invoiceModal');
     }
 
-    loadAll();
+    // Inicializa checando sessão ativa no Supabase Auth
+    sb.auth.getSession().then(({ data: { session } }) => {
+      if (session) {
+        onSessionAuthenticated(session);
+      } else {
+        lucide.createIcons();
+      }
+    });
   </script>
 </body>
 </html>
