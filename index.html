@@ -242,6 +242,103 @@
           </div>
         </div>
 
+        <!-- =====================================================================
+             SETUP INICIAL GUIADO (ONBOARDING EM 3 PASSOS COM 2 MÁQUINAS GRÁTIS)
+             ===================================================================== -->
+        <div id="onboardingCard" class="bg-gradient-to-r from-blue-950 via-[#002266] to-[#0038A8] text-white rounded-3xl p-6 shadow-xl space-y-4">
+          <div class="flex flex-wrap items-center justify-between gap-3">
+            <div class="flex items-center space-x-3">
+              <div class="w-10 h-10 rounded-2xl bg-white/10 text-white flex items-center justify-center border border-white/20">
+                <i data-lucide="sparkles" class="w-5 h-5 text-amber-300"></i>
+              </div>
+              <div>
+                <span class="text-[10px] font-black uppercase tracking-wider text-blue-200 block">Setup Inicial Guiado</span>
+                <h3 class="text-base font-black text-white">Como conectar suas impressoras em 3 passos simples</h3>
+              </div>
+            </div>
+            <div class="flex items-center space-x-2">
+              <span class="px-3 py-1 rounded-full text-[11px] font-black bg-emerald-400/20 text-emerald-300 border border-emerald-400/30">
+                🎁 2 IMPRESSORAS GRÁTIS PARA TESTAR
+              </span>
+              <button onclick="toggleOnboardingGuide()" class="text-xs text-blue-200 hover:text-white px-2 py-1 rounded-lg hover:bg-white/10 transition" title="Ocultar ou expandir guia">Ocultar</button>
+            </div>
+          </div>
+
+          <div id="onboardingStepsGrid" class="grid grid-cols-1 md:grid-cols-3 gap-4 pt-1">
+            <!-- PASSO 1 -->
+            <div class="bg-white/10 rounded-2xl p-4 border border-white/10 space-y-2 flex flex-col justify-between">
+              <div class="space-y-1">
+                <div class="flex items-center space-x-2">
+                  <span class="w-5 h-5 rounded-full bg-white text-[#0038A8] font-black text-[11px] flex items-center justify-center">1</span>
+                  <strong class="text-xs font-black text-white">Baixar o Agente Satélite</strong>
+                </div>
+                <p class="text-[11px] text-blue-100">
+                  O robô oficial Go (6.9 MB) é quem faz a varredura e lê os contadores invioláveis de hardware na sua rede.
+                </p>
+              </div>
+              <a href="https://github.com/lucaspereiracardoso2024-hue/printmind-platform/raw/main/printmind-agent.exe" download="printmind-agent.exe" class="w-full py-2.5 rounded-xl bg-white text-[#0038A8] font-black text-xs hover:bg-blue-50 transition shadow-sm flex items-center justify-center space-x-1.5 mt-2">
+                <i data-lucide="download" class="w-3.5 h-3.5"></i>
+                <span>Baixar printmind-agent.exe</span>
+              </a>
+            </div>
+
+            <!-- PASSO 2 -->
+            <div class="bg-white/10 rounded-2xl p-4 border border-white/10 space-y-2 flex flex-col justify-between">
+              <div class="space-y-1">
+                <div class="flex items-center space-x-2">
+                  <span class="w-5 h-5 rounded-full bg-white text-[#0038A8] font-black text-[11px] flex items-center justify-center">2</span>
+                  <strong class="text-xs font-black text-white">Executar na Rede das Impressoras</strong>
+                </div>
+                <p class="text-[11px] text-blue-100">
+                  Coloque o executável em qualquer PC conectado à rede Wi-Fi/cabo onde estão as impressoras e rode com seu Token.
+                </p>
+              </div>
+              <button onclick="openModal('agentModal')" class="w-full py-2.5 rounded-xl bg-white/20 hover:bg-white/30 text-white font-bold text-xs transition flex items-center justify-center space-x-1.5 mt-2 border border-white/20">
+                <i data-lucide="key" class="w-3.5 h-3.5"></i>
+                <span>Ver Meu Token de Pareamento</span>
+              </button>
+            </div>
+
+            <!-- PASSO 3 -->
+            <div class="bg-white/10 rounded-2xl p-4 border border-white/10 space-y-2 flex flex-col justify-between">
+              <div class="space-y-1">
+                <div class="flex items-center space-x-2">
+                  <span class="w-5 h-5 rounded-full bg-white text-[#0038A8] font-black text-[11px] flex items-center justify-center">3</span>
+                  <strong class="text-xs font-black text-white">Telemetria ao Vivo no Painel</strong>
+                </div>
+                <p class="text-[11px] text-blue-100">
+                  O robô detecta Brother, HP, Ricoh e Epson via SNMP RFC 3805 e os contadores aparecem aqui na hora!
+                </p>
+              </div>
+              <div class="p-2 rounded-xl bg-emerald-500/20 border border-emerald-400/30 text-[11px] text-emerald-200 font-bold flex items-center space-x-1.5 mt-2">
+                <i data-lucide="shield-check" class="w-3.5 h-3.5 text-emerald-400"></i>
+                <span>Até 2 máquinas grátis para teste</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- BANNER DE TRAVA OPÇÃO 2: MAIS DE 2 MÁQUINAS EXIGE ATIVAÇÃO -->
+        <div id="trialLockBanner" class="hidden p-5 rounded-3xl bg-amber-50 border-2 border-amber-300 text-amber-950 flex flex-wrap items-center justify-between gap-4 shadow-sm">
+          <div class="flex items-center space-x-3.5">
+            <div class="w-11 h-11 rounded-2xl bg-amber-500 text-slate-950 flex items-center justify-center font-black">
+              <i data-lucide="lock" class="w-5 h-5 text-slate-950"></i>
+            </div>
+            <div>
+              <div class="flex items-center space-x-2">
+                <span class="px-2 py-0.5 rounded-full text-[10px] font-black bg-amber-200 text-amber-900 uppercase">Limite de Teste Atingido</span>
+                <span class="text-xs font-bold text-amber-800" id="trialLockCountMsg">Você possui 3 impressoras conectadas</span>
+              </div>
+              <h4 class="text-sm font-black text-slate-900 mt-0.5">Ative seu plano para monitorar todo o seu parque de impressoras</h4>
+              <p class="text-xs text-slate-600 mt-0.5">Suas 2 primeiras máquinas continuam no teste gratuito. Ative o Módulo 1 (R$ 1,00/mês por máquina) para desbloquear a telemetria completa.</p>
+            </div>
+          </div>
+          <button onclick="openModal('pricingModal')" class="px-5 py-2.5 rounded-xl bg-[#0038A8] hover:bg-blue-800 text-white font-black text-xs shadow-md transition flex items-center space-x-1.5 whitespace-nowrap">
+            <i data-lucide="credit-card" class="w-4 h-4"></i>
+            <span>Ativar Assinatura (R$ 1,00/máquina)</span>
+          </button>
+        </div>
+
         <!-- CARD DE ALERTA: FATURAMENTO DO DIA / CORTE -->
         <div id="dueAlertCard" class="hidden p-4 rounded-3xl bg-amber-50/70 border border-amber-200 flex flex-wrap items-center justify-between gap-3 shadow-sm">
           <div class="flex items-center space-x-3">
@@ -1079,6 +1176,17 @@
         <h3 class="font-black text-base text-slate-900">Cadastrar / Alocar Impressora</h3>
         <button onclick="closeModal('newPrinterModal')" class="text-slate-400 hover:text-slate-600">✕</button>
       </div>
+
+      <!-- AVISO EXPLICATIVO: ROBÔ SATÉLITE VS CADASTRO MANUAL -->
+      <div class="p-3.5 rounded-2xl bg-blue-50/70 border border-blue-200 text-[#0038A8] text-xs space-y-1">
+        <div class="flex items-center space-x-1.5 font-bold">
+          <i data-lucide="info" class="w-3.5 h-3.5 text-[#0038A8]"></i>
+          <span>Como o sistema faz a leitura dos contadores?</span>
+        </div>
+        <p class="text-[11px] text-slate-600">
+          Para coletar contadores invioláveis de páginas e níveis de toner <strong>automaticamente em tempo real</strong>, execute o <strong>Agente Satélite (printmind-agent.exe)</strong> na sua rede local. O formulário manual abaixo é indicado para impressoras antigas sem placa de rede.
+        </p>
+      </div>
       <form onsubmit="handleCreatePrinter(event)" class="space-y-3 text-xs">
         <div>
           <label class="block font-bold text-slate-700 mb-1">Vincular ao Cliente</label>
@@ -1263,6 +1371,7 @@
       if (tabId === 'reports') renderReportsView();
       if (tabId === 'grafica') renderGraficaView();
       if (tabId === 'master') loadMasterTenants();
+      checkTrialPrinterLock();
       lucide.createIcons();
     }
 
@@ -1306,6 +1415,7 @@
       document.getElementById('subTabFechamento').className = sub === 'fechamento' ? act : inact;
       document.getElementById('subTabSuprimentos').className = sub === 'suprimentos' ? act : inact;
       document.getElementById('subTabOciosidade').className = sub === 'ociosidade' ? act : inact;
+      checkTrialPrinterLock();
       lucide.createIcons();
     }
 
@@ -1529,10 +1639,55 @@
 
       await loadTenantData();
       syncMasterAccess(currentSession ? currentSession.user.email : null);
+      checkTrialPrinterLock();
       lucide.createIcons();
     }
 
     // --- CARREGAMENTO DE DADOS DO BANCO SUPABASE ---
+
+    // =========================================================================
+    // ONBOARDING GUIADO & TRAVA OPÇÃO 2 (ATÉ 2 IMPRESSORAS GRÁTIS NO TESTE)
+    // =========================================================================
+    const FREE_TRIAL_PRINTER_LIMIT = 2;
+
+    function toggleOnboardingGuide() {
+      const grid = document.getElementById('onboardingStepsGrid');
+      const isHidden = grid.classList.toggle('hidden');
+      event.target.innerText = isHidden ? 'Expandir' : 'Ocultar';
+    }
+
+    function checkTrialPrinterLock() {
+      const lockBanner = document.getElementById('trialLockBanner');
+      const lockMsg = document.getElementById('trialLockCountMsg');
+      const topBadge = document.getElementById('topPlanBadge');
+      const count = printers.length;
+
+      // Se for o super admin Lucas, não aplica trava
+      if (typeof isMasterAdminUser === 'function' && isMasterAdminUser()) {
+        if (lockBanner) lockBanner.classList.add('hidden');
+        return;
+      }
+
+      const hasPaidPlan = currentTenant && currentTenant.subscription_status === 'active' && currentTenant.plan_tier && currentTenant.plan_tier !== 'trial';
+
+      if (!hasPaidPlan && count > FREE_TRIAL_PRINTER_LIMIT) {
+        if (lockBanner) {
+          lockBanner.classList.remove('hidden');
+          if (lockMsg) lockMsg.innerText = `Você possui ${count} impressoras conectadas (${FREE_TRIAL_PRINTER_LIMIT} no teste grátis)`;
+        }
+        if (topBadge) {
+          topBadge.className = "text-[10px] font-bold uppercase px-2 py-0.5 rounded-full bg-amber-400 text-slate-950 border border-amber-300 animate-pulse";
+          topBadge.innerText = `⚠️ LIMITE GRÁTIS (${count} MÁQ) • ASSINAR`;
+        }
+      } else {
+        if (lockBanner) lockBanner.classList.add('hidden');
+        if (topBadge && (!currentTenant || currentTenant.plan_tier === 'trial')) {
+          topBadge.className = "text-[10px] font-bold uppercase px-2 py-0.5 rounded-full bg-emerald-400/20 text-emerald-200 border border-emerald-300/30 hover:bg-emerald-400/30 transition";
+          topBadge.innerText = `TESTE GRÁTIS (${count}/${FREE_TRIAL_PRINTER_LIMIT} MÁQ)`;
+        }
+      }
+    }
+
     async function loadTenantData() {
       if (!currentSession) return;
       const [cRes, uRes, pRes, clRes] = await Promise.all([
@@ -1696,6 +1851,7 @@
           `;
         }).join('');
       }
+      checkTrialPrinterLock();
       lucide.createIcons();
     }
 
@@ -1778,6 +1934,7 @@
           </div>
         `).join('');
 
+      checkTrialPrinterLock();
       lucide.createIcons();
     }
 
@@ -1851,6 +2008,7 @@
           </div>
         `).join('');
 
+      checkTrialPrinterLock();
       lucide.createIcons();
     }
 
@@ -1927,6 +2085,7 @@
       document.getElementById('btnFreezeLabel').innerText = m.isFrozen ? 'Descongelar Faturamento' : 'Congelar Faturamento';
 
       openModal('invoiceModal');
+      checkTrialPrinterLock();
       lucide.createIcons();
     }
 
@@ -2083,6 +2242,18 @@ Podemos emitir a Nota Fiscal? Obrigado!`);
     async function handleCreatePrinter(e) {
       e.preventDefault();
       if (!currentProfile) return;
+
+      // Trava Opção 2: Impede cadastrar a 3ª máquina sem assinatura
+      const hasPaidPlan = currentTenant && currentTenant.subscription_status === 'active' && currentTenant.plan_tier && currentTenant.plan_tier !== 'trial';
+      const isMaster = typeof isMasterAdminUser === 'function' && isMasterAdminUser();
+      if (!isMaster && !hasPaidPlan && printers.length >= FREE_TRIAL_PRINTER_LIMIT) {
+        closeModal('newPrinterModal');
+        openModal('pricingModal');
+        alert(`🔒 Limite do Teste Gratuito Atingido (${FREE_TRIAL_PRINTER_LIMIT} impressoras).
+
+Para cadastrar a 3ª máquina e monitorar todo o seu parque, ative o Módulo 1 (apenas R$ 1,00/mês por impressora).`);
+        return;
+      }
       const client_id = document.getElementById('prtClientSelect').value;
       const unit = document.getElementById('prtUnit').value.trim() || 'Matriz';
       const department = document.getElementById('prtDept').value.trim() || 'Geral';
@@ -2369,6 +2540,7 @@ Podemos emitir a Nota Fiscal? Obrigado!`);
         document.getElementById('masterAsaasKeyInput').value = savedKey;
         document.getElementById('kpiMasterAsaasSub').innerText = 'Chave ativa: ' + savedKey.slice(0, 10) + '...';
       }
+      checkTrialPrinterLock();
       lucide.createIcons();
     }
 
