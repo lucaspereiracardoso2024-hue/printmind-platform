@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PrintMind V3.0 • Telemetria SNMP/USB, Rateio Hospitalar & FinTech Split</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@500;700;800&display=swap" rel="stylesheet">
+  <style>
+    body { font-family: 'Inter', sans-serif; background: #F8FAFC; color: #0F172A; }
+    .mono { font-family: 'JetBrains Mono', monospace; }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col">
+  <!-- TOPBAR -->
+  <header class="bg-[#0038A8] text-white shadow-lg sticky top-0 z-40">
+    <div class="max-w-7xl mx-auto px-4 py-3.5 flex flex-wrap items-center justify-between gap-3">
+      <div class="flex items-center space-x-3">
+        <div class="w-10 h-10 rounded-2xl bg-white/15 flex items-center justify-center border border-white/20">
+          <i data-lucide="printer" class="w-5 h-5 text-white"></i>
+        </div>
+        <div>
+          <div class="flex items-center space-x-2">
+            <span class="font-black text-lg tracking-tight">PrintMind</span>
+            <span class="text-[10px] font-bold uppercase px-2 py-0.5 rounded-full bg-emerald-400/20 text-emerald-200 border border-emerald-300/30">V3.0 Cloud + Split</span>
+          </div>
+          <p class="text-[11px] text-blue-100">Supabase Multi-Tenant • Agente Multi-Local • WhatsApp Evolution API</p>
+        </div>
+      </div>
+
+      <div class="flex flex-wrap items-center gap-2">
+        <button onclick="openModal('agentModal')" class="px-3 py-2 rounded-xl bg-white/10 hover:bg-white/20 text-xs font-bold flex items-center space-x-1.5 border border-white/15 transition">
+          <i data-lucide="radar" class="w-4 h-4"></i><span>Agente Multi-Local</span>
+        </button>
+        <button onclick="openModal('whatsappSplitModal')" class="px-3 py-2 rounded-xl bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-100 text-xs font-bold flex items-center space-x-1.5 border border-emerald-400/30 transition">
+          <i data-lucide="wallet" class="w-4 h-4"></i><span>WhatsApp & Split B2B2C</span>
+        </button>
+        <button onclick="openModal('authModal')" class="px-3 py-2 rounded-xl bg-white text-[#0038A8] hover:bg-blue-50 text-xs font-black flex items-center space-x-1.5 shadow-sm transition">
+          <i data-lucide="shield-check" class="w-4 h-4"></i><span id="authBtnLabel">Entrar / Google OAuth</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- MAIN CONTENT -->
+  <main class="max-w-7xl mx-auto w-full px-4 py-8 space-y-8 flex-1">
+    <!-- KPI ROW -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div class="bg-white p-5 rounded-3xl border border-slate-200 shadow-sm">
+        <span class="text-[11px] font-bold uppercase text-slate-400">Clientes / Contratos</span>
+        <div id="kpiClients" class="text-3xl font-black text-slate-900 mt-1 mono">0</div>
+        <span class="text-xs text-slate-500">Isolados via Supabase RLS</span>
+      </div>
+      <div class="bg-white p-5 rounded-3xl border border-slate-200 shadow-sm">
+        <span class="text-[11px] font-bold uppercase text-slate-400">Máquinas Online</span>
+        <div id="kpiPrinters" class="text-3xl font-black text-emerald-600 mt-1 mono">0</div>
+        <span class="text-xs text-slate-500">SNMPv2c/v3 (RFC 3805) + USB</span>
+      </div>
+      <div class="bg-white p-5 rounded-3xl border border-slate-200 shadow-sm">
+        <span class="text-[11px] font-bold uppercase text-slate-400">Produção Mensal (Delta)</span>
+        <div id="kpiDeltaPages" class="text-3xl font-black text-[#0038A8] mt-1 mono">0</div>
+        <span class="text-xs text-slate-500">Cont. Final − Cont. Inicial</span>
+      </div>
+      <div class="bg-white p-5 rounded-3xl border border-slate-200 shadow-sm">
+        <span class="text-[11px] font-bold uppercase text-slate-400">Faturamento Consolidado</span>
+        <div id="kpiTotalBilling" class="text-3xl font-black text-amber-600 mt-1 mono">R$ 0,00</div>
+        <span class="text-xs text-slate-500">PIX CRC16 + Split Asaas 1.5%</span>
+      </div>
+    </div>
+
+    <!-- CLIENTS & RATEIO TABLE -->
+    <div class="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden">
+      <div class="p-5 border-b border-slate-100 flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <h2 class="text-lg font-black text-slate-900">Fechamento Contábil, Rateio Hospitalar & Cobrança Automática</h2>
+          <p class="text-xs text-slate-500">Cálculo estrito de Delta Monotônico por Serial + MAC e separação financeira P&B vs. Colorido</p>
+        </div>
+        <button onclick="discoverLocalPrinters()" class="px-4 py-2 rounded-xl bg-[#0038A8] hover:bg-blue-800 text-white text-xs font-bold transition">
+          Auto-Scan SNMP (20 IPs/s)
+        </button>
+      </div>
+      <div class="overflow-x-auto">
+        <table class="w-full text-left text-xs">
+          <thead class="bg-slate-50 text-slate-500 uppercase text-[10px] font-bold border-b border-slate-200">
+            <tr>
+              <th class="py-3 px-4">Cliente / Contrato</th>
+              <th class="py-3 px-4">Equipamentos</th>
+              <th class="py-3 px-4 text-right">Consumo Mês (Delta)</th>
+              <th class="py-3 px-4 text-right">Fixo + Excedentes</th>
+              <th class="py-3 px-4 text-right">Líquido Locadora (98.5%)</th>
+              <th class="py-3 px-4 text-right">Ações</th>
+            </tr>
+          </thead>
+          <tbody id="clientsTableBody" class="divide-y divide-slate-100"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- PRINTERS & CMYK TELEMETRY -->
+    <div id="printersGrid" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
+  </main>
+
+  <!-- MODAL: AUTH SUPABASE (EMAIL/PASSWORD + GOOGLE OAUTH) -->
+  <div id="authModal" class="hidden fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl max-w-md w-full p-6 space-y-4 shadow-2xl">
+      <div class="flex justify-between items-center">
+        <h3 class="font-black text-base text-slate-900">Autenticação Supabase & Plano SaaS</h3>
+        <button onclick="closeModal('authModal')" class="text-slate-400 hover:text-slate-600">✕</button>
+      </div>
+      <button onclick="loginGoogle()" class="w-full py-2.5 px-4 rounded-xl border border-slate-300 hover:bg-slate-50 font-bold text-xs flex items-center justify-center space-x-2">
+        <span>🔐 Entrar com Google (OAuth 2.0)</span>
+      </button>
+      <div class="space-y-2">
+        <input id="emailIn" type="email" value="financeiro@starcopias.com.br" class="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs" placeholder="E-mail" />
+        <input id="passIn" type="password" value="••••••••••" class="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs" placeholder="Senha" />
+        <button onclick="closeModal('authModal')" class="w-full py-2.5 rounded-xl bg-[#0038A8] text-white font-bold text-xs">Acessar Painel Pro (R$ 397/mês)</button>
+      </div>
+      <p class="text-[11px] text-emerald-700 mono">● Supabase Project: zbsmzcbcivhzslcnfxmq (sa-east-1)</p>
+    </div>
+  </div>
+
+  <!-- MODAL: AGENTE MULTI-LOCAL -->
+  <div id="agentModal" class="hidden fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl max-w-2xl w-full p-6 space-y-4 shadow-2xl">
+      <div class="flex justify-between items-center">
+        <h3 class="font-black text-base text-slate-900">Agente Satélite Multi-Local (printmind-agent.exe)</h3>
+        <button onclick="closeModal('agentModal')" class="text-slate-400 hover:text-slate-600">✕</button>
+      </div>
+      <p class="text-xs text-slate-600">Para clínicas isoladas, instale 1 agente por local físico. Para hospitais com várias VLANs ou VPN corporativa, cadastre as sub-redes remotas e um único agente varrerá todas as faixas a 20 IPs/s via Unicast SNMP:</p>
+      <pre class="bg-slate-900 text-emerald-300 p-3.5 rounded-2xl text-[11px] mono overflow-x-auto">./printmind-agent.exe -server="http://localhost:8090" -token="pm_live_hosp_central_01" -subnets="192.168.1.0/24,10.20.1.0/24,10.20.2.0/24"</pre>
+    </div>
+  </div>
+
+  <!-- MODAL: WHATSAPP & SPLIT B2B2C -->
+  <div id="whatsappSplitModal" class="hidden fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl max-w-2xl w-full p-6 space-y-4 shadow-2xl">
+      <div class="flex justify-between items-center">
+        <h3 class="font-black text-base text-slate-900">Servidor WhatsApp Open-Source + Split B2B2C</h3>
+        <button onclick="closeModal('whatsappSplitModal')" class="text-slate-400 hover:text-slate-600">✕</button>
+      </div>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
+        <div class="p-4 rounded-2xl bg-slate-50 border border-slate-200 space-y-1">
+          <strong class="text-slate-900 block">Evolution API (Docker Auto-Hospedado)</strong>
+          <p class="text-slate-600">Custo R$ 0,00 por mensagem. Envia chave PIX CRC16 + Espelho A4 em PDF para o WhatsApp do cliente.</p>
+        </div>
+        <div class="p-4 rounded-2xl bg-emerald-50 border border-emerald-200 space-y-1">
+          <strong class="text-emerald-950 block">Asaas / Efí Subcontas + Split</strong>
+          <p class="text-emerald-800">Retém automaticamente 1,5% da fatura paga pelo hospital para a conta mãe do PrintMind e credita 98,5% líquido para a locadora.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: RATEIO HOSPITALAR & PIX CRC16 -->
+  <div id="invoiceModal" class="hidden fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl max-w-3xl w-full p-6 space-y-4 shadow-2xl max-h-[90vh] overflow-y-auto">
+      <div class="flex justify-between items-center border-b border-slate-100 pb-3">
+        <div>
+          <h3 id="invClientTitle" class="font-black text-lg text-slate-900">Demonstrativo de Fechamento & Rateio</h3>
+          <p class="text-xs text-slate-500">Rateio ponderado separando Franquia Fixa, P&B e Colorido por Centro de Custo</p>
+        </div>
+        <button onclick="closeModal('invoiceModal')" class="text-slate-400 hover:text-slate-600">✕</button>
+      </div>
+      <div id="invRateioBody" class="space-y-2 text-xs"></div>
+      <div class="p-3.5 rounded-2xl bg-slate-50 border border-slate-200 space-y-2">
+        <span class="text-[11px] font-bold text-slate-700 block">PIX Copia e Cola Oficial (EMVCo + Checksum CRC16-CCITT):</span>
+        <input id="invPixInput" readonly class="w-full px-3 py-2 rounded-xl bg-white border border-slate-300 mono text-[11px]" />
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const SUPABASE_URL = 'https://zbsmzcbcivhzslcnfxmq.supabase.co';
+    let clients = [], printers = [];
+
+    function openModal(id) { document.getElementById(id).classList.remove('hidden'); }
+    function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
+    function loginGoogle() {
+      window.open(`${SUPABASE_URL}/auth/v1/authorize?provider=google&redirect_to=${encodeURIComponent(window.location.origin)}`, '_blank');
+    }
+
+    function calcCRC16(str) {
+      let crc = 0xFFFF;
+      for (let i = 0; i < str.length; i++) {
+        crc ^= (str.charCodeAt(i) << 8);
+        for (let j = 0; j < 8; j++) {
+          crc = (crc & 0x8000) ? ((crc << 1) ^ 0x1021) : (crc << 1);
+          crc &= 0xFFFF;
+        }
+      }
+      return crc.toString(16).toUpperCase().padStart(4, '0');
+    }
+
+    function buildPixPayload(key, amount) {
+      const f = (id, v) => id + String(v.length).padStart(2, '0') + v;
+      const gui = f('00', 'br.gov.bcb.pix') + f('01', key || '18.234.567/0001-89');
+      const base = '000201010212' + f('26', gui) + '520400005303986' + f('54', amount.toFixed(2)) + '5802BR' + f('59', 'STAR COPIAS OUTSOURCING') + f('60', 'SAO PAULO') + f('62', f('05', 'PRINTMIND')) + '6304';
+      return base + calcCRC16(base);
+    }
+
+    function computeMetrics(c) {
+      const linked = printers.filter(p => (c.printer_ids || []).includes(p.id) || p.client_id === c.id);
+      let dMono = 0, dColor = 0;
+      linked.forEach(p => {
+        const m = Math.max(0, (p.mono_pages || 0) - (p.initial_mono_pages || 0));
+        const col = Math.max(0, (p.color_pages || 0) - (p.initial_color_pages || 0));
+        dMono += m;
+        dColor += col;
+      });
+      const exMono = Math.max(0, dMono - (c.franchise_mono || 0)) * (c.extra_mono || 0.05);
+      const exColor = Math.max(0, dColor - (c.franchise_color || 0)) * (c.extra_color || 0.10);
+      const total = (c.base_rate || 0) + exMono + exColor;
+      return { linked, dMono, dColor, dTotal: dMono + dColor, exMono, exColor, total, net: total * 0.985 };
+    }
+
+    async function loadAll() {
+      const [cRes, pRes] = await Promise.all([fetch('/api/clients'), fetch('/api/printers')]);
+      clients = await cRes.json();
+      printers = await pRes.json();
+      render();
+    }
+
+    function render() {
+      document.getElementById('kpiClients').innerText = clients.length;
+      document.getElementById('kpiPrinters').innerText = printers.length;
+      let sumPages = 0, sumBill = 0;
+
+      document.getElementById('clientsTableBody').innerHTML = clients.map(c => {
+        const m = computeMetrics(c);
+        sumPages += m.dTotal;
+        sumBill += m.total;
+        return `
+          <tr class="hover:bg-slate-50">
+            <td class="py-3.5 px-4">
+              <strong class="text-slate-900 block">${c.name}</strong>
+              <span class="text-[11px] text-slate-400 mono">${c.cnpj} • Corte Dia ${c.closing_day}</span>
+            </td>
+            <td class="py-3.5 px-4">${m.linked.length} máquina(s)</td>
+            <td class="py-3.5 px-4 text-right mono font-bold">${m.dTotal.toLocaleString('pt-BR')} págs<div class="text-[10px] text-slate-400">${m.dMono.toLocaleString('pt-BR')} P&B • ${m.dColor.toLocaleString('pt-BR')} Cor</div></td>
+            <td class="py-3.5 px-4 text-right mono font-black text-slate-900">R$ ${m.total.toFixed(2)}</td>
+            <td class="py-3.5 px-4 text-right mono font-bold text-emerald-700">R$ ${m.net.toFixed(2)}</td>
+            <td class="py-3.5 px-4 text-right">
+              <button onclick="openClientInvoice('${c.id}')" class="px-3 py-1.5 rounded-xl bg-blue-50 text-[#0038A8] font-bold hover:bg-blue-100">Ver Rateio & PIX</button>
+            </td>
+          </tr>
+        `;
+      }).join('');
+
+      document.getElementById('kpiDeltaPages').innerText = sumPages.toLocaleString('pt-BR');
+      document.getElementById('kpiTotalBilling').innerText = sumBill.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+
+      document.getElementById('printersGrid').innerHTML = printers.map(p => {
+        const sups = Array.isArray(p.supplies) ? p.supplies : [];
+        return `
+          <div class="bg-white p-5 rounded-3xl border border-slate-200 shadow-sm space-y-3">
+            <div class="flex justify-between items-start">
+              <div>
+                <h4 class="font-bold text-slate-900">${p.model}</h4>
+                <span class="text-xs text-slate-400 mono">Serial: ${p.serial} • IP: ${p.ip || p.usb_port} • ${p.unit || 'Oficina'} (${p.department || 'Geral'})</span>
+              </div>
+              <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 uppercase">${p.status}</span>
+            </div>
+            <div class="grid grid-cols-4 gap-2 text-center text-[11px]">
+              ${sups.map(s => `<div class="p-2 rounded-xl bg-slate-50 border border-slate-100"><span class="block text-slate-500 truncate">${s.name}</span><strong class="mono text-slate-900">${s.percent}%</strong></div>`).join('')}
+            </div>
+          </div>
+        `;
+      }).join('');
+      lucide.createIcons();
+    }
+
+    function openClientInvoice(id) {
+      const c = clients.find(x => x.id === id);
+      if (!c) return;
+      const m = computeMetrics(c);
+      document.getElementById('invClientTitle').innerText = c.name + ' • Rateio por Centro de Custo';
+      const totalMach = Math.max(1, m.linked.length);
+      document.getElementById('invRateioBody').innerHTML = m.linked.map(p => {
+        const pm = Math.max(0, (p.mono_pages || 0) - (p.initial_mono_pages || 0));
+        const pc = Math.max(0, (p.color_pages || 0) - (p.initial_color_pages || 0));
+        const share = ((c.base_rate || 0) / totalMach) + (m.dMono > 0 ? m.exMono * (pm / m.dMono) : 0) + (m.dColor > 0 ? m.exColor * (pc / m.dColor) : 0);
+        return `<div class="p-3 rounded-2xl bg-indigo-50/50 border border-indigo-100 flex justify-between items-center">
+          <div><strong class="text-slate-900">${p.unit || 'Matriz'} • ${p.department || 'Setor'}</strong><span class="block text-[11px] text-slate-500 mono">${p.model} (${p.serial}): ${pm} P&B + ${pc} Cor</span></div>
+          <strong class="mono text-indigo-950 font-black">R$ ${share.toFixed(2)}</strong>
+        </div>`;
+      }).join('');
+      document.getElementById('invPixInput').value = buildPixPayload(c.pix_key, m.total);
+      openModal('invoiceModal');
+    }
+
+    async function discoverLocalPrinters() {
+      const res = await fetch('/api/printers/discover');
+      const data = await res.json();
+      alert('Varredura SNMP concluída (20 IPs/s): ' + (data.count || 0) + ' dispositivos encontrados.');
+    }
+
+    loadAll();
+  </script>
+</body>
+</html>
