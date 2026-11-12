@@ -1,3 +1,91 @@
+  <!-- =========================================================================
+       MODAL: GUIA COMPLETO DE CONEXÃO (REDE, USB OU ANTIGA SEM REDE)
+       ========================================================================= -->
+  <div id="printerTypesModal" class="hidden fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl max-w-3xl w-full p-6 space-y-5 shadow-2xl max-h-[92vh] overflow-y-auto">
+      <div class="flex justify-between items-center border-b border-slate-100 pb-3">
+        <div class="flex items-center space-x-3">
+          <div class="w-10 h-10 rounded-2xl bg-blue-50 text-[#0038A8] flex items-center justify-center">
+            <i data-lucide="help-circle" class="w-5 h-5"></i>
+          </div>
+          <div>
+            <h3 class="font-black text-base text-slate-900">Como conectar cada tipo de impressora</h3>
+            <p class="text-xs text-slate-500">Entenda de forma clara e simples como o PrintMind coleta os contadores</p>
+          </div>
+        </div>
+        <button onclick="closeModal('printerTypesModal')" class="text-slate-400 hover:text-slate-600 text-lg">✕</button>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <!-- TIPO 1: REDE OU WI-FI -->
+        <div class="p-4 rounded-2xl bg-slate-50 border border-slate-200 flex flex-col justify-between space-y-3">
+          <div class="space-y-2">
+            <div class="w-9 h-9 rounded-xl bg-blue-100 text-[#0038A8] flex items-center justify-center">
+              <i data-lucide="network" class="w-4 h-4"></i>
+            </div>
+            <h4 class="font-black text-xs text-slate-900 uppercase tracking-wide">1. Rede (Cabo ou Wi-Fi)</h4>
+            <p class="text-xs text-slate-600 leading-relaxed">
+              Para impressoras ligadas no roteador ou switch da empresa:
+            </p>
+            <div class="p-2.5 rounded-xl bg-white border border-slate-200 text-[11px] text-slate-700 space-y-1">
+              <strong>Como funciona:</strong>
+              <p>Basta instalar o <code class="text-blue-700 font-bold">printmind-agent.exe</code> em <strong>apenas 1 computador</strong> daquela rede. O robô faz a varredura SNMP e acha todas as impressoras sozinho!</p>
+            </div>
+          </div>
+          <span class="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-lg border border-emerald-200 text-center">
+            ✓ 100% Automático via SNMP
+          </span>
+        </div>
+
+        <!-- TIPO 2: CABO USB -->
+        <div class="p-4 rounded-2xl bg-slate-50 border border-slate-200 flex flex-col justify-between space-y-3">
+          <div class="space-y-2">
+            <div class="w-9 h-9 rounded-xl bg-indigo-100 text-indigo-700 flex items-center justify-center">
+              <i data-lucide="usb" class="w-4 h-4"></i>
+            </div>
+            <h4 class="font-black text-xs text-slate-900 uppercase tracking-wide">2. No Cabo USB</h4>
+            <p class="text-xs text-slate-600 leading-relaxed">
+              Para impressoras conectadas diretamente na porta USB de um computador:
+            </p>
+            <div class="p-2.5 rounded-xl bg-white border border-slate-200 text-[11px] text-slate-700 space-y-1">
+              <strong>Como funciona:</strong>
+              <p>Instale o robô satélite <strong>no computador onde o cabo USB está conectado</strong>. O módulo <em>USB Spooler</em> intercepta as impressões e lê os medidores da porta USB.</p>
+            </div>
+          </div>
+          <span class="text-[10px] font-bold text-indigo-700 bg-indigo-50 px-2.5 py-1 rounded-lg border border-indigo-200 text-center">
+            ✓ Automático via USB Spooler
+          </span>
+        </div>
+
+        <!-- TIPO 3: ANTIGA OU ISOLADA -->
+        <div class="p-4 rounded-2xl bg-slate-50 border border-slate-200 flex flex-col justify-between space-y-3">
+          <div class="space-y-2">
+            <div class="w-9 h-9 rounded-xl bg-amber-100 text-amber-800 flex items-center justify-center">
+              <i data-lucide="file-text" class="w-4 h-4"></i>
+            </div>
+            <h4 class="font-black text-xs text-slate-900 uppercase tracking-wide">3. Antiga Isolada (Sem PC)</h4>
+            <p class="text-xs text-slate-600 leading-relaxed">
+              Para copiadoras ou impressoras antigas que não ficam ligadas a nenhum computador:
+            </p>
+            <div class="p-2.5 rounded-xl bg-white border border-slate-200 text-[11px] text-slate-700 space-y-1">
+              <strong>Como funciona:</strong>
+              <p>Aperte o botão na impressora para imprimir a folha de contador de fábrica (ex: apertar "Go" 3x na Brother). No dia do corte, lance o número no painel.</p>
+            </div>
+          </div>
+          <span class="text-[10px] font-bold text-amber-800 bg-amber-50 px-2.5 py-1 rounded-lg border border-amber-200 text-center">
+            ✓ Lançamento Manual Assistido
+          </span>
+        </div>
+      </div>
+
+      <div class="pt-2 flex justify-end">
+        <button onclick="closeModal('printerTypesModal')" class="px-5 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs transition">
+          Entendi, Fechar Guia
+        </button>
+      </div>
+    </div>
+  </div>
+
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -315,6 +403,18 @@
                 <span>Até 2 máquinas grátis para teste</span>
               </div>
             </div>
+          </div>
+
+          <!-- GUIA DE TIPOS DE IMPRESSORA (REDE vs USB vs ANTIGA ISOLADA) -->
+          <div class="pt-3 border-t border-white/10 flex flex-wrap items-center justify-between gap-3 text-xs">
+            <div class="flex items-center space-x-2 text-blue-100">
+              <i data-lucide="help-circle" class="w-4 h-4 text-amber-300"></i>
+              <span>Tem impressoras no cabo USB ou sem rede? Saiba exatamente como conectar cada tipo</span>
+            </div>
+            <button onclick="openModal('printerTypesModal')" class="px-3.5 py-1.5 rounded-xl bg-white/15 hover:bg-white/25 text-white font-bold transition flex items-center space-x-1.5 border border-white/20 shadow-sm">
+              <i data-lucide="printer" class="w-3.5 h-3.5 text-amber-300"></i>
+              <span>Guia: Como Conectar USB e Antigas</span>
+            </button>
           </div>
         </div>
 
@@ -957,6 +1057,53 @@
             </div>
           </div>
         </form>
+
+        <!-- =====================================================================
+             GESTÃO DA ASSINATURA & CONTA (CANCELAMENTO E EXCLUSÃO LGPD)
+             ===================================================================== -->
+        <div class="mt-6 pt-5 border-t border-slate-200 space-y-4">
+          <div class="flex flex-wrap items-center justify-between gap-2">
+            <div>
+              <h4 class="text-xs font-black uppercase tracking-wider text-slate-500">Gestão da Assinatura & LGPD</h4>
+              <p class="text-xs text-slate-600 mt-0.5">Transparência total: cancele sua assinatura ou exclua sua conta a qualquer momento sem burocracia</p>
+            </div>
+            <span id="accountCurrentPlanStatus" class="px-2.5 py-1 rounded-full text-[11px] font-bold bg-slate-100 text-slate-700">Status: Teste Gratuito (2 Máquinas)</span>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-3 pt-1">
+            <!-- CANCELAR ASSINATURA -->
+            <div class="p-4 rounded-2xl bg-amber-50/60 border border-amber-200 flex flex-col justify-between space-y-3">
+              <div class="space-y-1">
+                <strong class="text-xs font-bold text-amber-950 flex items-center space-x-1.5">
+                  <i data-lucide="shield-alert" class="w-3.5 h-3.5 text-amber-600"></i>
+                  <span>Cancelar Assinatura Mensal</span>
+                </strong>
+                <p class="text-[11px] text-amber-800">
+                  Interrompe cobranças recorrentes no gateway Asaas. Você volta ao limite gratuito de até 2 impressoras sem nenhuma cobrança adicional.
+                </p>
+              </div>
+              <button type="button" onclick="cancelTenantSubscription()" class="w-full py-2 rounded-xl bg-white hover:bg-amber-100 text-amber-900 border border-amber-300 font-bold text-xs transition">
+                Cancelar Cobrança Automática
+              </button>
+            </div>
+
+            <!-- EXCLUIR CONTA -->
+            <div class="p-4 rounded-2xl bg-rose-50/60 border border-rose-200 flex flex-col justify-between space-y-3">
+              <div class="space-y-1">
+                <strong class="text-xs font-bold text-rose-950 flex items-center space-x-1.5">
+                  <i data-lucide="trash-2" class="w-3.5 h-3.5 text-rose-600"></i>
+                  <span>Excluir Minha Conta (LGPD)</span>
+                </strong>
+                <p class="text-[11px] text-rose-800">
+                  Em conformidade com a LGPD, todos os dados da sua locadora, clientes, impressoras e faturamentos serão permanentemente excluídos.
+                </p>
+              </div>
+              <button type="button" onclick="confirmDeleteTenantAccount()" class="w-full py-2 rounded-xl bg-white hover:bg-rose-100 text-rose-700 border border-rose-300 font-bold text-xs transition">
+                Excluir Conta Permanentemente
+              </button>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -1686,6 +1833,54 @@
           topBadge.innerText = `TESTE GRÁTIS (${count}/${FREE_TRIAL_PRINTER_LIMIT} MÁQ)`;
         }
       }
+    }
+
+
+    // =========================================================================
+    // GESTÃO DA CONTA: CANCELAR ASSINATURA E EXCLUIR CONTA (LGPD)
+    // =========================================================================
+    async function cancelTenantSubscription() {
+      if (!currentTenant) return;
+      if (currentTenant.plan_tier === 'trial' || currentTenant.subscription_status !== 'active') {
+        alert('ℹ️ Sua conta atualmente está no Teste Gratuito (sem cobranças recorrentes ativas no seu nome).');
+        return;
+      }
+      const confirmCancel = confirm('Deseja realmente cancelar sua assinatura mensal do PrintMind?\n\n- Nenhuma cobrança futura será emitida no Asaas.\n- Suas 2 primeiras máquinas continuarão funcionando no modo gratuito.');
+      if (!confirmCancel) return;
+
+      const { error } = await sb.from('tenants').update({
+        subscription_status: 'canceled',
+        plan_tier: 'trial'
+      }).eq('id', currentTenant.id);
+
+      if (error) {
+        alert('Erro ao cancelar assinatura: ' + error.message);
+      } else {
+        currentTenant.subscription_status = 'canceled';
+        currentTenant.plan_tier = 'trial';
+        alert('✓ Assinatura cancelada com sucesso! Nenhuma cobrança futura será gerada.');
+        checkTrialPrinterLock();
+        closeModal('pricingModal');
+      }
+    }
+
+    async function confirmDeleteTenantAccount() {
+      if (!currentTenant || !currentSession) return;
+      const resp = prompt('⚠️ ATENÇÃO: Esta ação é irreversível e excluirá permanentemente todos os seus clientes, impressoras e faturas.\n\nPara confirmar a exclusão definitiva, digite "EXCLUIR":');
+      if (resp !== 'EXCLUIR') {
+        alert('Ação cancelada. A conta não foi excluída.');
+        return;
+      }
+
+      // Exclui tenant (ON DELETE CASCADE no banco remove clientes, impressoras, fechamentos e perfis)
+      const { error } = await sb.from('tenants').delete().eq('id', currentTenant.id);
+      if (error) {
+        alert('Erro ao excluir conta: ' + error.message);
+        return;
+      }
+
+      alert('Sua conta e todos os dados foram excluídos com sucesso.');
+      await handleLogout();
     }
 
     async function loadTenantData() {
