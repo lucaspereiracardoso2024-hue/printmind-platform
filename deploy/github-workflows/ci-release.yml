@@ -1,0 +1,45 @@
+name: Build & Release PrintMind Binaries (Server + Satellite Agent)
+
+on:
+  push:
+    branches: [ "main" ]
+    tags: [ "v*" ]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Go 1.23
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.23'
+
+      - name: Verify & Build PrintMind Cloud Server (Linux AMD64)
+        run: |
+          CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -ldflags="-s -w" -o dist/printmind-server-linux-amd64 main.go
+
+      - name: Build PrintMind Server Standalone (Windows AMD64)
+        run: |
+          CGO_ENABLED=0 GOOS=windows GOARCH=amd64 go build -ldflags="-s -w" -o dist/printmind-server.exe main.go
+
+      - name: Build PrintMind Satellite Agent V3.0 (Windows AMD64 Pure Go)
+        run: |
+          CGO_ENABLED=0 GOOS=windows GOARCH=amd64 go build -ldflags="-s -w" -o dist/printmind-agent.exe ./cmd/agent/main.go
+
+      - name: Build PrintMind Satellite Agent V3.0 (Linux AMD64 Pure Go)
+        run: |
+          CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -ldflags="-s -w" -o dist/printmind-agent-linux-amd64 ./cmd/agent/main.go
+
+      - name: Upload Compiled Binaries as Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: printmind-v3-binaries
+          path: dist/*
+          retention-days: 30
