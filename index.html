@@ -343,21 +343,25 @@
        TELA 2: PAINEL PRINCIPAL (SESSÃO SUPABASE ATIVA)
        ========================================================================= -->
   <div id="appScreen" class="hidden min-h-screen flex flex-col">
-    <!-- TOPBAR COM COMUTADOR DE MODO E ABAS SERENAS -->
-    <header class="bg-[#0038A8] text-white shadow-lg sticky top-0 z-40 no-print">
-      <div class="max-w-7xl mx-auto px-4 py-3 flex flex-wrap items-center justify-between gap-3">
-        <!-- Marca + Identidade + Comutador -->
-        <div class="flex items-center space-x-3">
-          <div class="w-10 h-10 rounded-2xl bg-white/15 flex items-center justify-center border border-white/20">
-            <i data-lucide="printer" class="w-5 h-5 text-white"></i>
+    <!-- TOPBAR COMPACTA COM COMUTADOR DE MODO E ABAS SERENAS -->
+    <header class="bg-[#0038A8] text-white shadow-lg md:sticky md:top-0 z-40 no-print">
+      <div class="max-w-7xl mx-auto px-4 py-2.5 flex flex-wrap items-center justify-between gap-2.5">
+        <!-- Marca + Identidade + Modo -->
+        <div class="flex items-center space-x-2.5">
+          <div class="w-9 h-9 rounded-2xl bg-white/15 flex items-center justify-center border border-white/20">
+            <i data-lucide="printer" class="w-4 h-4 text-white"></i>
           </div>
           <div>
-            <div class="flex items-center space-x-2">
-              <span id="topTenantName" class="font-black text-base tracking-tight">PrintMind</span>
-
+            <div class="flex flex-wrap items-center gap-1.5">
+              <span id="topTenantName" class="font-black text-sm tracking-tight">PrintMind</span>
               <button onclick="openModal('pricingModal')" id="topPlanBadge" class="text-[10px] font-bold uppercase px-2 py-0.5 rounded-full bg-emerald-400/20 text-emerald-200 border border-emerald-300/30 hover:bg-emerald-400/30 transition">
                 ESSENCIAL (R$ 1/MÁQ)
               </button>
+              <select id="operationModeSelect" data-client-only="true" onchange="switchOperationMode(this.value)" title="Modo de Operação da Conta" class="text-[10px] font-bold bg-white/15 hover:bg-white/20 text-white border border-white/25 rounded-lg px-2 py-0.5 outline-none cursor-pointer">
+                <option value="hibrido" class="text-slate-900">Modo: Locadora &amp; Gráfica</option>
+                <option value="locacao" class="text-slate-900">Modo: Só Locadora</option>
+                <option value="grafica" class="text-slate-900">Modo: Só Gráfica</option>
+              </select>
             </div>
             <p id="topUserEmail" class="text-[11px] text-blue-100 mono"></p>
           </div>
@@ -365,43 +369,38 @@
 
         <!-- 3 ABAS SERENAS CENTRAIS -->
         <nav id="mainNav" class="flex items-center bg-white/10 p-1 rounded-2xl border border-white/15 text-xs font-bold">
-          <button id="navTabClients" data-client-only="true" onclick="switchTab('clients')" class="px-3.5 py-1.5 rounded-xl bg-white text-[#0038A8] shadow-sm transition flex items-center space-x-1.5">
+          <button id="navTabClients" data-client-only="true" onclick="switchTab('clients')" class="px-3 py-1.5 rounded-xl bg-white text-[#0038A8] shadow-sm transition flex items-center space-x-1.5">
             <i data-lucide="layout-grid" class="w-3.5 h-3.5"></i>
-            <span>Operação & Clientes</span>
+            <span>Operação &amp; Clientes</span>
           </button>
-          <button id="navTabReports" data-client-only="true" onclick="switchTab('reports')" class="px-3.5 py-1.5 rounded-xl text-white/80 hover:text-white hover:bg-white/10 transition flex items-center space-x-1.5">
+          <button id="navTabReports" data-client-only="true" onclick="switchTab('reports')" class="px-3 py-1.5 rounded-xl text-white/80 hover:text-white hover:bg-white/10 transition flex items-center space-x-1.5">
             <i data-lucide="file-check-2" class="w-3.5 h-3.5"></i>
-            <span>Relatórios & Faturamento</span>
+            <span>Relatórios &amp; Faturas</span>
           </button>
-          <button id="navTabGrafica" data-client-only="true" onclick="switchTab('grafica')" class="px-3.5 py-1.5 rounded-xl text-white/80 hover:text-white hover:bg-white/10 transition flex items-center space-x-1.5">
+          <button id="navTabGrafica" data-client-only="true" onclick="switchTab('grafica')" class="px-3 py-1.5 rounded-xl text-white/80 hover:text-white hover:bg-white/10 transition flex items-center space-x-1.5">
             <i data-lucide="bar-chart-3" class="w-3.5 h-3.5"></i>
             <span>Produção Diária</span>
           </button>
         </nav>
 
-        <!-- BOTÕES DE AÇÃO RÁPIDA -->
-        <div class="flex flex-wrap items-center gap-2">
-          <button id="btnQuickGuide" data-client-only="true" onclick="openOnboardingOnDemand()" class="px-2.5 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 text-blue-100 text-xs font-semibold flex items-center space-x-1 border border-white/15 transition" title="Abrir Guia Rápido de configuração">
-            <i data-lucide="sparkles" class="w-3.5 h-3.5 text-amber-300"></i>
-            <span>Guia Rápido</span>
+        <!-- BOTÕES DE AÇÃO RÁPIDA ENXUTOS -->
+        <div class="flex flex-wrap items-center gap-1.5">
+          <button data-client-only="true" onclick="openClientModalForCreate()" class="px-2.5 py-1.5 rounded-xl bg-white text-[#0038A8] hover:bg-blue-50 text-xs font-black flex items-center space-x-1 shadow-sm transition">
+            <i data-lucide="plus" class="w-3.5 h-3.5"></i><span>Cliente</span>
           </button>
-          <button data-client-only="true" onclick="openModal('welcomeTourModal')" class="px-2.5 py-1.5 rounded-xl bg-amber-400/20 hover:bg-amber-400/30 text-amber-200 text-xs font-bold flex items-center space-x-1 border border-amber-300/30 transition shadow-sm" title="Ver como funciona o sistema">
-            <i data-lucide="help-circle" class="w-3.5 h-3.5 text-amber-300"></i>
-            <span>Como Funciona?</span>
+          <button data-client-only="true" onclick="openModal('newPrinterModal')" class="px-2.5 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 text-xs font-bold flex items-center space-x-1 border border-white/15 transition">
+            <i data-lucide="cpu" class="w-3.5 h-3.5"></i><span>Impressora</span>
           </button>
-          <button data-client-only="true" onclick="openModal('newClientModal')" class="px-3 py-1.5 rounded-xl bg-white text-[#0038A8] hover:bg-blue-50 text-xs font-black flex items-center space-x-1 shadow-sm transition">
-            <i data-lucide="plus" class="w-3.5 h-3.5"></i><span>Novo Cliente</span>
+          <button data-client-only="true" onclick="openModal('agentModal')" class="px-2.5 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 text-xs font-bold flex items-center space-x-1 border border-white/15 transition" title="Baixar Scanner e Ver Token">
+            <i data-lucide="radar" class="w-3.5 h-3.5"></i><span>Scanner</span>
           </button>
-          <button data-client-only="true" onclick="openModal('newPrinterModal')" class="px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 text-xs font-bold flex items-center space-x-1 border border-white/15 transition">
-            <i data-lucide="cpu" class="w-3.5 h-3.5"></i><span>+ Impressora</span>
+          <button data-client-only="true" onclick="openModal('pricingModal')" class="px-2.5 py-1.5 rounded-xl bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-100 text-xs font-bold flex items-center space-x-1 border border-emerald-400/30 transition">
+            <i data-lucide="calculator" class="w-3.5 h-3.5"></i><span>Planos</span>
           </button>
-          <button data-client-only="true" onclick="openModal('agentModal')" class="px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 text-xs font-bold flex items-center space-x-1 border border-white/15 transition">
-            <i data-lucide="radar" class="w-3.5 h-3.5"></i><span>Scanner de Impressoras</span>
+          <button id="btnQuickGuide" data-client-only="true" onclick="openModal('welcomeTourModal')" class="px-2 py-1.5 rounded-xl bg-amber-400/20 hover:bg-amber-400/30 text-amber-200 text-xs font-bold border border-amber-300/30 transition" title="Como Funciona?">
+            <i data-lucide="help-circle" class="w-3.5 h-3.5"></i>
           </button>
-          <button data-client-only="true" onclick="openModal('pricingModal')" class="px-3 py-1.5 rounded-xl bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-100 text-xs font-bold flex items-center space-x-1 border border-emerald-400/30 transition">
-            <i data-lucide="calculator" class="w-3.5 h-3.5"></i><span>Planos (R$ 1 / R$ 4 / R$ 6)</span>
-          </button>
-          <button onclick="handleLogout()" class="px-2.5 py-1.5 rounded-xl bg-rose-500/20 hover:bg-rose-500/30 text-rose-100 text-xs font-bold border border-rose-400/30 transition" title="Sair">
+          <button onclick="handleLogout()" class="px-2 py-1.5 rounded-xl bg-rose-500/20 hover:bg-rose-500/30 text-rose-100 text-xs font-bold border border-rose-400/30 transition" title="Sair">
             <i data-lucide="log-out" class="w-3.5 h-3.5"></i>
           </button>
         </div>
@@ -419,9 +418,9 @@
           <span class="inline-block px-3 py-1 rounded-full text-xs font-bold bg-blue-50 text-[#0038A8] border border-blue-100 mb-1">
             Plataforma de Outsourcing & Gestão de Impressão
           </span>
-          <h2 class="text-2xl font-black text-slate-900 tracking-tight" id="mainSectionTitle">Painel de Controle & Telemetria</h2>
+          <h2 class="text-2xl font-black text-slate-900 tracking-tight" id="mainSectionTitle">Painel de Controle &amp; Telemetria</h2>
           <p class="text-xs text-slate-500 mt-0.5" id="mainSectionSubtitle">
-            Telemetria automática SNMP/USB, rateio por centro de custo e fechamentos contratuais inteligentes.
+            Leitura automática de contadores em rede e USB, franquias por contrato e faturamento rápido.
           </p>
           <div class="mt-2 flex flex-wrap items-center justify-center gap-2">
             <button onclick="openGeminiConsultantFromOverview()" class="px-3.5 py-1.5 rounded-full bg-indigo-50 hover:bg-indigo-100 text-indigo-800 border border-indigo-200 text-xs font-bold transition inline-flex items-center space-x-1.5 shadow-sm">
@@ -448,7 +447,7 @@
             <div>
               <span class="text-[11px] font-bold uppercase text-slate-400">Máquinas Monitoradas</span>
               <div id="kpiPrinters" class="text-3xl font-black text-emerald-600 mt-1 mono">0</div>
-              <span id="kpiPrintersSub" class="text-xs text-slate-500">SNMPv2c (RFC 3805) + USB</span>
+              <span id="kpiPrintersSub" class="text-xs text-slate-500">Rede (Wi-Fi/Cabo) + USB</span>
             </div>
             <div class="w-10 h-10 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center">
               <i data-lucide="printer" class="w-5 h-5"></i>
@@ -479,72 +478,77 @@
         </div>
 
         <!-- =====================================================================
-             SETUP INICIAL GUIADO (ONBOARDING EM 3 PASSOS COM 2 MÁQUINAS GRÁTIS)
+             GUIA DE INÍCIO RÁPIDO UNIFICADO (SIMPLES EM 2 PASSOS)
              ===================================================================== -->
-        <!-- =====================================================================
-             GUIA DE INÍCIO RÁPIDO INTERATIVO COM FOCO & SETA DINÂMICA
-             ===================================================================== -->
-        <div id="walkthroughCard" class="bg-white rounded-3xl p-6 border-2 shadow-lg transition-all space-y-4">
+        <div id="walkthroughCard" class="bg-white rounded-3xl p-5 border-2 border-blue-200 shadow-md transition-all space-y-3.5">
           <div class="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 pb-3">
             <div class="flex items-center space-x-2.5">
               <span class="w-8 h-8 rounded-xl bg-blue-50 text-[#0038A8] flex items-center justify-center font-black text-sm">
                 <i data-lucide="compass" class="w-4 h-4"></i>
               </span>
               <div>
-                <h3 class="text-sm font-black text-slate-900 flex items-center gap-2">
-                  <span>Guia de Início Rápido</span>
+                <h3 class="text-sm font-black text-slate-900 flex flex-wrap items-center gap-2">
+                  <span>Início Rápido • Até 2 Impressoras Grátis</span>
                   <span id="wtStepBadge" class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-100 text-[#0038A8] uppercase">Passo 1 de 2</span>
                 </h3>
-                <p id="wtDesc" class="text-xs text-slate-500">Siga as etapas abaixo para ativar o monitoramento em tempo real.</p>
+                <p id="wtDesc" class="text-xs text-slate-500">Cadastre seu 1º cliente e conecte o scanner para ler os contadores automaticamente.</p>
               </div>
             </div>
-            <span class="text-xs font-bold text-slate-400" id="wtStatusIndicator">Configuração Inicial</span>
+            <div class="flex items-center gap-2">
+              <button type="button" onclick="openModal('printerTypesModal')" class="text-[11px] font-bold text-[#0038A8] hover:underline">Rede, USB ou Sem PC?</button>
+              <span class="text-xs font-bold text-slate-400" id="wtStatusIndicator">Configuração Inicial</span>
+            </div>
           </div>
 
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-3.5">
             <!-- ETAPA 1: CADASTRAR 1º CLIENTE -->
-            <div id="wtStep1Card" class="p-4 rounded-2xl border-2 transition-all flex flex-col justify-between space-y-3 bg-blue-50/40 border-blue-400 shadow-md">
-              <div class="space-y-1.5">
+            <div id="wtStep1Card" class="p-4 rounded-2xl border-2 transition-all flex flex-col justify-between space-y-2.5 bg-blue-50/40 border-blue-400 shadow-sm">
+              <div class="space-y-1">
                 <div class="flex items-center justify-between">
                   <div class="flex items-center space-x-2">
                     <span id="wtStep1Num" class="w-6 h-6 rounded-full bg-[#0038A8] text-white font-black text-xs flex items-center justify-center">1</span>
-                    <strong class="text-xs font-black text-slate-900">Cadastrar Primeiro Cliente</strong>
+                    <strong class="text-xs font-black text-slate-900">Cadastrar 1º Cliente ou Unidade</strong>
                   </div>
-                  <span id="wtStep1Pill" class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-600 text-white animate-pulse">👉 COMECE POR AQUI</span>
+                  <span id="wtStep1Pill" class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-600 text-white animate-pulse">COMECE AQUI</span>
                 </div>
                 <p class="text-[11px] text-slate-600 leading-relaxed">
-                  Cadastre o contrato da empresa, hospital ou filial onde suas impressoras estão alocadas com valor fixo e franquias.
+                  Defina nome, dia de corte, mensalidade e franquia do contrato (ou crie uma unidade própria).
                 </p>
               </div>
-              <button id="wtStep1Btn" onclick="openModal('newClientModal')" class="w-full py-2.5 rounded-xl bg-[#0038A8] hover:bg-blue-800 text-white font-black text-xs shadow-sm transition flex items-center justify-center space-x-2">
+              <button id="wtStep1Btn" onclick="openClientModalForCreate()" class="w-full py-2.5 rounded-xl bg-[#0038A8] hover:bg-blue-800 text-white font-black text-xs shadow-sm transition flex items-center justify-center space-x-2">
                 <i data-lucide="plus-circle" class="w-4 h-4"></i>
-                <span>👉 Cadastrar 1º Cliente Agora</span>
+                <span>Cadastrar 1º Cliente</span>
               </button>
             </div>
 
-            <!-- ETAPA 2: CONECTAR IMPRESSORAS VIA ROBÔ -->
-            <div id="wtStep2Card" class="p-4 rounded-2xl border-2 transition-all flex flex-col justify-between space-y-3 bg-slate-50 border-slate-200 opacity-80">
-              <div class="space-y-1.5">
+            <!-- ETAPA 2: CONECTAR IMPRESSORAS VIA SCANNER OU MANUAL -->
+            <div id="wtStep2Card" class="p-4 rounded-2xl border-2 transition-all flex flex-col justify-between space-y-2.5 bg-slate-50 border-slate-200 opacity-80">
+              <div class="space-y-1">
                 <div class="flex items-center justify-between">
                   <div class="flex items-center space-x-2">
                     <span id="wtStep2Num" class="w-6 h-6 rounded-full bg-slate-300 text-slate-700 font-black text-xs flex items-center justify-center">2</span>
-                    <strong class="text-xs font-black text-slate-900">Localizar Impressoras na Rede</strong>
+                    <strong class="text-xs font-black text-slate-900">Conectar Impressoras (Rede / USB / Manual)</strong>
                   </div>
                   <span id="wtStep2Pill" class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-200 text-slate-600">Aguardando Passo 1</span>
                 </div>
                 <p class="text-[11px] text-slate-600 leading-relaxed">
-                  Execute o <code class="text-blue-700 font-bold">printmind-agent.exe</code> na rede local ou no PC da impressora USB. O scanner localiza as impressoras na rede/USB e puxa os contadores sozinho!
+                  Baixe o <code class="text-blue-700 font-bold">printmind-agent.exe</code> (~11 MB) no PC do cliente — ele detecta as impressoras na rede e USB sozinho!
                 </p>
               </div>
-              <button id="wtStep2Btn" onclick="openModal('newPrinterModal')" class="w-full py-2.5 rounded-xl bg-slate-200 text-slate-500 font-bold text-xs transition flex items-center justify-center space-x-2" disabled>
-                <i data-lucide="cpu" class="w-4 h-4"></i>
-                <span>Abrir Scanner de Impressoras</span>
-              </button>
+              <div class="flex flex-wrap gap-2">
+                <button id="wtStep2Btn" onclick="openModal('newPrinterModal')" class="flex-1 py-2.5 rounded-xl bg-slate-200 text-slate-500 font-bold text-xs transition flex items-center justify-center space-x-1.5" disabled>
+                  <i data-lucide="cpu" class="w-4 h-4"></i>
+                  <span>Conectar / Baixar Scanner</span>
+                </button>
+                <button type="button" onclick="openModal('agentModal')" class="px-3 py-2.5 rounded-xl bg-white border border-slate-300 text-slate-700 hover:bg-slate-100 font-bold text-xs transition">
+                  Token / MSI
+                </button>
+              </div>
             </div>
           </div>
         </div>
 
-        <div id="onboardingCard" class="bg-gradient-to-r from-blue-950 via-[#002266] to-[#0038A8] text-white rounded-3xl p-6 shadow-xl space-y-4">
+        <div id="onboardingCard" class="hidden bg-gradient-to-r from-blue-950 via-[#002266] to-[#0038A8] text-white rounded-3xl p-6 shadow-xl space-y-4">
           <div class="flex flex-wrap items-center justify-between gap-3">
             <div class="flex items-center space-x-3">
               <div class="w-10 h-10 rounded-2xl bg-white/10 text-white flex items-center justify-center border border-white/20">
@@ -557,9 +561,9 @@
             </div>
             <div class="flex items-center space-x-2">
               <span class="px-3 py-1 rounded-full text-[11px] font-black bg-emerald-400/20 text-emerald-300 border border-emerald-400/30">
-                🎁 2 IMPRESSORAS GRÁTIS PARA TESTAR
+                2 IMPRESSORAS GRÁTIS PARA TESTAR
               </span>
-              <button onclick="toggleOnboardingGuide(this)" class="text-xs text-blue-200 hover:text-white px-2 py-1 rounded-lg hover:bg-white/10 transition" title="Ocultar ou expandir guia">Ocultar</button>
+              <button onclick="toggleOnboardingGuide(this)" class="text-xs text-blue-200 hover:text-white px-2 py-1 rounded-lg hover:bg-white/10 transition" title="Ocultar ou expandir guia">Fechar</button>
             </div>
           </div>
 
@@ -572,7 +576,7 @@
                   <strong class="text-xs font-black text-white">Baixar Scanner de Impressoras</strong>
                 </div>
                 <p class="text-[11px] text-blue-100">
-                  O Scanner leve em Go (6.9 MB) faz a varredura automática na rede local ou porta USB e lê os contadores de hardware.
+                  Arquivo único (~11 MB, sem instalação) que varre automaticamente a rede local e portas USB para ler os contadores reais.
                 </p>
               </div>
               <button type="button" onclick="downloadPairedAgent('windows')" class="w-full py-2.5 rounded-xl bg-white text-[#0038A8] font-black text-xs hover:bg-blue-50 transition shadow-sm flex items-center justify-center space-x-1.5 mt-2">
@@ -678,7 +682,7 @@
               <p class="text-xs text-slate-500">Gestão de franquias, medições SNMP e rateio por centros de custo</p>
             </div>
             <div class="flex items-center gap-2">
-              <button onclick="openModal('newClientModal')" class="px-3.5 py-2 rounded-xl bg-[#0038A8] hover:bg-blue-800 text-white text-xs font-bold transition flex items-center space-x-1">
+              <button onclick="openClientModalForCreate()" class="px-3.5 py-2 rounded-xl bg-[#0038A8] hover:bg-blue-800 text-white text-xs font-bold transition flex items-center space-x-1">
                 <i data-lucide="plus" class="w-3.5 h-3.5"></i>
                 <span>Novo Cliente</span>
               </button>
@@ -686,7 +690,6 @@
                 <i data-lucide="rotate-cw" class="w-3.5 h-3.5"></i>
                 <span>Sincronizar</span>
               </button>
-
             </div>
           </div>
 
@@ -716,15 +719,25 @@
           <div class="flex flex-wrap items-center justify-between gap-3">
             <div>
               <h3 class="text-base font-black text-slate-900 flex items-center space-x-2">
-                <span>Parque de Impressoras & Telemetria em Tempo Real</span>
+                <span>Parque de Impressoras &amp; Contadores</span>
                 <span id="printersCountBadge" class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 text-slate-600">0</span>
               </h3>
-              <p class="text-xs text-slate-500">Monitoramento via SNMP RFC 3805 (contadores invioláveis e insumos)</p>
+              <p class="text-xs text-slate-500">Leitura automática via rede local ou cabo USB, níveis de insumos e vínculo por cliente</p>
             </div>
-            <button onclick="openModal('newPrinterModal')" class="text-xs font-bold text-[#0038A8] hover:underline flex items-center space-x-1">
-              <i data-lucide="plus-circle" class="w-3.5 h-3.5"></i>
-              <span>+ Adicionar Impressora Manual ou via Agente</span>
-            </button>
+            <div class="flex flex-wrap items-center gap-2">
+              <input id="printerSearchInput" type="search" oninput="renderPrintersGrid()" placeholder="Buscar modelo, serial, IP ou cliente..." class="px-3 py-1.5 rounded-xl border border-slate-300 bg-white text-xs w-56 focus:outline-none focus:ring-2 focus:ring-blue-200" />
+              <select id="printerOwnershipFilter" onchange="renderPrintersGrid()" class="px-3 py-1.5 rounded-xl border border-slate-300 bg-white text-xs font-semibold text-slate-700">
+                <option value="all">Todas (Propriedade)</option>
+                <option value="locada">Locadas</option>
+                <option value="propria">Próprias</option>
+                <option value="cliente">Do Cliente</option>
+                <option value="unlinked">Sem Cliente (Avulsas)</option>
+              </select>
+              <button onclick="openModal('newPrinterModal')" class="px-3 py-1.5 rounded-xl bg-blue-50 hover:bg-blue-100 text-xs font-bold text-[#0038A8] flex items-center space-x-1 transition">
+                <i data-lucide="plus-circle" class="w-3.5 h-3.5"></i>
+                <span>+ Impressora</span>
+              </button>
+            </div>
           </div>
           <div id="printersGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
         </div>
@@ -825,7 +838,7 @@
                   <h3 class="text-base font-black text-slate-900">Fechamento Detalhado por Máquina (Mês Atual)</h3>
                   <span id="wppReadinessSummary" class="hidden px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200"></span>
                 </div>
-                <p class="text-xs text-slate-500">Contador inicial (1ª leitura do mês em <code class="mono">telemetry_readings</code> ou base inicial), contador final, delta real e excedente.</p>
+                <p class="text-xs text-slate-500">Contador inicial (1ª leitura do mês ou base inicial), contador final, produção líquida (P&amp;B / Cor) e excedente.</p>
               </div>
               <button onclick="exportMachineClosingCSV()" class="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition flex items-center space-x-1.5 shadow-sm">
                 <i data-lucide="download" class="w-3.5 h-3.5"></i>
@@ -838,7 +851,7 @@
                   <tr>
                     <th class="py-3 px-4">Cliente / Unidade</th>
                     <th class="py-3 px-4">Impressora / Serial</th>
-                    <th class="py-3 px-4 text-center">Status (last_seen)</th>
+                    <th class="py-3 px-4 text-center">Status Online</th>
                     <th class="py-3 px-4 text-right">Cont. Inicial</th>
                     <th class="py-3 px-4 text-right">Cont. Final</th>
                     <th class="py-3 px-4 text-right">Delta (P&B / Cor)</th>
@@ -850,12 +863,12 @@
             </div>
           </div>
 
-          <!-- RATEIO POR SETOR / PC / USUÁRIO (print_jobs_summary) -->
+          <!-- RATEIO POR SETOR / PC / USUÁRIO -->
           <div class="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden">
             <div class="p-5 border-b border-slate-100 flex flex-wrap items-center justify-between gap-3">
               <div>
                 <h3 class="text-base font-black text-slate-900">Rateio por Setor / PC / Usuário (Mês Atual)</h3>
-                <p class="text-xs text-slate-500">Bilhetagem detalhada de estações e usuários coletada via spooler/agente v4.0 (<code class="mono">print_jobs_summary</code>).</p>
+                <p class="text-xs text-slate-500">Consumo agrupado por setor, computador e usuário com estimativa de custo mensal e frente/verso.</p>
               </div>
               <span id="jobsBreakdownCountBadge" class="px-2.5 py-1 rounded-full text-[10px] font-bold bg-slate-100 text-slate-600">0 registros</span>
             </div>
@@ -868,18 +881,19 @@
           <div class="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm space-y-4">
             <div class="flex flex-wrap items-center justify-between gap-2">
               <div>
-                <h3 class="text-base font-black text-slate-900">Alertas de Suprimentos & Auditoria Anti-Desperdício</h3>
-                <p class="text-xs text-slate-500">Eventos reais (<code class="mono">supply_alerts</code>): toner baixo (&le;15%), caixa de resíduo cheia (&ge;85%), troca prematura e dreno por limpeza de cabeçote.</p>
+                <h3 class="text-base font-black text-slate-900">Alertas de Suprimentos &amp; Auditoria Anti-Desperdício</h3>
+                <p class="text-xs text-slate-500">Eventos automáticos: toner baixo (&le;15%), caixa de resíduo cheia (&ge;85%), troca prematura e dreno por limpeza de cabeçote.</p>
               </div>
               <span id="supplyAlertsBadge" class="px-2.5 py-1 rounded-full text-[10px] font-bold bg-slate-100 text-slate-600">0 alertas</span>
             </div>
+            <div id="wppRiskSummaryBanner" class="hidden"></div>
             <div id="supplyAlertsFeed" class="space-y-2.5"></div>
           </div>
 
           <div class="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm space-y-4">
             <div>
-              <h3 class="text-base font-black text-slate-900">Leitura Real de Consumíveis & Caixas de Resíduo por Máquina</h3>
-              <p class="text-xs text-slate-500">Exibe somente percentuais reais informados pelo hardware ou o estado honesto quando o equipamento não reporta porcentagem exata.</p>
+              <h3 class="text-base font-black text-slate-900">Leitura Real de Consumíveis &amp; Caixas de Resíduo por Máquina</h3>
+              <p class="text-xs text-slate-500">Exibe apenas percentuais reais lidos do equipamento ou o estado honesto quando o modelo não informa porcentagem exata.</p>
             </div>
             <div id="suppliesAuditGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 pt-1"></div>
           </div>
@@ -887,8 +901,8 @@
 
         <!-- SUB-ABA CONTEÚDO: OCIOSIDADE -->
         <div id="subViewOciosidade" class="hidden bg-white p-6 rounded-3xl border border-slate-200 shadow-sm space-y-4">
-          <h3 class="text-base font-black text-slate-900">Análise de Ociosidade, Máquinas Offline & Remanejamento</h3>
-          <p class="text-xs text-slate-500">Calculado sobre o delta real de <code class="mono">telemetry_readings</code>: destaca máquinas offline (&gt; 25 min sem sinal) e equipamentos com menos de 50 páginas ou &lt; 20% da franquia.</p>
+          <h3 class="text-base font-black text-slate-900">Análise de Ociosidade, Máquinas Offline &amp; Remanejamento</h3>
+          <p class="text-xs text-slate-500">Calculado sobre a produção real do mês: destaca máquinas offline (&gt; 25 min sem sinal) e equipamentos com menos de 50 páginas ou &lt; 20% da franquia.</p>
           <div id="idlePrintersList" class="space-y-3 pt-2"></div>
         </div>
 
@@ -951,10 +965,10 @@
       <section id="sectionGrafica" class="hidden space-y-6">
         <div class="text-center py-1">
           <span class="inline-block px-3 py-1 rounded-full text-xs font-bold bg-indigo-50 text-indigo-700 border border-indigo-200 mb-1">
-            Produção Própria & Oficina
+            Acompanhamento Diário do Parque
           </span>
-          <h2 class="text-2xl font-black text-slate-900 tracking-tight">Minha Gráfica • Volume Diário & Telemetria</h2>
-          <p class="text-xs text-slate-500 mt-0.5">Acompanhamento de custos de insumos, tiragem por dia e margem de lucro da produção interna.</p>
+          <h2 class="text-2xl font-black text-slate-900 tracking-tight">Produção Diária • P&amp;B vs Colorido</h2>
+          <p class="text-xs text-slate-500 mt-0.5">Volume diário impresso, média por dia e níveis de suprimentos das máquinas.</p>
         </div>
 
         <!-- 4 KPIS DE PRODUÇÃO -->
@@ -968,13 +982,13 @@
           <div class="bg-white p-5 rounded-3xl border border-slate-200 shadow-sm">
             <span class="text-[11px] font-bold uppercase text-slate-400">Coloridas (Color)</span>
             <div id="graficaColorPages" class="text-3xl font-black text-indigo-600 mt-1 mono">0 págs</div>
-            <span id="graficaColorPercent" class="text-xs text-indigo-700 font-semibold">0% • Adesivos, rótulos e brindes</span>
+            <span id="graficaColorPercent" class="text-xs text-indigo-700 font-semibold">0% • Impressões coloridas</span>
           </div>
 
           <div class="bg-white p-5 rounded-3xl border border-slate-200 shadow-sm">
-            <span class="text-[11px] font-bold uppercase text-slate-400">Preto & Branco (P&B)</span>
+            <span class="text-[11px] font-bold uppercase text-slate-400">Preto &amp; Branco (P&amp;B)</span>
             <div id="graficaMonoPages" class="text-3xl font-black text-slate-700 mt-1 mono">0 págs</div>
-            <span id="graficaMonoPercent" class="text-xs text-slate-500">0% • Documentos e apostilas</span>
+            <span id="graficaMonoPercent" class="text-xs text-slate-500">0% • Impressões em P&amp;B</span>
           </div>
 
           <div class="bg-white p-5 rounded-3xl border border-slate-200 shadow-sm">
@@ -989,11 +1003,11 @@
           <div class="flex flex-wrap items-center justify-between gap-3">
             <div>
               <h3 class="text-base font-black text-slate-900">Curva de Produção Diária (Últimos 14 Dias • Dados Reais)</h3>
-              <p class="text-xs text-slate-500">Calculada a partir dos deltas diários reais em <code class="mono">telemetry_readings</code> (P&B vs Color).</p>
+              <p class="text-xs text-slate-500">Diferença diária real de contadores das impressoras (P&amp;B vs Color).</p>
             </div>
             <div class="flex items-center space-x-3 text-xs font-semibold">
               <span class="flex items-center space-x-1"><span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span><span>Coloridas</span></span>
-              <span class="flex items-center space-x-1"><span class="w-2.5 h-2.5 rounded-full bg-blue-700"></span><span>P&B</span></span>
+              <span class="flex items-center space-x-1"><span class="w-2.5 h-2.5 rounded-full bg-blue-700"></span><span>P&amp;B</span></span>
             </div>
           </div>
           <!-- Barras de Produção (Últimos 14 Dias) -->
@@ -1002,8 +1016,8 @@
 
         <!-- NÍVEIS DE CONSUMÍVEIS CMYK EM TEMPO REAL -->
         <div class="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm space-y-4">
-          <h3 class="text-base font-black text-slate-900">Níveis de Consumíveis CMYK das Máquinas de Produção</h3>
-          <p class="text-xs text-slate-500">Leitura em tempo real do nível de toners/tintas via SNMP Printer-MIB RFC 3805</p>
+          <h3 class="text-base font-black text-slate-900">Níveis de Toners &amp; Tintas das Máquinas Coloridas</h3>
+          <p class="text-xs text-slate-500">Percentual real reportado pelo hardware de cada equipamento.</p>
           <div id="graficaSuppliesPark" class="grid grid-cols-1 md:grid-cols-2 gap-4 pt-1"></div>
         </div>
       </section>
@@ -1642,9 +1656,18 @@
           </table>
         </div>
 
-        <!-- Rateio por Centro de Custo Hospitalar -->
+        <!-- Curva Diária do Cliente (Espelho Visual Estilo Star/PrintWayy: P&B + Color por dia) -->
+        <div id="formalDailyChartsSection" class="space-y-2">
+          <div class="flex justify-between items-center">
+            <span class="font-bold text-slate-900 text-xs uppercase tracking-wider">Produção Diária do Contrato (Últimos 14 Dias • P&amp;B e Colorido)</span>
+            <span class="text-[10px] text-slate-500" id="formalDailyChartsPeriodHint">Leitura contínua por dia</span>
+          </div>
+          <div id="formalDailyChartsGrid" class="grid grid-cols-1 md:grid-cols-2 gap-3"></div>
+        </div>
+
+        <!-- Rateio por Centro de Custo -->
         <div id="formalDeptSection" class="space-y-2">
-          <span class="font-bold text-indigo-950 text-xs uppercase tracking-wider block">Rateio por Centro de Custo (Auditoria Hospitalar)</span>
+          <span class="font-bold text-indigo-950 text-xs uppercase tracking-wider block">Rateio por Centro de Custo / Setor</span>
           <div id="formalDeptCards" class="grid grid-cols-1 md:grid-cols-3 gap-2.5"></div>
         </div>
 
@@ -1703,15 +1726,16 @@
   </div>
 
   <!-- =========================================================================
-       MODAL 3: CADASTRAR NOVO CLIENTE / HOSPITAL
+       MODAL 3: CADASTRAR OU EDITAR CLIENTE / CONTRATO
        ========================================================================= -->
   <div id="newClientModal" class="hidden fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
     <div class="bg-white rounded-3xl max-w-xl w-full p-6 space-y-4 shadow-2xl max-h-[90vh] overflow-y-auto">
       <div class="flex justify-between items-center border-b border-slate-100 pb-3">
-        <h3 class="font-black text-base text-slate-900">Cadastrar Novo Cliente & Contrato</h3>
+        <h3 id="newClientModalTitle" class="font-black text-base text-slate-900">Cadastrar Novo Cliente &amp; Contrato</h3>
         <button onclick="closeModal('newClientModal')" class="text-slate-400 hover:text-slate-600">✕</button>
       </div>
       <form onsubmit="handleCreateClient(event)" class="space-y-3 text-xs">
+        <input id="cliEditId" type="hidden" value="" />
         <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
           <div>
             <label class="block font-bold text-slate-700 mb-1">Razão Social / Nome do Cliente</label>
@@ -1801,8 +1825,8 @@
             </div>
           </div>
         </div>
-        <button type="submit" class="w-full py-3 rounded-2xl bg-[#0038A8] hover:bg-blue-800 text-white font-black transition">
-          Salvar Cliente e Gerar Tokens de Agente
+        <button id="cliSubmitBtn" type="submit" class="w-full py-3 rounded-2xl bg-[#0038A8] hover:bg-blue-800 text-white font-black transition">
+          Salvar Cliente e Gerar Token do Scanner
         </button>
       </form>
     </div>
@@ -1857,7 +1881,7 @@
                 <strong class="text-xs font-black text-slate-900">Baixar Scanner de Impressoras</strong>
               </div>
               <p class="text-[11px] text-slate-600">
-                Arquivo único e leve (6.9 MB). Não precisa instalar nada, basta abrir no computador.
+                Arquivo único (~11 MB), sem instalação: basta abrir no computador.
               </p>
             </div>
             <button type="button" onclick="downloadPairedAgent('windows')" class="w-full py-2.5 rounded-xl bg-[#0038A8] hover:bg-blue-800 text-white font-black text-xs transition shadow-sm flex items-center justify-center space-x-1.5">
@@ -1991,11 +2015,11 @@
       <div class="p-4 rounded-2xl bg-gradient-to-r from-blue-900 to-[#0038A8] text-white flex flex-wrap items-center justify-between gap-3 shadow-md">
         <div>
           <div class="flex items-center space-x-2">
-            <span class="px-2 py-0.5 rounded-full text-[10px] font-black bg-emerald-400/20 text-emerald-300 border border-emerald-400/30">BINÁRIOS OFICIAIS COMPILADOS v4.1.0</span>
-            <span class="text-xs text-blue-200">Windows (.exe / .msi) &amp; Linux 64-bit • Go Nativo</span>
+            <span class="px-2 py-0.5 rounded-full text-[10px] font-black bg-emerald-400/20 text-emerald-300 border border-emerald-400/30">SCANNER OFICIAL</span>
+            <span class="text-xs text-blue-200">Windows (.exe / .msi) &amp; Linux 64-bit</span>
           </div>
-          <h4 class="text-sm font-black text-white mt-1">Scanner Autônomo PrintMind (Rede + USB Spooler)</h4>
-          <p class="text-[11px] text-blue-200">Zero instalação no .exe ou implantação corporativa em lote via MSI. Auto-detecta sub-redes locais, impressoras SNMP RFC 3805 e USB locais.</p>
+          <h4 class="text-sm font-black text-white mt-1">Scanner Autônomo PrintMind (Rede + USB)</h4>
+          <p class="text-[11px] text-blue-200">Roda direto no .exe (~11 MB, sem instalação) ou via instalador corporativo .msi. Auto-detecta impressoras em rede local (Wi-Fi/cabo) e USB.</p>
         </div>
         <div class="flex flex-wrap gap-2">
           <button type="button" onclick="downloadPairedAgent('windows')" class="px-3.5 py-2 rounded-xl bg-white text-[#0038A8] font-black text-xs hover:bg-blue-50 transition shadow-md flex items-center space-x-1.5">
@@ -2004,7 +2028,7 @@
           </button>
           <a href="https://github.com/lucaspereiracardoso2024-hue/printmind-platform/releases/latest/download/PrintMindAgentSetup-v4.1.0-x64.msi" target="_blank" rel="noopener" class="px-3.5 py-2 rounded-xl bg-amber-400 text-slate-950 font-black text-xs hover:bg-amber-300 transition shadow-md flex items-center space-x-1.5">
             <i data-lucide="package" class="w-4 h-4"></i>
-            <span>Baixar MSI x64 (v4.1.0)</span>
+            <span>Baixar Instalador (.msi)</span>
           </a>
           <button type="button" onclick="downloadPairedAgent('linux')" class="px-3.5 py-2 rounded-xl bg-blue-800 text-white font-black text-xs hover:bg-blue-700 transition border border-white/20 flex items-center space-x-1.5">
             <i data-lucide="download" class="w-4 h-4"></i>
@@ -2308,30 +2332,44 @@
     }
 
     // --- COMUTAÇÃO DE MODO: HÍBRIDO / LOCADORA / GRÁFICA ---
-    async function switchOperationMode(mode) {
-      currentMode = mode;
+    function applyOperationModeUI(mode) {
+      currentMode = mode || 'hibrido';
       const title = document.getElementById('mainSectionTitle');
       const sub = document.getElementById('mainSectionSubtitle');
       const kpiLab = document.getElementById('kpiClientsLabel');
+      const oms = document.getElementById('operationModeSelect');
+      const btnGrafica = document.getElementById('navTabGrafica');
+      if (oms) oms.value = currentMode;
 
-      if (mode === 'grafica') {
-        title.innerText = 'Minha Gráfica • Gestão de Produção & Insumos';
-        sub.innerText = 'Acompanhe a tiragem de balcão, custos de papel/tinta e rendimento dos consumíveis da oficina.';
-        kpiLab.innerText = 'Bancadas / Máquinas';
-        switchTab('grafica');
-      } else if (mode === 'locacao') {
-        title.innerText = 'Outsourcing de Impressão • Gestão de Clientes & Contratos';
-        sub.innerText = 'Telemetria SNMP remota, franquias, excedentes e rateio por centro de custo hospitalar.';
-        kpiLab.innerText = 'Clientes / Tomadores';
-        switchTab('clients');
-      } else {
-        title.innerText = 'Controle Inteligente de Impressão (Modo Híbrido)';
-        sub.innerText = 'Seja para alugar impressoras para seus clientes ou para gerenciar os custos e a produção da sua própria gráfica.';
-        kpiLab.innerText = 'Clientes / Unidades';
-        switchTab('clients');
+      if (btnGrafica) {
+        btnGrafica.classList.toggle('hidden', currentMode === 'locacao');
       }
 
+      if (currentMode === 'grafica') {
+        if (title) title.innerText = 'Minha Gráfica • Produção & Suprimentos';
+        if (sub) sub.innerText = 'Volume diário P&B e colorido, média por dia e níveis de tinta/toner das máquinas.';
+        if (kpiLab) kpiLab.innerText = 'Unidades / Bancadas';
+      } else if (currentMode === 'locacao') {
+        if (title) title.innerText = 'Gestão de Locação • Clientes & Contadores';
+        if (sub) sub.innerText = 'Leitura automática de contadores, franquias mensais e fechamento direto no WhatsApp + PIX.';
+        if (kpiLab) kpiLab.innerText = 'Clientes / Contratos';
+        if (currentTab === 'grafica') switchTab('clients');
+      } else {
+        if (title) title.innerText = 'Painel de Controle & Telemetria';
+        if (sub) sub.innerText = 'Leitura automática de contadores em rede e USB, franquias por contrato e faturamento rápido.';
+        if (kpiLab) kpiLab.innerText = 'Clientes / Unidades';
+      }
+    }
+
+    async function switchOperationMode(mode) {
+      applyOperationModeUI(mode);
+      if (mode === 'grafica') {
+        switchTab('grafica');
+      } else {
+        switchTab('clients');
+      }
       if (currentTenant && currentTenant.id) {
+        currentTenant.operation_mode = mode;
         await sb.from('tenants').update({ operation_mode: mode }).eq('id', currentTenant.id);
       }
     }
@@ -2667,7 +2705,9 @@
           document.getElementById('tenantPixKey').value = ten.pix_key || ten.cnpj_cpf || '';
           document.getElementById('tenantWalletId').value = ten.baas_wallet_id || '';
           if (ten.operation_mode) {
-            const oms = document.getElementById('operationModeSelect'); if (oms) oms.value = ten.operation_mode;
+            applyOperationModeUI(ten.operation_mode);
+          } else {
+            applyOperationModeUI('hibrido');
           }
         }
       }
@@ -2876,52 +2916,50 @@
       }
 
       card.classList.remove('hidden');
-      if (onboardingCard) onboardingCard.classList.remove('hidden');
+      if (onboardingCard && !forceShowOnboarding) {
+        onboardingCard.classList.add('hidden');
+      }
 
       if (!hasClients) {
-        // CASO 1: CONTA NOVA (0 CLIENTES) -> FOCO TOTAL NO PASSO 1 COM SETA PULSANTE
-        badge.innerText = "Passo 1 de 2 • Obrigatório";
-        desc.innerText = "Para onde vão suas impressoras? Comece cadastrando seu primeiro cliente ou empresa.";
+        // CASO 1: CONTA NOVA (0 CLIENTES) -> FOCO TOTAL NO PASSO 1
+        badge.innerText = "Passo 1 de 2";
+        desc.innerText = "Para onde vão suas impressoras? Comece cadastrando seu primeiro cliente ou unidade.";
         indicator.innerText = "Aguardando 1º Cliente";
 
-        // Passo 1 em Destaque
-        s1Card.className = "p-4 rounded-2xl border-2 transition-all flex flex-col justify-between space-y-3 bg-blue-50/60 border-blue-500 shadow-lg ring-2 ring-blue-300";
+        s1Card.className = "p-4 rounded-2xl border-2 transition-all flex flex-col justify-between space-y-2.5 bg-blue-50/60 border-blue-500 shadow-md ring-2 ring-blue-200";
         s1Num.className = "w-6 h-6 rounded-full bg-[#0038A8] text-white font-black text-xs flex items-center justify-center";
         s1Pill.className = "text-[10px] font-black px-2 py-0.5 rounded-full bg-blue-600 text-white animate-pulse";
-        s1Pill.innerText = "👉 COMECE POR AQUI";
-        s1Btn.className = "w-full py-2.5 rounded-xl bg-[#0038A8] hover:bg-blue-800 text-white font-black text-xs shadow-md transition flex items-center justify-center space-x-2";
+        s1Pill.innerText = "COMECE AQUI";
+        s1Btn.className = "w-full py-2.5 rounded-xl bg-[#0038A8] hover:bg-blue-800 text-white font-black text-xs shadow-sm transition flex items-center justify-center space-x-2";
         s1Btn.disabled = false;
 
-        // Passo 2 Aguardando
-        s2Card.className = "p-4 rounded-2xl border-2 transition-all flex flex-col justify-between space-y-3 bg-slate-50 border-slate-200 opacity-60";
+        s2Card.className = "p-4 rounded-2xl border-2 transition-all flex flex-col justify-between space-y-2.5 bg-slate-50 border-slate-200 opacity-60";
         s2Num.className = "w-6 h-6 rounded-full bg-slate-200 text-slate-500 font-black text-xs flex items-center justify-center";
         s2Pill.className = "text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-200 text-slate-500";
         s2Pill.innerText = "Aguardando Passo 1";
-        s2Btn.className = "w-full py-2.5 rounded-xl bg-slate-200 text-slate-400 font-bold text-xs transition flex items-center justify-center space-x-2";
+        s2Btn.className = "flex-1 py-2.5 rounded-xl bg-slate-200 text-slate-400 font-bold text-xs transition flex items-center justify-center space-x-1.5";
         s2Btn.disabled = true;
 
       } else if (!hasPrinters) {
-        // CASO 2: CLIENTE JÁ CADASTRADO, 0 IMPRESSORAS -> FOCO VAI PARA O PASSO 2 (CONECTAR ROBÔ)
-        badge.innerText = "Passo 2 de 2 • Próximo Passo";
-        desc.innerText = "Cliente cadastrado com sucesso! Agora baixe e execute o Scanner de Impressoras para localizar os equipamentos.";
-        indicator.innerText = "Aguardando Scanner de Impressoras";
+        // CASO 2: CLIENTE JÁ CADASTRADO, 0 IMPRESSORAS -> FOCO VAI PARA O PASSO 2
+        badge.innerText = "Passo 2 de 2";
+        desc.innerText = "Cliente cadastrado! Agora conecte suas impressoras usando o Scanner automático ou cadastro manual.";
+        indicator.innerText = "Aguardando Impressora";
 
-        // Passo 1 Concluído
-        s1Card.className = "p-4 rounded-2xl border-2 transition-all flex flex-col justify-between space-y-3 bg-emerald-50/50 border-emerald-300 opacity-90";
+        s1Card.className = "p-4 rounded-2xl border-2 transition-all flex flex-col justify-between space-y-2.5 bg-emerald-50/50 border-emerald-300 opacity-90";
         s1Num.className = "w-6 h-6 rounded-full bg-emerald-600 text-white font-black text-xs flex items-center justify-center";
         s1Pill.className = "text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800";
         s1Pill.innerText = "✓ Concluído";
         s1Btn.className = "w-full py-2.5 rounded-xl bg-white hover:bg-emerald-50 text-emerald-800 border border-emerald-300 font-bold text-xs transition flex items-center justify-center space-x-2";
         s1Btn.disabled = false;
 
-        // Passo 2 em Foco Total com Seta
-        s2Card.className = "p-4 rounded-2xl border-2 transition-all flex flex-col justify-between space-y-3 bg-blue-50/60 border-blue-500 shadow-lg ring-2 ring-blue-300";
+        s2Card.className = "p-4 rounded-2xl border-2 transition-all flex flex-col justify-between space-y-2.5 bg-blue-50/60 border-blue-500 shadow-md ring-2 ring-blue-200";
         s2Num.className = "w-6 h-6 rounded-full bg-[#0038A8] text-white font-black text-xs flex items-center justify-center";
         s2Pill.className = "text-[10px] font-black px-2 py-0.5 rounded-full bg-blue-600 text-white animate-pulse";
-        s2Pill.innerText = "👉 PRÓXIMO PASSO OBRIGATÓRIO";
-        s2Btn.className = "w-full py-2.5 rounded-xl bg-[#0038A8] hover:bg-blue-800 text-white font-black text-xs shadow-md transition flex items-center justify-center space-x-2";
+        s2Pill.innerText = "PRÓXIMO PASSO";
+        s2Btn.className = "flex-1 py-2.5 rounded-xl bg-[#0038A8] hover:bg-blue-800 text-white font-black text-xs shadow-sm transition flex items-center justify-center space-x-1.5";
         s2Btn.disabled = false;
-        s2Btn.innerHTML = `<i data-lucide="cpu" class="w-4 h-4"></i><span>👉 Abrir Scanner de Impressoras Agora</span>`;
+        s2Btn.innerHTML = `<i data-lucide="cpu" class="w-4 h-4"></i><span>Conectar / Baixar Scanner</span>`;
 
       } else {
         // CASO 3: PARQUE ATIVO (CLIENTES E IMPRESSORAS OPERANDO)
@@ -3004,9 +3042,7 @@
     function checkFirstTimeUserTour() {
       if (tourCheckedThisSession) return;
       tourCheckedThisSession = true;
-      if (!localStorage.getItem('printmind_tour_completed') && clients.length === 0) {
-        setTimeout(() => { openModal('welcomeTourModal'); }, 800);
-      }
+      // Tour permanece sob demanda pelo botão "?" para não bloquear a tela inicial
     }
 
     function getActiveUnitPairingToken() {
@@ -3095,7 +3131,7 @@
 
       if (aiData && aiData.length > 0 && !latestAiInsight) {
         const row = aiData[0];
-        latestAiInsight = row.insights || row.payload || row.content || row;
+        latestAiInsight = row.insights_json || row.insights || row.payload || row.content || row;
       }
 
       renderDashboard();
@@ -3448,13 +3484,14 @@
       if (currentTab === 'reports') renderReportsView();
     }
 
-    // --- CÁLCULO DE MÉTRICAS AUDITADAS (DELTA SNMP + AJUSTE TÉCNICO + TROCA) ---
+    // --- CÁLCULO DE MÉTRICAS AUDITADAS (DELTA MENSAL + AJUSTE TÉCNICO + TROCA) ---
     function computeMetrics(c) {
       const linked = printers.filter(p => p.client_id === c.id);
       let rawMono = 0, rawColor = 0;
       linked.forEach(p => {
-        rawMono += Math.max(0, (p.mono_pages || 0) - (p.initial_mono_pages || 0));
-        rawColor += Math.max(0, (p.color_pages || 0) - (p.initial_color_pages || 0));
+        const pm = getPrinterPeriodMetrics(p);
+        rawMono += pm.deltaMono;
+        rawColor += pm.deltaColor;
       });
       const replacedMono = Math.max(0, Number(c.replaced_delta_mono || 0));
       const replacedColor = Math.max(0, Number(c.replaced_delta_color || 0));
@@ -3675,6 +3712,8 @@
       const st = getEffectivePrinterStatus(p);
       const pm = getPrinterPeriodMetrics(p);
       const isExempt = !!p.billing_exempt;
+      const own = String(p.ownership || 'locada').toLowerCase();
+      const clientOpts = `<option value="">Sem cliente (Avulsa / Própria)</option>` + clients.map(x => `<option value="${x.id}" ${p.client_id === x.id ? 'selected' : ''}>${escapeHtml(x.name)}</option>`).join('');
 
       document.getElementById('prdModalTitle').innerText = p.model || 'Impressora';
       document.getElementById('prdModalSubtitle').innerText = `Serial: ${p.serial || '-'} • ${p.ip || p.usb_port || 'Local'} • ${c ? c.name : 'Avulsa'}`;
@@ -3690,36 +3729,182 @@
             <strong class="text-slate-900">${pm.finalTotal.toLocaleString('pt-BR')}</strong>
           </div>
           <div class="p-2.5 rounded-xl bg-slate-50 border border-slate-200">
-            <span class="text-[10px] text-slate-400 block">Delta P&amp;B</span>
+            <span class="text-[10px] text-slate-400 block">Delta P&amp;B (Mês)</span>
             <strong class="text-slate-900">${pm.deltaMono.toLocaleString('pt-BR')}</strong>
           </div>
           <div class="p-2.5 rounded-xl bg-indigo-50/70 border border-indigo-200">
-            <span class="text-[10px] text-indigo-600 block">Delta Color</span>
+            <span class="text-[10px] text-indigo-600 block">Delta Color (Mês)</span>
             <strong class="text-indigo-800">${pm.deltaColor.toLocaleString('pt-BR')}</strong>
           </div>
         </div>
 
+        <!-- LANÇAR CONTADOR MANUAL (IDEAL PARA MÁQUINA ISOLADA/USB OU CONFERÊNCIA DE CORTE) -->
+        <form onsubmit="saveManualPrinterReading(event, '${p.id}')" class="p-4 rounded-2xl bg-blue-50/60 border border-blue-200 space-y-2.5">
+          <div class="flex items-center justify-between">
+            <strong class="text-xs font-black text-slate-900">Lançar Contador Manual (Folha de Teste / Corte)</strong>
+            <span class="text-[10px] text-blue-700 font-bold">Atualiza histórico do mês</span>
+          </div>
+          <div class="grid grid-cols-2 gap-2.5">
+            <div>
+              <label class="block text-[11px] font-bold text-slate-700 mb-1">Contador Atual P&amp;B</label>
+              <input id="manualReadMono" type="number" min="0" value="${Number(p.mono_pages || 0)}" required class="w-full px-3 py-2 rounded-xl border border-slate-300 bg-white mono" />
+            </div>
+            <div>
+              <label class="block text-[11px] font-bold text-slate-700 mb-1">Contador Atual Color</label>
+              <input id="manualReadColor" type="number" min="0" value="${Number(p.color_pages || 0)}" required class="w-full px-3 py-2 rounded-xl border border-slate-300 bg-white mono" />
+            </div>
+          </div>
+          <button type="submit" class="w-full py-2 rounded-xl bg-[#0038A8] hover:bg-blue-800 text-white font-black text-xs transition">
+            Salvar Leitura Manual Agora
+          </button>
+        </form>
+
+        <!-- EDITAR / VINCULAR AO CLIENTE / PROPRIEDADE -->
+        <form onsubmit="savePrinterDetails(event, '${p.id}')" class="p-4 rounded-2xl bg-slate-50 border border-slate-200 space-y-2.5">
+          <strong class="text-xs font-black text-slate-900 block">Editar Dados, Vínculo e Propriedade</strong>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+            <div>
+              <label class="block text-[11px] font-bold text-slate-700 mb-1">Cliente Vinculado</label>
+              <select id="editPrtClientId" class="w-full px-3 py-2 rounded-xl border border-slate-300 bg-white">${clientOpts}</select>
+            </div>
+            <div>
+              <label class="block text-[11px] font-bold text-slate-700 mb-1">Propriedade da Máquina</label>
+              <select id="editPrtOwnership" class="w-full px-3 py-2 rounded-xl border border-slate-300 bg-white">
+                <option value="locada" ${own === 'locada' ? 'selected' : ''}>Locada no Cliente</option>
+                <option value="propria" ${own === 'propria' ? 'selected' : ''}>Própria (Gráfica / Interna)</option>
+                <option value="cliente" ${own === 'cliente' ? 'selected' : ''}>Do Cliente (Patrimônio Terceiro)</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-[11px] font-bold text-slate-700 mb-1">Unidade / Filial</label>
+              <input id="editPrtUnit" type="text" value="${escapeHtml(p.unit || 'Matriz')}" class="w-full px-3 py-2 rounded-xl border border-slate-300 bg-white" />
+            </div>
+            <div>
+              <label class="block text-[11px] font-bold text-slate-700 mb-1">Setor / Departamento</label>
+              <input id="editPrtDept" type="text" value="${escapeHtml(p.department || 'Geral')}" class="w-full px-3 py-2 rounded-xl border border-slate-300 bg-white" />
+            </div>
+            <div>
+              <label class="block text-[11px] font-bold text-slate-700 mb-1">Modelo</label>
+              <input id="editPrtModel" type="text" value="${escapeHtml(p.model || '')}" required class="w-full px-3 py-2 rounded-xl border border-slate-300 bg-white" />
+            </div>
+            <div>
+              <label class="block text-[11px] font-bold text-slate-700 mb-1">IP / Porta USB</label>
+              <input id="editPrtIp" type="text" value="${escapeHtml(p.ip || p.usb_port || '')}" class="w-full px-3 py-2 rounded-xl border border-slate-300 bg-white mono" />
+            </div>
+          </div>
+          <div class="flex flex-wrap items-center justify-between gap-2 pt-1">
+            <button type="button" onclick="deletePrinter('${p.id}')" class="px-3 py-2 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 font-bold text-xs transition">
+              Excluir Impressora
+            </button>
+            <button type="submit" class="px-4 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-black text-xs transition">
+              Salvar Alterações
+            </button>
+          </div>
+        </form>
+
         <div class="p-4 rounded-2xl border ${isExempt ? 'bg-amber-50 border-amber-300' : 'bg-emerald-50/60 border-emerald-200'} flex flex-wrap items-center justify-between gap-3">
           <div class="space-y-0.5 max-w-md">
             <strong class="text-xs font-black ${isExempt ? 'text-amber-950' : 'text-emerald-950'} block">
-              ${isExempt ? '⏸️ Fair Billing Ativo: Cobrança Isenta (Bancada / Offline)' : '✓ Máquina Faturável na Assinatura SaaS'}
+              ${isExempt ? 'Fair Billing Ativo: Cobrança Isenta (Bancada / Backup)' : 'Máquina Ativa na Contagem do Plano'}
             </strong>
             <span class="text-[11px] ${isExempt ? 'text-amber-800' : 'text-emerald-800'}">
-              Marque máquinas em bancada, backup ou pausadas para não serem cobradas na contagem mensal do SaaS.
+              Marque máquinas em bancada, backup ou pausadas para não serem cobradas na contagem mensal.
             </span>
           </div>
           <label class="inline-flex items-center space-x-2 cursor-pointer px-3 py-2 rounded-xl bg-white border border-slate-300 font-bold text-slate-800 shadow-sm">
             <input type="checkbox" ${isExempt ? 'checked' : ''} onchange="togglePrinterBillingExempt('${p.id}')" class="rounded text-[#0038A8]" />
-            <span>Isentar Cobrança (Fair Billing — Bancada/Offline)</span>
+            <span>Isentar Cobrança (Fair Billing)</span>
           </label>
         </div>
 
         <div class="space-y-2">
-          <strong class="text-[11px] uppercase tracking-wider text-slate-500 block">Leitura Real de Suprimentos (RFC 3805)</strong>
+          <strong class="text-[11px] uppercase tracking-wider text-slate-500 block">Níveis Reais de Suprimentos</strong>
           ${renderSupplyListHtml(p.supplies, false)}
         </div>
       `;
       lucide.createIcons();
+    }
+
+    async function saveManualPrinterReading(e, printerId) {
+      e.preventDefault();
+      const p = printers.find(x => x.id === printerId);
+      if (!p) return;
+      const newMono = Math.max(0, Number(document.getElementById('manualReadMono')?.value || 0));
+      const newColor = Math.max(0, Number(document.getElementById('manualReadColor')?.value || 0));
+      const newTotal = newMono + newColor;
+
+      const { error } = await sb.from('printers').update({
+        mono_pages: newMono,
+        color_pages: newColor,
+        total_pages: newTotal,
+        is_color_capable: p.is_color_capable || newColor > 0,
+        last_seen: new Date().toISOString(),
+        status: 'online'
+      }).eq('id', printerId);
+
+      if (error) {
+        alert('Erro ao salvar leitura manual: ' + error.message);
+        return;
+      }
+
+      if (currentTenant && currentTenant.id) {
+        const nowIso = new Date().toISOString();
+        const idemKey = `${printerId}-${nowIso.slice(0, 16).replace(/[:T]/g, '-')}`;
+        await sb.from('telemetry_readings').insert({
+          tenant_id: currentTenant.id,
+          printer_id: printerId,
+          client_id: p.client_id || null,
+          idempotency_key: idemKey,
+          total_pages: newTotal,
+          mono_pages: newMono,
+          color_pages: newColor,
+          recorded_at: nowIso
+        });
+      }
+
+      await loadTenantData();
+      renderPrinterDetailModalBody();
+      alert('Contador manual atualizado com sucesso!');
+    }
+
+    async function savePrinterDetails(e, printerId) {
+      e.preventDefault();
+      const p = printers.find(x => x.id === printerId);
+      if (!p) return;
+      const client_id = (document.getElementById('editPrtClientId')?.value || '').trim() || null;
+      const ownership = (document.getElementById('editPrtOwnership')?.value || 'locada').trim();
+      const unit = (document.getElementById('editPrtUnit')?.value || 'Matriz').trim();
+      const department = (document.getElementById('editPrtDept')?.value || 'Geral').trim();
+      const model = (document.getElementById('editPrtModel')?.value || p.model || '').trim();
+      const ip = (document.getElementById('editPrtIp')?.value || '').trim();
+
+      const payload = { client_id, ownership, unit, department, model, ip };
+      let { error } = await sb.from('printers').update(payload).eq('id', printerId);
+      if (error && isMissingColumnError(error)) {
+        const fallback = { client_id, unit, department, model, ip };
+        const retry = await sb.from('printers').update(fallback).eq('id', printerId);
+        error = retry.error;
+      }
+      if (error) {
+        alert('Erro ao atualizar impressora: ' + error.message);
+        return;
+      }
+      await loadTenantData();
+      renderPrinterDetailModalBody();
+      alert('Dados da impressora atualizados!');
+    }
+
+    async function deletePrinter(printerId) {
+      const p = printers.find(x => x.id === printerId);
+      if (!p) return;
+      if (!confirm(`Deseja realmente excluir a impressora "${p.model}" (${p.serial})?`)) return;
+      const { error } = await sb.from('printers').delete().eq('id', printerId);
+      if (error) {
+        alert('Erro ao excluir impressora: ' + error.message);
+        return;
+      }
+      closeModal('printerDetailModal');
+      await loadTenantData();
     }
 
     async function togglePrinterBillingExempt(printerId) {
@@ -3739,12 +3924,130 @@
       if (currentTab === 'reports') renderReportsView();
     }
 
+    let activeDueClientId = null;
+
+    function getDueWindowScore(closingDay, todayDay) {
+      const cd = Number(closingDay || 0);
+      if (cd < 1 || cd > 31) return null;
+      const diff = Math.abs(todayDay - cd);
+      if (diff <= 2) return diff;
+      if ((todayDay >= 29 && cd <= 2) || (cd >= 29 && todayDay <= 2)) return 2;
+      return null;
+    }
+
+    function renderPrintersGrid() {
+      const grid = document.getElementById('printersGrid');
+      const countBadge = document.getElementById('printersCountBadge');
+      if (!grid) return;
+
+      const searchTerm = (document.getElementById('printerSearchInput')?.value || '').trim().toLowerCase();
+      const ownFilter = (document.getElementById('printerOwnershipFilter')?.value || 'all').toLowerCase();
+
+      const filtered = printers.filter(p => {
+        const c = clients.find(x => x.id === p.client_id);
+        const own = String(p.ownership || 'locada').toLowerCase();
+        if (ownFilter === 'unlinked' && p.client_id) return false;
+        if ((ownFilter === 'locada' || ownFilter === 'propria' || ownFilter === 'cliente') && own !== ownFilter) return false;
+
+        if (!searchTerm) return true;
+        const hay = `${p.model || ''} ${p.serial || ''} ${p.ip || ''} ${p.usb_port || ''} ${p.unit || ''} ${p.department || ''} ${c ? c.name : 'avulsa'}`.toLowerCase();
+        return hay.includes(searchTerm);
+      });
+
+      if (countBadge) {
+        countBadge.innerText = (filtered.length !== printers.length)
+          ? `${filtered.length}/${printers.length}`
+          : String(printers.length);
+      }
+
+      if (printers.length === 0) {
+        grid.innerHTML = `
+          <div class="col-span-full p-8 rounded-3xl bg-white border border-slate-200 text-center text-xs text-slate-400 space-y-2">
+            <div class="font-bold text-slate-600">Nenhuma impressora conectada ainda.</div>
+            <p>Clique em "+ Impressora" ou execute o Scanner para localizar automaticamente na rede e no USB.</p>
+          </div>`;
+        return;
+      }
+
+      if (filtered.length === 0) {
+        grid.innerHTML = `
+          <div class="col-span-full p-8 rounded-3xl bg-white border border-slate-200 text-center text-xs text-slate-500">
+            Nenhuma impressora encontrada para o filtro atual.
+          </div>`;
+        return;
+      }
+
+      grid.innerHTML = filtered.map(p => {
+        const pm = getPrinterPeriodMetrics(p);
+        const dMono = pm.deltaMono;
+        const dColor = pm.deltaColor;
+        const c = clients.find(x => x.id === p.client_id);
+        const st = getEffectivePrinterStatus(p);
+        const wppReady = isUnitWppReady(p);
+        const isExempt = !!p.billing_exempt;
+        const own = String(p.ownership || 'locada').toLowerCase();
+        const ownLabel = own === 'propria' ? 'Própria' : (own === 'cliente' ? 'Do Cliente' : 'Locada');
+        const suppliesArr = Array.isArray(p.supplies) ? p.supplies : [];
+        const lowSupply = suppliesArr.map(normalizeSupplyItem).find(s => s.isLowAlert);
+        const lowSpareWidget = (lowSupply && c) ? renderSpareTonersInlineWidget(c, lowSupply.colorKey || 'K') : '';
+
+        return `
+          <div class="bg-white p-5 rounded-3xl border ${isExempt ? 'border-amber-300 bg-amber-50/15' : (st.isOffline ? 'border-rose-200' : 'border-slate-200')} shadow-sm space-y-3 hover:shadow-md transition">
+            <div class="flex justify-between items-start gap-2">
+              <div class="min-w-0">
+                <h4 class="font-black text-slate-900 text-sm truncate">${escapeHtml(p.model)}</h4>
+                <span class="text-xs text-slate-400 mono block truncate">Série: ${escapeHtml(p.serial)} • ${escapeHtml(p.ip || p.usb_port || 'Local')}</span>
+                <div class="text-[11px] font-bold text-indigo-700 mt-1 flex flex-wrap items-center gap-1">
+                  <i data-lucide="map-pin" class="w-3 h-3"></i>
+                  <span>${escapeHtml(c ? c.name : 'Avulsa (Vincular)')} • ${escapeHtml(p.unit || 'Matriz')} (${escapeHtml(p.department || 'Geral')})</span>
+                  <span class="px-1.5 py-0.5 rounded-full text-[9px] font-bold bg-slate-100 text-slate-700 border border-slate-200">${ownLabel}</span>
+                  ${wppReady ? '<span class="px-1.5 py-0.5 rounded-full text-[9px] font-bold bg-emerald-100 text-emerald-800">WPP Win11</span>' : ''}
+                  ${isExempt ? '<span class="px-1.5 py-0.5 rounded-full text-[9px] font-black bg-amber-100 text-amber-900 border border-amber-300">ISENTA (FAIR BILLING)</span>' : ''}
+                </div>
+              </div>
+              <span class="px-2 py-0.5 rounded-full text-[10px] font-black uppercase whitespace-nowrap ${st.badgeClass}">${escapeHtml(st.label)}</span>
+            </div>
+            <div class="pt-2 border-t border-slate-100 grid grid-cols-3 gap-2 text-center text-xs mono">
+              <div class="bg-slate-50 p-2 rounded-xl">
+                <span class="text-[10px] text-slate-400 block">P&amp;B Mês</span>
+                <strong>${dMono.toLocaleString('pt-BR')}</strong>
+              </div>
+              <div class="bg-indigo-50/60 p-2 rounded-xl">
+                <span class="text-[10px] text-indigo-500 block">Color Mês</span>
+                <strong class="text-indigo-700">${dColor.toLocaleString('pt-BR')}</strong>
+              </div>
+              <div class="bg-blue-50/60 p-2 rounded-xl">
+                <span class="text-[10px] text-[#0038A8] block">Total Mês</span>
+                <strong class="text-[#0038A8]">${(dMono + dColor).toLocaleString('pt-BR')}</strong>
+              </div>
+            </div>
+            <div class="pt-2 border-t border-slate-100 space-y-1.5">
+              <div class="flex items-center justify-between text-[10px] font-bold uppercase text-slate-400">
+                <span>Suprimentos &amp; Resíduo</span>
+                <span class="mono">${escapeHtml(p.discovery_source || 'rede')}</span>
+              </div>
+              ${renderSupplyListHtml(p.supplies, true)}
+              ${lowSpareWidget}
+            </div>
+            <div class="pt-2 border-t border-slate-100 flex flex-wrap items-center justify-between gap-2 text-[11px]">
+              <button type="button" onclick="togglePrinterBillingExempt('${p.id}')" class="px-2.5 py-1 rounded-xl border font-bold transition ${isExempt ? 'bg-amber-100 border-amber-300 text-amber-950 hover:bg-amber-200' : 'bg-slate-50 border-slate-200 text-slate-600 hover:bg-slate-100'}" title="Isentar Cobrança (Fair Billing — Bancada/Offline)">
+                ${isExempt ? 'Isenta • Reativar' : 'Isentar Cobrança'}
+              </button>
+              <button type="button" onclick="openPrinterDetailModal('${p.id}')" class="px-3 py-1 rounded-xl bg-blue-50 hover:bg-blue-100 text-[#0038A8] font-bold transition">
+                Editar / Contador
+              </button>
+            </div>
+          </div>
+        `;
+      }).join('');
+      lucide.createIcons();
+    }
+
     // --- RENDERIZAÇÃO DA ABA 1: OPERAÇÃO & CLIENTES ---
     function renderDashboard() {
       document.getElementById('kpiClients').innerText = clients.length;
       document.getElementById('kpiPrinters').innerText = printers.length;
       document.getElementById('clientsCountBadge').innerText = clients.length;
-      document.getElementById('printersCountBadge').innerText = printers.length;
 
       const offlineCount = printers.filter(p => getEffectivePrinterStatus(p).isOffline).length;
       const onlineCount = Math.max(0, printers.length - offlineCount);
@@ -3752,12 +4055,15 @@
       const kpiPrintersSub = document.getElementById('kpiPrintersSub');
       if (kpiPrintersSub) {
         kpiPrintersSub.innerText = printers.length > 0
-          ? `${onlineCount} online • ${offlineCount} offline${exemptCount > 0 ? ` • ${exemptCount} isenta(s) Fair Billing` : ' (SNMP/USB)'}`
-          : 'SNMPv2c (RFC 3805) + USB';
+          ? `${onlineCount} online • ${offlineCount} offline${exemptCount > 0 ? ` • ${exemptCount} isenta(s)` : ''}`
+          : 'Rede (Wi-Fi/Cabo) + USB';
       }
 
       let sumPages = 0, sumBill = 0;
       let dueClient = null;
+      let bestDueScore = 999;
+      const todayDay = new Date().getDate();
+      activeDueClientId = null;
 
       if (clients.length === 0) {
         document.getElementById('clientsTableBody').innerHTML = `
@@ -3766,24 +4072,27 @@
               <div class="w-12 h-12 rounded-2xl bg-slate-100 text-slate-400 flex items-center justify-center mx-auto">
                 <i data-lucide="inbox" class="w-6 h-6"></i>
               </div>
-              <div class="font-bold text-slate-800 text-sm">Nenhum contrato ativo cadastrado</div>
+              <div class="font-bold text-slate-800 text-sm">Nenhum cliente cadastrado ainda</div>
               <p class="text-xs text-slate-500 max-w-md mx-auto">
-                Cadastre seus clientes corporativos e unidades para iniciar o monitoramento automatizado de franquias, medidores SNMP e fechamentos mensais.
+                Cadastre seu primeiro cliente ou unidade para organizar impressoras, franquias e fechamentos mensais.
               </p>
               <div class="pt-2">
-                <button onclick="openModal('newClientModal')" class="px-4 py-2 rounded-xl bg-[#0038A8] hover:bg-blue-800 text-white font-bold text-xs shadow-sm transition">
-                  + Cadastrar Primeiro Cliente
+                <button onclick="openClientModalForCreate()" class="px-4 py-2 rounded-xl bg-[#0038A8] hover:bg-blue-800 text-white font-bold text-xs shadow-sm transition">
+                  + Cadastrar 1º Cliente
                 </button>
               </div>
             </td>
           </tr>`;
       } else {
-        const bd = document.getElementById('btnDemoData'); if (bd) bd.classList.add('hidden');
         document.getElementById('clientsTableBody').innerHTML = clients.map(c => {
           const m = computeMetrics(c);
           sumPages += m.dTotal;
           sumBill += m.total;
-          if (!dueClient && c.closing_day) dueClient = c;
+          const score = getDueWindowScore(c.closing_day, todayDay);
+          if (!m.isFrozen && score !== null && score < bestDueScore) {
+            bestDueScore = score;
+            dueClient = c;
+          }
 
           const badge = m.isFrozen
             ? '<span class="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-blue-100 text-[#0038A8]">● CONGELADO</span>'
@@ -3822,17 +4131,23 @@
               <td class="py-3.5 px-4 text-center">${badge}</td>
               <td class="py-3.5 px-4 text-right">
                 <div class="inline-flex flex-wrap justify-end items-center gap-1">
-                  <button onclick="openSpareTonersModal('${c.id}')" class="px-2.5 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold text-[11px] transition" title="Gerenciar Toner Reserva no Cliente">
-                    Estoque Reserva
+                  <button onclick="openClientModalForEdit('${c.id}')" class="px-2 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-[11px] transition" title="Editar Cliente">
+                    Editar
                   </button>
-                  <button onclick="openClientAdjustmentModal('${c.id}')" class="px-2.5 py-1.5 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-200 font-bold text-[11px] transition" title="Abatimento Técnico, Troca ou Pool">
-                    Ajuste Técnico / Troca
+                  <button onclick="openSpareTonersModal('${c.id}')" class="px-2 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold text-[11px] transition" title="Gerenciar Toner Reserva no Cliente">
+                    Reserva
+                  </button>
+                  <button onclick="openClientAdjustmentModal('${c.id}')" class="px-2 py-1.5 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-200 font-bold text-[11px] transition" title="Abatimento Técnico, Troca ou Pool">
+                    Ajuste / Troca
                   </button>
                   <button onclick="openClientInvoice('${c.id}')" class="px-3 py-1.5 rounded-xl bg-[#0038A8] text-white font-bold hover:bg-blue-800 transition shadow-sm">
-                    Demonstrativo A4
+                    Espelho A4
                   </button>
                   <button onclick="sendQuickWhatsAppClient('${c.id}')" class="p-1.5 rounded-xl bg-emerald-50 text-emerald-700 hover:bg-emerald-100 transition" title="Enviar WhatsApp">
                     <i data-lucide="message-circle" class="w-4 h-4"></i>
+                  </button>
+                  <button onclick="deleteClient('${c.id}')" class="p-1.5 rounded-xl bg-rose-50 text-rose-600 hover:bg-rose-100 transition" title="Excluir Cliente">
+                    <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
                   </button>
                 </div>
               </td>
@@ -3856,85 +4171,22 @@
       document.getElementById('kpiDeltaPages').innerText = sumPages.toLocaleString('pt-BR') + ' págs';
       document.getElementById('kpiTotalBilling').innerText = sumBill.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 
-      // Alerta de Corte do Dia
+      // Alerta de Corte do Dia (apenas quando corte é hoje ou até 2 dias)
       const dueCard = document.getElementById('dueAlertCard');
       if (dueClient) {
+        activeDueClientId = dueClient.id;
         dueCard.classList.remove('hidden');
         const m = computeMetrics(dueClient);
-        document.getElementById('dueAlertTitle').innerText = `● FATURAMENTO DO DIA • CORTE DIA ${dueClient.closing_day}`;
-        document.getElementById('dueAlertDesc').innerText = `O cliente ${dueClient.name} atingiu a data de corte mensal (${m.dTotal.toLocaleString('pt-BR')} págs • R$ ${m.total.toFixed(2)}).`;
+        const exactMatch = Number(dueClient.closing_day) === todayDay;
+        document.getElementById('dueAlertTitle').innerText = exactMatch
+          ? `● FECHAMENTO DE HOJE • CORTE DIA ${dueClient.closing_day}`
+          : `● CORTE PRÓXIMO • DIA ${dueClient.closing_day}`;
+        document.getElementById('dueAlertDesc').innerText = `${dueClient.name}: ${m.dTotal.toLocaleString('pt-BR')} págs • R$ ${m.total.toFixed(2)}.`;
       } else {
         dueCard.classList.add('hidden');
       }
 
-      // Grid de Impressoras (com status real via last_seen, Fair Billing e Reserva no Cliente)
-      if (printers.length === 0) {
-        document.getElementById('printersGrid').innerHTML = `
-          <div class="col-span-full p-8 rounded-3xl bg-white border border-slate-200 text-center text-xs text-slate-400 space-y-2">
-            <div class="font-bold text-slate-600">Nenhuma impressora conectada ainda.</div>
-            <p>Clique em "+ Adicionar Impressora" ou execute o Scanner Autônomo para localizar automaticamente na rede e no USB.</p>
-          </div>`;
-      } else {
-        document.getElementById('printersGrid').innerHTML = printers.map(p => {
-          const dMono = Math.max(0, (p.mono_pages || 0) - (p.initial_mono_pages || 0));
-          const dColor = Math.max(0, (p.color_pages || 0) - (p.initial_color_pages || 0));
-          const c = clients.find(x => x.id === p.client_id);
-          const st = getEffectivePrinterStatus(p);
-          const wppReady = isUnitWppReady(p);
-          const isExempt = !!p.billing_exempt;
-          const suppliesArr = Array.isArray(p.supplies) ? p.supplies : [];
-          const lowSupply = suppliesArr.map(normalizeSupplyItem).find(s => s.isLowAlert);
-          const lowSpareWidget = (lowSupply && c) ? renderSpareTonersInlineWidget(c, lowSupply.colorKey || 'K') : '';
-
-          return `
-            <div class="bg-white p-5 rounded-3xl border ${isExempt ? 'border-amber-300 bg-amber-50/15' : (st.isOffline ? 'border-rose-200' : 'border-slate-200')} shadow-sm space-y-3 hover:shadow-md transition">
-              <div class="flex justify-between items-start gap-2">
-                <div class="min-w-0">
-                  <h4 class="font-black text-slate-900 text-sm truncate">${escapeHtml(p.model)}</h4>
-                  <span class="text-xs text-slate-400 mono block truncate">Serial: ${escapeHtml(p.serial)} • ${escapeHtml(p.ip || p.usb_port || 'Local')}</span>
-                  <div class="text-[11px] font-bold text-indigo-700 mt-1 flex flex-wrap items-center gap-1">
-                    <i data-lucide="map-pin" class="w-3 h-3"></i>
-                    <span>${escapeHtml(c ? c.name : 'Avulsa')} • ${escapeHtml(p.unit || 'Matriz')} (${escapeHtml(p.department || 'Geral')})</span>
-                    ${wppReady ? '<span class="px-1.5 py-0.5 rounded-full text-[9px] font-bold bg-emerald-100 text-emerald-800">WPP Win11</span>' : ''}
-                    ${isExempt ? '<span class="px-1.5 py-0.5 rounded-full text-[9px] font-black bg-amber-100 text-amber-900 border border-amber-300">FAIR BILLING • ISENTA</span>' : ''}
-                  </div>
-                </div>
-                <span class="px-2 py-0.5 rounded-full text-[10px] font-black uppercase whitespace-nowrap ${st.badgeClass}">${escapeHtml(st.label)}</span>
-              </div>
-              <div class="pt-2 border-t border-slate-100 grid grid-cols-3 gap-2 text-center text-xs mono">
-                <div class="bg-slate-50 p-2 rounded-xl">
-                  <span class="text-[10px] text-slate-400 block">P&B</span>
-                  <strong>${dMono.toLocaleString('pt-BR')}</strong>
-                </div>
-                <div class="bg-indigo-50/60 p-2 rounded-xl">
-                  <span class="text-[10px] text-indigo-500 block">Color</span>
-                  <strong class="text-indigo-700">${dColor.toLocaleString('pt-BR')}</strong>
-                </div>
-                <div class="bg-blue-50/60 p-2 rounded-xl">
-                  <span class="text-[10px] text-[#0038A8] block">Total Delta</span>
-                  <strong class="text-[#0038A8]">${(dMono + dColor).toLocaleString('pt-BR')}</strong>
-                </div>
-              </div>
-              <div class="pt-2 border-t border-slate-100 space-y-1.5">
-                <div class="flex items-center justify-between text-[10px] font-bold uppercase text-slate-400">
-                  <span>Insumos &amp; Resíduo</span>
-                  <span class="mono">${escapeHtml(p.discovery_source || 'snmp')}</span>
-                </div>
-                ${renderSupplyListHtml(p.supplies, true)}
-                ${lowSpareWidget}
-              </div>
-              <div class="pt-2 border-t border-slate-100 flex flex-wrap items-center justify-between gap-2 text-[11px]">
-                <button type="button" onclick="togglePrinterBillingExempt('${p.id}')" class="px-2.5 py-1 rounded-xl border font-bold transition ${isExempt ? 'bg-amber-100 border-amber-300 text-amber-950 hover:bg-amber-200' : 'bg-slate-50 border-slate-200 text-slate-600 hover:bg-slate-100'}" title="Isentar Cobrança (Fair Billing — Bancada/Offline)">
-                  ${isExempt ? '⏸️ Isenta (Fair Billing) • Reativar' : 'Isentar Cobrança (Fair Billing)'}
-                </button>
-                <button type="button" onclick="openPrinterDetailModal('${p.id}')" class="px-2.5 py-1 rounded-xl bg-blue-50 hover:bg-blue-100 text-[#0038A8] font-bold transition">
-                  Detalhes
-                </button>
-              </div>
-            </div>
-          `;
-        }).join('');
-      }
+      renderPrintersGrid();
       checkTrialPrinterLock();
       lucide.createIcons();
     }
@@ -4178,7 +4430,7 @@
             }).join('');
       }
 
-      // Rateio por Setor / PC / Usuário (print_jobs_summary)
+      // Rateio por Setor / PC / Usuário
       const jobsContainer = document.getElementById('jobsBreakdownContainer');
       const jobsBadge = document.getElementById('jobsBreakdownCountBadge');
       const monthPrefix = getCurrentMonthPrefix();
@@ -4192,25 +4444,33 @@
         if (monthJobs.length === 0) {
           jobsContainer.innerHTML = `
             <div class="p-5 rounded-2xl bg-slate-50 border border-slate-200 text-center text-xs text-slate-500 space-y-1">
-              <strong class="text-slate-700 block">Aguardando trabalhos do agente v4.0 (<code class="mono">print_jobs_summary</code>)</strong>
-              <span>Quando o agente Windows/USB v4.0 enviar o resumo de spooler por estação e usuário neste mês, o rateio detalhado aparecerá automaticamente aqui.</span>
+              <strong class="text-slate-700 block">Nenhuma impressão detalhada registrada neste mês</strong>
+              <span>Quando o Scanner estiver rodando nos computadores, você verá aqui o consumo e custo estimado por setor, computador e usuário.</span>
             </div>`;
         } else {
           const grouped = {};
           monthJobs.forEach(j => {
             const dept = j.department || j.sector || 'Geral';
-            const pc = j.pc_name || j.hostname || j.workstation || j.computer_name || 'Estação não informada';
+            const pc = j.machine_name || j.pc_name || j.hostname || j.workstation || j.computer_name || 'Estação não informada';
             const usr = j.user_name || j.username || j.os_user || 'Usuário';
+            const prt = printers.find(x => x.id === j.printer_id);
+            const cli = prt ? clients.find(c => c.id === prt.client_id) : null;
+            const rateMono = cli && cli.extra_mono != null ? Number(cli.extra_mono) : 0.05;
+            const rateColor = cli && cli.extra_color != null ? Number(cli.extra_color) : 0.35;
+
             const key = `${dept}||${pc}||${usr}`;
-            if (!grouped[key]) grouped[key] = { dept, pc, usr, jobs: 0, mono: 0, color: 0, total: 0 };
+            if (!grouped[key]) grouped[key] = { dept, pc, usr, jobs: 0, mono: 0, color: 0, duplex: 0, total: 0, estCost: 0 };
             const g = grouped[key];
             const mono = Number(j.mono_pages || 0);
             const color = Number(j.color_pages || 0);
+            const duplex = Number(j.duplex_pages || 0);
             const tot = Number(j.total_pages || j.pages || (mono + color));
             g.jobs += Number(j.jobs_count || j.job_count || 1);
             g.mono += mono;
             g.color += color;
+            g.duplex += duplex;
             g.total += tot;
+            g.estCost += (mono * rateMono) + (color * rateColor);
           });
           const rows = Object.values(grouped).sort((a, b) => b.total - a.total);
           jobsContainer.innerHTML = `
@@ -4222,13 +4482,17 @@
                     <th class="py-2.5 px-3">PC / Estação</th>
                     <th class="py-2.5 px-3">Usuário</th>
                     <th class="py-2.5 px-3 text-center">Trabalhos</th>
-                    <th class="py-2.5 px-3 text-right">P&B</th>
+                    <th class="py-2.5 px-3 text-right">P&amp;B</th>
                     <th class="py-2.5 px-3 text-right">Color</th>
+                    <th class="py-2.5 px-3 text-right">Frente/Verso</th>
                     <th class="py-2.5 px-3 text-right">Total Págs</th>
+                    <th class="py-2.5 px-3 text-right">Custo Est.</th>
                   </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-100">
-                  ${rows.map(r => `
+                  ${rows.map(r => {
+                    const dupPct = r.total > 0 ? Math.round((r.duplex / r.total) * 100) : 0;
+                    return `
                     <tr class="hover:bg-slate-50">
                       <td class="py-2.5 px-3 font-bold text-indigo-800">${escapeHtml(r.dept)}</td>
                       <td class="py-2.5 px-3 mono text-slate-700">${escapeHtml(r.pc)}</td>
@@ -4236,16 +4500,38 @@
                       <td class="py-2.5 px-3 text-center mono">${r.jobs.toLocaleString('pt-BR')}</td>
                       <td class="py-2.5 px-3 text-right mono">${r.mono.toLocaleString('pt-BR')}</td>
                       <td class="py-2.5 px-3 text-right mono text-indigo-700">${r.color.toLocaleString('pt-BR')}</td>
+                      <td class="py-2.5 px-3 text-right mono text-slate-500">${dupPct}%</td>
                       <td class="py-2.5 px-3 text-right mono font-black text-slate-900">${r.total.toLocaleString('pt-BR')}</td>
-                    </tr>
-                  `).join('')}
+                      <td class="py-2.5 px-3 text-right mono font-bold text-emerald-700">R$ ${r.estCost.toFixed(2)}</td>
+                    </tr>`;
+                  }).join('')}
                 </tbody>
               </table>
             </div>`;
         }
       }
 
-      // Sub-aba Suprimentos: Feed real de supply_alerts
+      // Alerta Windows 11 Protected Print Mode (WPP) em risco
+      const wppRiskBanner = document.getElementById('wppRiskSummaryBanner');
+      if (wppRiskBanner) {
+        const wppRiskPrinters = printers.filter(p => !!p.wpp_at_risk);
+        if (wppRiskPrinters.length > 0) {
+          wppRiskBanner.classList.remove('hidden');
+          wppRiskBanner.innerHTML = `
+            <div class="p-3.5 rounded-2xl bg-amber-50 border border-amber-300 text-amber-950 text-xs flex flex-wrap items-center justify-between gap-2">
+              <div>
+                <strong>Atenção • Compatibilidade Windows 11 (Modo Protegido WPP):</strong>
+                <span>${wppRiskPrinters.length} impressora(s) em risco caso o Windows 11 ative WPP: ${wppRiskPrinters.map(p => escapeHtml(p.model)).slice(0, 4).join(', ')}.</span>
+              </div>
+              <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-200 text-amber-950">Recomenda-se driver IPP/Mopria</span>
+            </div>`;
+        } else {
+          wppRiskBanner.classList.add('hidden');
+          wppRiskBanner.innerHTML = '';
+        }
+      }
+
+      // Sub-aba Suprimentos: Feed real de alertas
       const alertsFeed = document.getElementById('supplyAlertsFeed');
       const alertsBadge = document.getElementById('supplyAlertsBadge');
       const openAlerts = supplyAlerts.filter(a => !a.resolved && String(a.status || '').toLowerCase() !== 'resolved');
@@ -4253,7 +4539,7 @@
 
       if (alertsFeed) {
         if (supplyAlerts.length === 0) {
-          alertsFeed.innerHTML = `<div class="p-4 rounded-2xl bg-slate-50 border border-slate-200 text-xs text-slate-500 text-center">Nenhum alerta registrado em <code class="mono">supply_alerts</code> (troca prematura, resíduo cheio, limpeza de cabeçote ou toner &le; 15%).</div>`;
+          alertsFeed.innerHTML = `<div class="p-4 rounded-2xl bg-slate-50 border border-slate-200 text-xs text-slate-500 text-center">Nenhum alerta automático de troca prematura, caixa de resíduo ou toner baixo (&le; 15%) até o momento.</div>`;
         } else {
           alertsFeed.innerHTML = supplyAlerts.map(a => {
             const prt = printers.find(p => p.id === a.printer_id);
@@ -4368,8 +4654,8 @@
       lucide.createIcons();
     }
 
-    // --- RENDERIZAÇÃO DA ABA 3: MINHA GRÁFICA (PRODUÇÃO DIÁRIA 100% REAL) ---
-    function computeDailyProductionSeries(daysCount = 14) {
+    // --- RENDERIZAÇÃO DA ABA 3: PRODUÇÃO DIÁRIA (LEITURA CONTÍNUA) ---
+    function computeDailyProductionSeries(daysCount = 14, filterPrinterIds = null) {
       const days = [];
       const today = new Date();
       for (let i = daysCount - 1; i >= 0; i--) {
@@ -4384,6 +4670,7 @@
       const byPrinterDay = {};
       telemetryReadings.forEach(r => {
         if (!r.printer_id || !r.recorded_at) return;
+        if (filterPrinterIds && !filterPrinterIds.has(r.printer_id)) return;
         const dayIso = String(r.recorded_at).slice(0, 10);
         if (!byPrinterDay[r.printer_id]) byPrinterDay[r.printer_id] = {};
         const tot = Number(r.total_pages || 0);
@@ -4429,8 +4716,9 @@
     function renderGraficaView() {
       let sumPages = 0, sumMono = 0, sumColor = 0;
       printers.forEach(p => {
-        sumMono += Math.max(0, (p.mono_pages || 0) - (p.initial_mono_pages || 0));
-        sumColor += Math.max(0, (p.color_pages || 0) - (p.initial_color_pages || 0));
+        const pm = getPrinterPeriodMetrics(p);
+        sumMono += pm.deltaMono;
+        sumColor += pm.deltaColor;
       });
       sumPages = sumMono + sumColor;
 
@@ -4442,7 +4730,7 @@
       document.getElementById('graficaColorPercent').innerText = `${colorPct}% • Impressões coloridas`;
       document.getElementById('graficaMonoPercent').innerText = `${sumPages > 0 ? 100 - colorPct : 0}% • Documentos monocromáticos`;
 
-      // Curva diária 100% real sobre telemetry_readings (últimos 14 dias)
+      // Curva diária real (últimos 14 dias)
       const series = computeDailyProductionSeries(14);
       const daysWithProd = series.filter(d => d.total > 0);
       const total14d = series.reduce((acc, d) => acc + d.total, 0);
@@ -4452,13 +4740,13 @@
       document.getElementById('graficaAvgDay').innerText = `${avg.toLocaleString('pt-BR')} págs/dia`;
       document.getElementById('graficaPeakRecord').innerText = peakDay.total > 0
         ? `Pico real (14d): ${peakDay.total.toLocaleString('pt-BR')} págs (${peakDay.label})`
-        : 'Aguardando snapshots diários em telemetry_readings';
+        : 'Aguardando múltiplas leituras diárias';
 
       const barsContainer = document.getElementById('graficaDailyBars');
       if (telemetryReadings.length === 0 || total14d === 0) {
         barsContainer.innerHTML = `
           <div class="w-full h-full flex items-center justify-center text-center text-xs text-slate-400 px-4">
-            Sem histórico diário suficiente em <code class="mono mx-1">telemetry_readings</code> nos últimos 14 dias. Assim que o agente registrar múltiplas leituras por dia, as barras reais P&amp;B vs Color serão exibidas aqui.
+            Ainda não há histórico suficiente nos últimos 14 dias. Assim que o scanner registrar leituras ao longo do dia, as barras P&amp;B e Color aparecerão automaticamente aqui.
           </div>`;
       } else {
         const maxVal = Math.max(...series.map(d => d.total), 1);
@@ -4507,7 +4795,7 @@
         <div class="col-span-full p-4 rounded-2xl bg-slate-50 border border-slate-200 space-y-2">
           <div class="flex flex-wrap items-center justify-between gap-2">
             <strong class="text-xs font-black text-slate-900">Média Real CMYK (${colorPrinters.length} impressora(s) colorida(s))</strong>
-            <span class="text-[11px] text-slate-500">Calculada apenas com leituras numéricas reais de <code class="mono">printers.supplies</code></span>
+            <span class="text-[11px] text-slate-500">Calculada apenas com percentuais reais lidos do hardware</span>
           </div>
           <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 text-center text-xs mono">
             <div class="bg-white p-2.5 rounded-xl border border-slate-200"><span class="text-[10px] font-bold text-slate-500 block">BLACK (K)</span><strong class="text-slate-900">${avgOrNull(cmykBuckets.K)}</strong></div>
@@ -4519,7 +4807,7 @@
       `;
 
       document.getElementById('graficaSuppliesPark').innerHTML = printers.length === 0
-        ? `<div class="col-span-full text-slate-400 py-4 text-center">Nenhuma impressora alocada na oficina.</div>`
+        ? `<div class="col-span-full text-slate-400 py-4 text-center">Nenhuma impressora conectada ainda.</div>`
         : cmykSummaryCard + printers.map(p => {
             const st = getEffectivePrinterStatus(p);
             return `
@@ -4784,7 +5072,7 @@
         const apiKey = (localStorage.getItem(GEMINI_KEY_STORAGE) || '').trim();
         if (!apiKey) {
           toggleGeminiKeyBox(true);
-          setGeminiStatusMessage('Edge Function gemini-insights ainda não configurada. Cole sua chave da API Gemini abaixo (fica salva somente no seu navegador) e clique em "Salvar Chave & Analisar".', true);
+          setGeminiStatusMessage('Para ativar o Consultor IA neste navegador agora, cole sua chave gratuita do Google AI Studio abaixo (salva apenas localmente) e clique em "Salvar Chave & Analisar".', true);
           return;
         }
 
@@ -4829,11 +5117,22 @@ ${JSON.stringify(contextPayload)}`;
         setGeminiStatusMessage('✓ Insights gerados com sucesso pelo Google Gemini 2.5 Flash.', false);
 
         try {
-          await sb.from('ai_insights').insert({
+          const periodMonth = getCurrentMonthPrefix();
+          const { error: aiInsErr } = await sb.from('ai_insights').insert({
             tenant_id: currentTenant.id,
-            insights: normalized,
-            model: 'gemini-2.5-flash'
+            period_month: periodMonth,
+            model_used: 'gemini-2.5-flash',
+            deterministic_context: contextPayload || {},
+            insights_json: normalized,
+            summary_markdown: normalized.executive_summary || ''
           });
+          if (aiInsErr && isMissingColumnError(aiInsErr)) {
+            await sb.from('ai_insights').insert({
+              tenant_id: currentTenant.id,
+              insights: normalized,
+              model: 'gemini-2.5-flash'
+            });
+          }
         } catch (_) {}
       } catch (err) {
         setGeminiStatusMessage('Erro ao consultar Gemini IA: ' + (err && err.message ? err.message : String(err)), true);
@@ -4846,9 +5145,29 @@ ${JSON.stringify(contextPayload)}`;
       }
     }
 
-    // --- DEMONSTRATIVO FORMAL A4 DE FECHAMENTO (ESPECIAL HOSPITALAR) ---
+    // --- DEMONSTRATIVO FORMAL A4 DE FECHAMENTO ---
     function openFormalPrintPreview(id) {
       return openClientInvoice(id);
+    }
+
+    function renderFormalDailyMiniChartHtml(series, field, title, barColorClass, badgeColorClass) {
+      const total = series.reduce((s, d) => s + Number(d[field] || 0), 0);
+      const maxVal = Math.max(...series.map(d => Number(d[field] || 0)), 1);
+      return `
+        <div class="p-3 rounded-2xl border border-slate-200 bg-slate-50/70 space-y-2">
+          <div class="flex items-center justify-between">
+            <strong class="text-[11px] font-black text-slate-800">${title}</strong>
+            <span class="px-2 py-0.5 rounded-full text-[10px] font-bold mono ${badgeColorClass}">${total.toLocaleString('pt-BR')} págs</span>
+          </div>
+          ${total === 0
+            ? `<div class="h-20 flex items-center justify-center text-[10px] text-slate-400">Sem leituras diárias registradas nos últimos 14 dias.</div>`
+            : `<div class="h-20 flex items-end gap-1 pt-2 border-b border-slate-200">${series.map(d => {
+                const val = Number(d[field] || 0);
+                const hPct = val > 0 ? Math.max(8, Math.round((val / maxVal) * 100)) : 2;
+                return `<div class="flex-1 flex flex-col items-center gap-0.5" title="${d.label}: ${val.toLocaleString('pt-BR')} págs"><div class="w-full ${barColorClass} rounded-t" style="height:${hPct}%; min-height:2px"></div><span class="text-[8px] text-slate-500 mono">${d.label.slice(0, 2)}</span></div>`;
+              }).join('')}</div>`}
+        </div>
+      `;
     }
 
     function openClientInvoice(id) {
@@ -4856,16 +5175,26 @@ ${JSON.stringify(contextPayload)}`;
       if (!c) return;
       activeClientForInvoice = c;
       const m = computeMetrics(c);
+      const now = new Date();
+      const yyyy = now.getFullYear();
+      const mm = String(now.getMonth() + 1).padStart(2, '0');
+      const closingDay = String(Math.min(28, Math.max(1, Number(c.closing_day || 15)))).padStart(2, '0');
+      const prevDate = new Date(yyyy, now.getMonth() - 1, Number(closingDay));
+      const periodStr = `${prevDate.toLocaleDateString('pt-BR')} a ${closingDay}/${mm}/${yyyy}`;
+      const dueDateObj = new Date(yyyy, now.getMonth(), Math.min(28, Number(closingDay) + 5));
 
       // Preenche cabeçalho
       const tenName = (currentTenant && currentTenant.trade_name) || 'PRINTMIND OUTSOURCING DE IMPRESSÃO';
       document.getElementById('formalLocadoraName').innerText = tenName.toUpperCase();
-      document.getElementById('formalLocadoraDoc').innerText = `CNPJ: ${(currentTenant && currentTenant.cnpj_cpf) || '00.000.000/0001-00'} • contato@printmind.io`;
-      document.getElementById('formalInvoiceNum').innerText = `FAT-2026/${c.closing_day || '01'}42`;
+      document.getElementById('formalLocadoraDoc').innerText = `CNPJ: ${(currentTenant && currentTenant.cnpj_cpf) || '00.000.000/0001-00'} • ${currentSession && currentSession.user ? currentSession.user.email : 'contato@printmind.io'}`;
+      document.getElementById('formalInvoiceNum').innerText = `FAT-${yyyy}/${mm}${closingDay}`;
+      document.getElementById('formalIssueDate').innerText = `Data de Emissão: ${now.toLocaleDateString('pt-BR')}`;
+      document.getElementById('formalPeriod').innerText = periodStr;
+      document.getElementById('formalDueDate').innerText = dueDateObj.toLocaleDateString('pt-BR');
       document.getElementById('formalClientName').innerText = c.name;
       document.getElementById('formalClientDoc').innerText = `CNPJ/CPF: ${c.cnpj || 'Não informado'}`;
       document.getElementById('formalClientAddress').innerText = `Unidades: ${(c.units || ['Matriz']).join(', ')}`;
-      document.getElementById('formalContractNum').innerText = c.contract_num || 'CT-2026/01';
+      document.getElementById('formalContractNum').innerText = c.contract_num || `CT-${yyyy}/01`;
 
       const poolRow = document.getElementById('formalPoolGroupRow');
       const poolEl = document.getElementById('formalPoolGroup');
@@ -4879,35 +5208,44 @@ ${JSON.stringify(contextPayload)}`;
         }
       }
 
-      // Apuração SNMP
+      // Apuração Técnica por Equipamento (mesmo cálculo mensal consistente)
       document.getElementById('formalTelemetryRows').innerHTML = m.linked.length === 0
         ? `<tr><td colspan="6" class="py-4 text-center text-slate-400">Nenhuma impressora vinculada a este contrato.</td></tr>`
         : m.linked.map(p => {
-            const pm = Math.max(0, (p.mono_pages || 0) - (p.initial_mono_pages || 0));
-            const pc = Math.max(0, (p.color_pages || 0) - (p.initial_color_pages || 0));
+            const pm = getPrinterPeriodMetrics(p);
             return `
               <tr class="hover:bg-slate-50">
                 <td class="py-2.5 px-3"><strong>${escapeHtml(p.model)}</strong> (${escapeHtml(p.serial)})${p.billing_exempt ? ' <span class="text-[9px] px-1.5 py-0.5 rounded bg-amber-100 text-amber-900 font-bold">Fair Billing</span>' : ''}</td>
-                <td class="py-2.5 px-3 text-right">${(p.initial_total_pages || 0).toLocaleString('pt-BR')}</td>
-                <td class="py-2.5 px-3 text-right">${(p.total_pages || 0).toLocaleString('pt-BR')}</td>
-                <td class="py-2.5 px-3 text-right text-slate-700">${pm.toLocaleString('pt-BR')}</td>
-                <td class="py-2.5 px-3 text-right text-indigo-700 font-bold">${pc.toLocaleString('pt-BR')}</td>
-                <td class="py-2.5 px-3 text-right font-black text-[#0038A8]">${(pm + pc).toLocaleString('pt-BR')}</td>
+                <td class="py-2.5 px-3 text-right">${pm.startTotal.toLocaleString('pt-BR')}</td>
+                <td class="py-2.5 px-3 text-right">${pm.finalTotal.toLocaleString('pt-BR')}</td>
+                <td class="py-2.5 px-3 text-right text-slate-700">${pm.deltaMono.toLocaleString('pt-BR')}</td>
+                <td class="py-2.5 px-3 text-right text-indigo-700 font-bold">${pm.deltaColor.toLocaleString('pt-BR')}</td>
+                <td class="py-2.5 px-3 text-right font-black text-[#0038A8]">${pm.deltaTotal.toLocaleString('pt-BR')}</td>
               </tr>
             `;
           }).join('');
 
-      // Rateio Hospitalar
+      // Curva diária P&B + Colorido do Cliente (Estilo Star/PrintWayy)
+      const formalChartsGrid = document.getElementById('formalDailyChartsGrid');
+      if (formalChartsGrid) {
+        const clientSeries = computeDailyProductionSeries(14, new Set(m.linked.map(p => p.id)));
+        formalChartsGrid.innerHTML =
+          renderFormalDailyMiniChartHtml(clientSeries, 'mono', 'Total P&B por Dia', 'bg-[#0038A8]', 'bg-blue-100 text-[#0038A8]') +
+          renderFormalDailyMiniChartHtml(clientSeries, 'color', 'Total Colorido por Dia', 'bg-emerald-500', 'bg-emerald-100 text-emerald-800');
+      }
+
+      // Rateio por Setor
       const totalMach = Math.max(1, m.linked.length);
       document.getElementById('formalDeptCards').innerHTML = m.linked.length === 0
         ? `<div class="col-span-full text-slate-400">Sem máquinas para rateio.</div>`
         : m.linked.map(p => {
-            const pm = Math.max(0, (p.mono_pages || 0) - (p.initial_mono_pages || 0));
-            const pc = Math.max(0, (p.color_pages || 0) - (p.initial_color_pages || 0));
+            const pMetrics = getPrinterPeriodMetrics(p);
+            const pm = pMetrics.deltaMono;
+            const pc = pMetrics.deltaColor;
             const share = (Number(c.base_rate || 0) / totalMach) + (m.rawMono > 0 ? m.exMono * (pm / m.rawMono) : 0) + (m.rawColor > 0 ? m.exColor * (pc / m.rawColor) : 0);
             return `
               <div class="p-3 rounded-2xl bg-indigo-50/60 border border-indigo-100">
-                <span class="text-[10px] font-black text-indigo-800 uppercase block">🏥 ${escapeHtml(p.department || 'Setor Hospitalar')}</span>
+                <span class="text-[10px] font-black text-indigo-800 uppercase block">${escapeHtml(p.department || 'Setor')}</span>
                 <span class="text-[11px] text-slate-600 block">${escapeHtml(p.model)} (${escapeHtml(p.serial)})</span>
                 <div class="mt-1 flex justify-between items-center text-xs">
                   <span class="mono text-slate-500">${(pm + pc).toLocaleString('pt-BR')} págs</span>
@@ -5058,7 +5396,8 @@ Podemos emitir a Nota Fiscal? Obrigado!`);
     }
 
     function handleQuickBillingAction() {
-      if (clients.length > 0) openClientInvoice(clients[0].id);
+      const targetId = activeDueClientId || (clients.length > 0 ? clients[0].id : null);
+      if (targetId) openClientInvoice(targetId);
     }
 
     function copyPixCode() {
@@ -5068,10 +5407,67 @@ Podemos emitir a Nota Fiscal? Obrigado!`);
       alert('Código PIX Copia e Cola copiado para a área de transferência!');
     }
 
-    // --- CRIAÇÃO DE CLIENTES E IMPRESSORAS ---
+    // --- CRIAÇÃO, EDIÇÃO E EXCLUSÃO DE CLIENTES ---
+    function openClientModalForCreate() {
+      const editInput = document.getElementById('cliEditId');
+      if (editInput) editInput.value = '';
+      const form = document.querySelector('#newClientModal form');
+      if (form) form.reset();
+      const titleEl = document.getElementById('newClientModalTitle');
+      if (titleEl) titleEl.innerText = 'Cadastrar Novo Cliente & Contrato';
+      const btnEl = document.getElementById('cliSubmitBtn');
+      if (btnEl) btnEl.innerText = 'Salvar Cliente e Gerar Token do Scanner';
+      openModal('newClientModal');
+    }
+
+    function openClientModalForEdit(clientId) {
+      const c = clients.find(x => x.id === clientId);
+      if (!c) return;
+      const editInput = document.getElementById('cliEditId');
+      if (editInput) editInput.value = c.id;
+      const titleEl = document.getElementById('newClientModalTitle');
+      if (titleEl) titleEl.innerText = `Editar Cliente • ${c.name}`;
+      const btnEl = document.getElementById('cliSubmitBtn');
+      if (btnEl) btnEl.innerText = 'Salvar Alterações do Cliente';
+
+      document.getElementById('cliName').value = c.name || '';
+      document.getElementById('cliCnpj').value = c.cnpj || '';
+      document.getElementById('cliPhone').value = c.phone || '';
+      document.getElementById('cliClosingDay').value = c.closing_day || 15;
+      document.getElementById('cliContract').value = c.contract_num || '';
+      document.getElementById('cliBaseRate').value = Number(c.base_rate || 0);
+      document.getElementById('cliFranMono').value = Number(c.franchise_mono || 0);
+      document.getElementById('cliExtraMono').value = Number(c.extra_mono || 0.05);
+      document.getElementById('cliFranColor').value = Number(c.franchise_color || 0);
+      document.getElementById('cliExtraColor').value = Number(c.extra_color || 0.10);
+      document.getElementById('cliIsCorp').checked = c.is_corporate !== false;
+      document.getElementById('cliUnits').value = Array.isArray(c.units) ? c.units.join(', ') : (c.units || 'Matriz');
+      document.getElementById('cliDepts').value = Array.isArray(c.departments) ? c.departments.join(', ') : (c.departments || 'Geral');
+      if (document.getElementById('cliBillingPoolGroup')) document.getElementById('cliBillingPoolGroup').value = c.billing_pool_group || '';
+      if (document.getElementById('cliTechDeductionMono')) document.getElementById('cliTechDeductionMono').value = Number(c.tech_deduction_mono || 0);
+      if (document.getElementById('cliTechDeductionColor')) document.getElementById('cliTechDeductionColor').value = Number(c.tech_deduction_color || 0);
+      if (document.getElementById('cliReplacedDeltaMono')) document.getElementById('cliReplacedDeltaMono').value = Number(c.replaced_delta_mono || 0);
+      if (document.getElementById('cliReplacedDeltaColor')) document.getElementById('cliReplacedDeltaColor').value = Number(c.replaced_delta_color || 0);
+      if (document.getElementById('cliAdjustmentNote')) document.getElementById('cliAdjustmentNote').value = c.adjustment_note || '';
+      openModal('newClientModal');
+    }
+
+    async function deleteClient(clientId) {
+      const c = clients.find(x => x.id === clientId);
+      if (!c) return;
+      if (!confirm(`Deseja realmente excluir o cliente "${c.name}"?\n\nAs impressoras ligadas a ele ficarão "Sem Cliente (Avulsa)" para não perder histórico.`)) return;
+      const { error } = await sb.from('clients').delete().eq('id', clientId);
+      if (error) {
+        alert('Erro ao excluir cliente: ' + error.message);
+        return;
+      }
+      await loadTenantData();
+    }
+
     async function handleCreateClient(e) {
       e.preventDefault();
       if (!currentProfile) return;
+      const editId = (document.getElementById('cliEditId')?.value || '').trim();
       const name = document.getElementById('cliName').value.trim();
       const cnpj = document.getElementById('cliCnpj').value.trim();
       const phone = document.getElementById('cliPhone').value.trim();
@@ -5108,6 +5504,23 @@ Podemos emitir a Nota Fiscal? Obrigado!`);
         replaced_delta_color,
         adjustment_note
       };
+
+      if (editId) {
+        let { error } = await sb.from('clients').update({ ...basePayload, ...v41Fields }).eq('id', editId);
+        if (error && isMissingColumnError(error)) {
+          const retry = await sb.from('clients').update(basePayload).eq('id', editId);
+          error = retry.error;
+        }
+        if (error) {
+          alert('Erro ao atualizar cliente: ' + error.message);
+          return;
+        }
+        if (document.getElementById('cliEditId')) document.getElementById('cliEditId').value = '';
+        e.target.reset();
+        closeModal('newClientModal');
+        await loadTenantData();
+        return;
+      }
 
       let { data: newCli, error } = await sb.from('clients').insert({ ...basePayload, ...v41Fields }).select().single();
       if (error && isMissingColumnError(error)) {
@@ -5252,8 +5665,10 @@ Para cadastrar a 3ª máquina e monitorar todo o seu parque, ative o Plano Essen
     async function loadDemoDataIfEmpty() {
       if (!currentProfile) return;
       const btn = document.getElementById('btnDemoData');
-      btn.disabled = true;
-      btn.innerText = 'Carregando exemplos...';
+      if (btn) {
+        btn.disabled = true;
+        btn.innerText = 'Carregando exemplos...';
+      }
 
       // 1. Cria Cliente Hospitalar Modelo
       const { data: c1 } = await sb.from('clients').insert({
@@ -5375,30 +5790,44 @@ Para cadastrar a 3ª máquina e monitorar todo o seu parque, ative o Plano Essen
     }
 
     async function emitAsaasSplitChargeCurrent() {
-      if (!activeClientForInvoice) return;
+      if (!activeClientForInvoice || !currentProfile) return;
       const c = activeClientForInvoice;
       const m = computeMetrics(c);
-      await fetch(`${SUPABASE_URL}/functions/v1/asaas-billing`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          action: 'emit_split_charge',
-          tenant_id: currentProfile.tenant_id,
-          client_id: c.id,
-          client_name: c.name,
-          month_year: '11/2026',
-          total_pages: m.dTotal,
-          mono_pages: m.dMono,
-          color_pages: m.dColor,
-          base_rate: c.base_rate,
-          extra_mono: m.exMono,
-          extra_color: m.exColor,
-          total_amount: m.total,
-          pix_key: (currentTenant && currentTenant.pix_key) || c.cnpj || '',
-          split_percent: 1.5
-        })
-      });
-      alert('Comando de emissão enviado para a Edge Function do Asaas!');
+      const now = new Date();
+      const monthYear = `${String(now.getMonth() + 1).padStart(2, '0')}/${now.getFullYear()}`;
+      try {
+        const headers = { 'Content-Type': 'application/json' };
+        if (currentSession && currentSession.access_token) {
+          headers.Authorization = `Bearer ${currentSession.access_token}`;
+        }
+        const resp = await fetch(`${SUPABASE_URL}/functions/v1/asaas-billing`, {
+          method: 'POST',
+          headers,
+          body: JSON.stringify({
+            action: 'emit_split_charge',
+            tenant_id: currentProfile.tenant_id,
+            client_id: c.id,
+            client_name: c.name,
+            month_year: monthYear,
+            total_pages: m.dTotal,
+            mono_pages: m.dMono,
+            color_pages: m.dColor,
+            base_rate: c.base_rate,
+            extra_mono: m.exMono,
+            extra_color: m.exColor,
+            total_amount: m.total,
+            pix_key: (currentTenant && currentTenant.pix_key) || c.cnpj || '',
+            split_percent: 1.5
+          })
+        });
+        if (!resp.ok) {
+          alert('Emissão automática Asaas ainda não habilitada nesta conta.\n\nUse o código PIX Copia e Cola Oficial gerado acima ou envie o demonstrativo direto pelo botão "Enviar no WhatsApp".');
+          return;
+        }
+        alert('Cobrança Asaas emitida com sucesso!');
+      } catch (_) {
+        alert('Integração Asaas indisponível no momento.\n\nUse o código PIX Copia e Cola Oficial gerado acima ou clique em "Enviar no WhatsApp".');
+      }
     }
 
     // Inicialização da Sessão e Fluxo de Recuperação de Senha
