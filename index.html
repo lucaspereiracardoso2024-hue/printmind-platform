@@ -965,7 +965,7 @@
               <div class="p-3.5 rounded-2xl bg-blue-50/60 border border-blue-200 text-[#0038A8] text-xs space-y-1">
                 <strong>💡 O que acontece quando ele clica no link:</strong>
                 <p class="text-[11px] text-slate-600">
-                  A locadora faz o cadastro dela, escolhe o Módulo 1 (R$ 1,00/mês por impressora) e já pode baixar o agente satélite para conectar os equipamentos.
+                  A locadora faz o cadastro dela, escolhe o Módulo 1 (R$ 1,00/mês por impressora) e já pode baixar o Scanner de Impressoras para conectar os equipamentos automaticamente.
                 </p>
               </div>
             </div>
@@ -1022,7 +1022,7 @@
           <span>Tabela de Módulos & Preços (R$ 1 a R$ 6)</span>
         </button>
         <span class="text-slate-300">|</span>
-        <button onclick="openModal('agentModal')" class="hover:text-[#0038A8] font-bold transition">Agente Satélite</button>
+        <button onclick="openModal('agentModal')" class="hover:text-[#0038A8] font-bold transition">Scanner de Impressoras</button>
       </div>
     </footer>
   </div>
@@ -1646,29 +1646,35 @@
     <div class="bg-white rounded-3xl max-w-3xl w-full p-6 space-y-4 shadow-2xl max-h-[90vh] overflow-y-auto">
       <div class="flex justify-between items-center border-b border-slate-100 pb-3">
         <div>
-          <span class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase bg-indigo-50 text-indigo-700">Tokens Exclusivos por Unidade</span>
-          <h3 class="font-black text-base text-slate-900 mt-1">Implantação do Agente Satélite (`printmind-agent.exe`)</h3>
+          <span class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase bg-indigo-50 text-indigo-700">Scanner Autônomo Inteligente</span>
+          <h3 class="font-black text-base text-slate-900 mt-1">Download e Implantação do Scanner de Impressoras</h3>
         </div>
         <button onclick="closeModal('agentModal')" class="text-slate-400 hover:text-slate-600">✕</button>
       </div>
-      <!-- BOTÃO OFICIAL DE DOWNLOAD DO EXECUTÁVEL COMPILADO -->
+      <!-- BOTÕES OFICIAIS DE DOWNLOAD: WINDOWS E LINUX -->
       <div class="p-4 rounded-2xl bg-gradient-to-r from-blue-900 to-[#0038A8] text-white flex flex-wrap items-center justify-between gap-3 shadow-md">
         <div>
           <div class="flex items-center space-x-2">
-            <span class="px-2 py-0.5 rounded-full text-[10px] font-black bg-emerald-400/20 text-emerald-300 border border-emerald-400/30">BINÁRIO OFICIAL COMPILADO</span>
-            <span class="text-xs text-blue-200">Windows 64-bit • Go Nativo</span>
+            <span class="px-2 py-0.5 rounded-full text-[10px] font-black bg-emerald-400/20 text-emerald-300 border border-emerald-400/30">BINÁRIOS OFICIAIS COMPILADOS v3.2.0</span>
+            <span class="text-xs text-blue-200">Windows &amp; Linux 64-bit • Go Nativo</span>
           </div>
-          <h4 class="text-sm font-black text-white mt-1">printmind-agent.exe (6.9 MB)</h4>
-          <p class="text-[11px] text-blue-200">Zero instalação pesada. Não precisa de Java nem .NET. Roda em segundo plano consumindo &lt;15 MB de RAM.</p>
+          <h4 class="text-sm font-black text-white mt-1">Scanner Autônomo PrintMind (Rede + USB Spooler)</h4>
+          <p class="text-[11px] text-blue-200">Zero instalação. Auto-detecta sub-redes locais, impressoras de rede via SNMP RFC 3805 e impressoras USB locais. Sincroniza direto com a nuvem.</p>
         </div>
-        <a href="https://github.com/lucaspereiracardoso2024-hue/printmind-platform/raw/main/printmind-agent.exe" download="printmind-agent.exe" target="_blank" class="px-4 py-2.5 rounded-xl bg-white text-[#0038A8] font-black text-xs hover:bg-blue-50 transition shadow-md flex items-center space-x-1.5">
-          <i data-lucide="download" class="w-4 h-4"></i>
-          <span>Baixar printmind-agent.exe</span>
-        </a>
+        <div class="flex flex-wrap gap-2">
+          <a href="https://github.com/lucaspereiracardoso2024-hue/printmind-platform/raw/main/printmind-agent.exe" download="printmind-agent.exe" target="_blank" class="px-3.5 py-2 rounded-xl bg-white text-[#0038A8] font-black text-xs hover:bg-blue-50 transition shadow-md flex items-center space-x-1.5">
+            <i data-lucide="download" class="w-4 h-4"></i>
+            <span>Baixar p/ Windows (.exe)</span>
+          </a>
+          <a href="https://github.com/lucaspereiracardoso2024-hue/printmind-platform/raw/main/printmind-agent-linux-amd64" download="printmind-agent-linux-amd64" target="_blank" class="px-3.5 py-2 rounded-xl bg-blue-800 text-white font-black text-xs hover:bg-blue-700 transition border border-white/20 flex items-center space-x-1.5">
+            <i data-lucide="download" class="w-4 h-4"></i>
+            <span>Baixar p/ Linux (amd64)</span>
+          </a>
+        </div>
       </div>
 
       <p class="text-xs text-slate-600">
-        Cada unidade física cadastrada recebe um token único no Supabase (`public.client_units`). Basta rodar o comando abaixo no terminal da recepção do cliente:
+        Basta dar dois cliques no <code class="text-blue-700 font-bold">printmind-agent.exe</code> no computador da recepção/empresa ou rodar via terminal:
       </p>
       <div id="unitsTokensList" class="space-y-2.5 text-xs"></div>
     </div>
@@ -2422,7 +2428,7 @@
         document.getElementById('printersGrid').innerHTML = `
           <div class="col-span-full p-8 rounded-3xl bg-white border border-slate-200 text-center text-xs text-slate-400 space-y-2">
             <div class="font-bold text-slate-600">Nenhuma impressora conectada ainda.</div>
-            <p>Clique em "+ Adicionar Impressora" para registrar suas máquinas ou inicie o Agente Satélite.</p>
+            <p>Clique em "+ Adicionar Impressora" ou execute o Scanner Autônomo para localizar automaticamente na rede e no USB.</p>
           </div>`;
       } else {
         document.getElementById('printersGrid').innerHTML = printers.map(p => {
@@ -2902,7 +2908,7 @@ Para cadastrar a 3ª máquina e monitorar todo o seu parque, ative o Módulo 1 (
     function renderUnitsTokens() {
       const container = document.getElementById('unitsTokensList');
       if (units.length === 0) {
-        container.innerHTML = '<div class="p-4 rounded-2xl bg-slate-50 text-slate-500 text-center">Cadastre seu primeiro cliente para gerar automaticamente o Token de Pareamento do Agente Satélite.</div>';
+        container.innerHTML = '<div class="p-4 rounded-2xl bg-slate-50 text-slate-500 text-center">Cadastre seu primeiro cliente para gerar automaticamente o Token de Pareamento do Scanner de Impressoras.</div>';
         return;
       }
       container.innerHTML = units.map(u => {
@@ -2914,7 +2920,7 @@ Para cadastrar a 3ª máquina e monitorar todo o seu parque, ative o Módulo 1 (
               <strong class="text-white">${cli ? cli.name : 'Cliente'} • Unidade: ${u.unit_name}</strong>
               <span class="px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 mono text-[10px]">${u.pairing_token}</span>
             </div>
-            <pre class="bg-black/40 p-2.5 rounded-xl text-[11px] mono text-emerald-300 overflow-x-auto select-all">./printmind-agent.exe -server="https://zbsmzcbcivhzslcnfxmq.supabase.co" -token="${u.pairing_token}" -subnets="${subnetsStr}"</pre>
+            <pre class="bg-black/40 p-2.5 rounded-xl text-[11px] mono text-emerald-300 overflow-x-auto select-all">./printmind-agent.exe -token="${u.pairing_token}"</pre>
           </div>
         `;
       }).join('');
