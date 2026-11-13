@@ -749,14 +749,14 @@
       <section id="sectionReports" class="hidden space-y-6">
         <div class="text-center py-1">
           <span class="inline-block px-3 py-1 rounded-full text-xs font-bold bg-emerald-50 text-emerald-800 border border-emerald-200 mb-1">
-            Auditoria SNMP RFC 3805
+            Auditoria & Faturamento
           </span>
           <h2 class="text-2xl font-black text-slate-900 tracking-tight">Central de Relatórios & Faturamento Auditável</h2>
           <p class="text-xs text-slate-500 mt-0.5">Fechamentos auditáveis, esteira de congelamento e prevenção de desperdício de insumos.</p>
         </div>
 
         <!-- Sub-navegação de Relatórios -->
-        <div class="flex items-center space-x-2 border-b border-slate-200 pb-3 text-xs font-bold">
+        <div class="flex flex-wrap items-center gap-2 border-b border-slate-200 pb-3 text-xs font-bold">
           <button id="subTabFechamento" onclick="switchReportsSubTab('fechamento')" class="px-4 py-2 rounded-xl bg-[#0038A8] text-white transition flex items-center space-x-1.5 shadow-sm">
             <i data-lucide="receipt" class="w-3.5 h-3.5"></i>
             <span>Fechamento Mensal</span>
@@ -1638,8 +1638,8 @@
         <!-- Apuração Técnica de Leituras SNMP -->
         <div class="space-y-2">
           <div class="flex justify-between items-center">
-            <span class="font-bold text-slate-900 text-xs uppercase tracking-wider">Apuração de Leituras Técnicas (Medição SNMP RFC 3805)</span>
-            <span class="text-[10px] text-slate-500">Zero estimativas manuais</span>
+            <span class="font-bold text-slate-900 text-xs uppercase tracking-wider">Apuração de Leituras Técnicas (Contadores Reais)</span>
+            <span class="text-[10px] text-slate-500">Medição automática e ajustes auditados</span>
           </div>
           <table class="w-full text-left border border-slate-200 rounded-xl overflow-hidden">
             <thead class="bg-slate-100 text-slate-600 text-[10px] font-bold uppercase border-b border-slate-200">
@@ -2321,7 +2321,13 @@
 
       btnClients.className = tabId === 'clients' ? activeClasses : inactiveClasses;
       btnReports.className = tabId === 'reports' ? activeClasses : inactiveClasses;
-      if (btnGrafica) btnGrafica.className = tabId === 'grafica' ? activeClasses : inactiveClasses;
+      if (btnGrafica) {
+        btnGrafica.className = tabId === 'grafica' ? activeClasses : inactiveClasses;
+        if (currentMode === 'locacao') {
+          btnGrafica.classList.remove('flex');
+          btnGrafica.classList.add('hidden');
+        }
+      }
       if (btnMaster) btnMaster.className = tabId === 'master' ? masterActive : masterInactive;
 
       if (tabId === 'reports') renderReportsView();
@@ -2342,7 +2348,9 @@
       if (oms) oms.value = currentMode;
 
       if (btnGrafica) {
-        btnGrafica.classList.toggle('hidden', currentMode === 'locacao');
+        const hideGraf = currentMode === 'locacao';
+        btnGrafica.classList.toggle('hidden', hideGraf);
+        btnGrafica.classList.toggle('flex', !hideGraf);
       }
 
       if (currentMode === 'grafica') {
@@ -6333,7 +6341,7 @@ Para cadastrar a 3ª máquina e monitorar todo o seu parque, ative o Plano Essen
     }
 
     function shareInviteWhatsApp() {
-      const text = encodeURIComponent(`Olá! Conheça o PrintMind: nossa plataforma de telemetria SNMP RFC 3805 e gestão de outsourcing de impressão sem mensalidades mínimas abusivas (a partir de R$ 1,00/mês por impressora!).\n\nCadastre sua locadora agora mesmo:\nhttps://lucaspereiracardoso2024-hue.github.io/printmind-platform/`);
+      const text = encodeURIComponent(`Olá! Conheça o PrintMind: nossa plataforma de telemetria automática em rede e USB e gestão de outsourcing de impressão sem mensalidades mínimas abusivas (a partir de R$ 1,00/mês por impressora!).\n\nCadastre sua locadora agora mesmo:\nhttps://lucaspereiracardoso2024-hue.github.io/printmind-platform/`);
       window.open(`https://api.whatsapp.com/send?text=${text}`, '_blank');
     }
 
