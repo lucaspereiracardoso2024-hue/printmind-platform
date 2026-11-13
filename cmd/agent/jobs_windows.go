@@ -3,6 +3,7 @@
 package main
 
 import (
+	"context"
 	"log/slog"
 	"os"
 	"strings"
@@ -267,6 +268,7 @@ func collectPlatformPrintJobs(store *SQLiteStore, devices []DiscoveredDevice, sp
 	lookup := BuildDeviceColorLookup(devices, spooler.PrinterIPMap)
 	domain := ResolveHostDomain()
 	jobs := CorrelatePrintJobs(events, lookup, domain, hostname)
+	EnrichPrintJobsDepartment(context.Background(), jobs, defaultLDAPResolver)
 
 	if store != nil && maxRecID > lastRecID {
 		if err := store.SaveCheckpoint("windows_printservice", maxRecID, ""); err != nil {

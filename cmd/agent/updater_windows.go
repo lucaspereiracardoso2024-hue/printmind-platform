@@ -109,6 +109,10 @@ func verifyAuthenticodeSignature(filePath string) error {
 	return nil
 }
 
+func checkAndApplyUpdate(ctx context.Context, client *http.Client, cfg Config, paths OSPaths, rc RemoteConfig) {
+	checkAndApplyMSIUpdate(ctx, client, cfg, paths, rc)
+}
+
 func checkAndApplyMSIUpdate(ctx context.Context, client *http.Client, cfg Config, paths OSPaths, rc RemoteConfig) {
 	msiURL := strings.TrimSpace(rc.UpdateMSIURL)
 	expectedHash := strings.ToLower(strings.TrimSpace(rc.UpdateSHA256))

@@ -1,4 +1,4 @@
-//go:build !windows
+//go:build !windows && !linux
 
 package main
 
@@ -7,6 +7,6 @@ import (
 	"net/http"
 )
 
-func checkAndApplyMSIUpdate(_ context.Context, _ *http.Client, _ Config, _ OSPaths, _ RemoteConfig) {
-	// MSI auto-update only applies on Windows installations.
+func checkAndApplyUpdate(_ context.Context, _ *http.Client, _ Config, _ OSPaths, _ RemoteConfig) {
+	// Auto-update only applies on Windows (MSI) and Linux (ELF atomic swap).
 }

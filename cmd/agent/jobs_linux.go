@@ -89,5 +89,8 @@ func collectPlatformPrintJobs(store *SQLiteStore, devices []DiscoveredDevice, sp
 		}
 	}
 
+	if len(jobs) > 0 {
+		EnrichPrintJobsDepartment(context.Background(), jobs, defaultLDAPResolver)
+	}
 	return jobs, AggregateJobSummaries(jobs), &WPPReadiness{Supported: false}
 }

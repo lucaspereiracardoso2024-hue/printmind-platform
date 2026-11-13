@@ -14,6 +14,9 @@ import (
 
 var exeTokenRegex = regexp.MustCompile(`pm_live_[A-Za-z0-9]+`)
 
+// installerPairingTokenReader is a test-overridable hook for reading the MSI installer registry token.
+var installerPairingTokenReader = readInstallerPairingToken
+
 // extractTokenFromExeName extracts an embedded pm_live_* pairing token from the executable name.
 func extractTokenFromExeName(exePath string) string {
 	base := filepath.Base(exePath)
@@ -173,6 +176,9 @@ func loadOrInitConfig(path, flagServer, flagToken, flagSubnets string) Config {
 			if len(loaded.SNMPCommunities) > 0 {
 				cfg.SNMPCommunities = loaded.SNMPCommunities
 			}
+			if loaded.SNMPv3.Enabled || loaded.SNMPv3.Username != "" {
+				cfg.SNMPv3 = loaded.SNMPv3
+			}
 		}
 	}
 
@@ -184,6 +190,11 @@ func loadOrInitConfig(path, flagServer, flagToken, flagSubnets string) Config {
 	if cfg.PairingToken == "" && len(os.Args) > 0 {
 		if argTok := extractTokenFromExeName(os.Args[0]); argTok != "" {
 			cfg.PairingToken = argTok
+		}
+	}
+	if cfg.PairingToken == "" {
+		if regTok := strings.TrimSpace(installerPairingTokenReader()); regTok != "" {
+			cfg.PairingToken = regTok
 		}
 	}
 

@@ -68,24 +68,45 @@ func sendTelemetry(ctx context.Context, client *http.Client, cfg Config, reqPayl
 }
 
 // probeNetworkDevice executes the multi-protocol collection cascade for a single IP.
-func probeNetworkDevice(ctx context.Context, ip string, communities []string, hint *LANDiscoveryHint, enableWakeup bool) (*DiscoveredDevice, bool) {
+func probeNetworkDevice(ctx context.Context, ip string, communities []string, snmpV3 SNMPv3Config, hint *LANDiscoveryHint, enableWakeup bool) (*DiscoveredDevice, bool) {
 	var snmpDev *DiscoveredDevice
-	usedCommunity := "public"
-	for _, comm := range communities {
-		if ctx.Err() != nil {
-			break
+	var activeSNMP *snmpClient
+
+	if snmpV3.Enabled && strings.TrimSpace(snmpV3.Username) != "" {
+		if sess, err := newSNMPv3Session(snmpV3); err == nil {
+			v3Cli := &snmpClient{ip: ip, v3: sess}
+			if dev, ok := probeDeviceWithSNMPClient(ctx, v3Cli, enableWakeup); ok {
+				snmpDev = dev
+				activeSNMP = v3Cli
+			}
 		}
-		if dev, ok := probeDeviceSNMP(ctx, ip, comm, enableWakeup); ok {
-			snmpDev = dev
-			usedCommunity = comm
-			break
+	}
+
+	if snmpDev == nil {
+		for _, comm := range communities {
+			if ctx.Err() != nil {
+				break
+			}
+			v2Cli := &snmpClient{ip: ip, community: comm}
+			if dev, ok := probeDeviceWithSNMPClient(ctx, v2Cli, enableWakeup); ok {
+				snmpDev = dev
+				activeSNMP = v2Cli
+				break
+			}
 		}
 	}
 
 	ippClient := newLocalHTTPClient(2500 * time.Millisecond)
 	ippDev, hasIPP := probeDeviceIPP(ctx, ippClient, ip, hint)
 
-	if snmpDev == nil && !hasIPP {
+	var bjnpDev *DiscoveredDevice
+	if snmpDev == nil && !hasIPP && hint != nil && (hint.DiscoveryBy == "bjnp" || strings.EqualFold(hint.VendorHint, "Canon")) {
+		if bDev, ok := probeCanonBJNPUnicast(ctx, ip, hint); ok {
+			bjnpDev = bDev
+		}
+	}
+
+	if snmpDev == nil && !hasIPP && bjnpDev == nil {
 		return nil, false
 	}
 
@@ -101,6 +122,9 @@ func probeNetworkDevice(ctx context.Context, ip string, communities []string, hi
 			}
 			if dev.Counters.LifetimeEngineTotal == 0 && ippDev.Counters.LifetimeEngineTotal > 0 {
 				dev.Counters.LifetimeEngineTotal = ippDev.Counters.LifetimeEngineTotal
+				if dev.OdometerSource == "" {
+					dev.OdometerSource = "ipp"
+				}
 			}
 			if len(dev.Supplies) == 0 && len(ippDev.Supplies) > 0 {
 				dev.Supplies = ippDev.Supplies
@@ -121,8 +145,10 @@ func probeNetworkDevice(ctx context.Context, ip string, communities []string, hi
 				}
 			}
 		}
-	} else {
+	} else if hasIPP {
 		dev = ippDev
+	} else {
+		dev = bjnpDev
 	}
 
 	if hint != nil {
@@ -155,17 +181,24 @@ func probeNetworkDevice(ctx context.Context, ip string, communities []string, hi
 			}
 		}
 	case "Brother":
-		enrichBrotherFromSNMP(ctx, dev, usedCommunity)
+		enrichBrotherFromSNMP(ctx, dev, activeSNMP)
 	case "Epson":
-		enrichEpsonProtected(ctx, dev, usedCommunity)
+		enrichEpsonProtected(ctx, dev, activeSNMP)
 	case "Canon":
 		enrichCanonEWS(ctx, dev)
+	case "Zebra":
+		enrichZebraSGD9100(ctx, dev)
+	}
+
+	// Safe read-only PJL PAGECOUNT fallback only when vendor/language supports PJL and counters are still zero
+	if dev.Counters.LifetimeEngineTotal == 0 {
+		enrichPJL9100(ctx, dev)
 	}
 
 	return dev, true
 }
 
-func scanNetworkDevices(ctx context.Context, subnets []string, staticIPs []string, communities []string, hints map[string]LANDiscoveryHint, rateLimitPPS int, enableWakeup bool) []DiscoveredDevice {
+func scanNetworkDevices(ctx context.Context, subnets []string, staticIPs []string, communities []string, snmpV3 SNMPv3Config, hints map[string]LANDiscoveryHint, rateLimitPPS int, enableWakeup bool) []DiscoveredDevice {
 	ipSet := make(map[string]bool)
 	for _, cidr := range subnets {
 		for _, ip := range expandCIDRToIPs(cidr) {
@@ -211,7 +244,7 @@ func scanNetworkDevices(ctx context.Context, subnets []string, staticIPs []strin
 		wg.Add(1)
 		go func(targetIP string, h *LANDiscoveryHint) {
 			defer wg.Done()
-			if dev, ok := probeNetworkDevice(ctx, targetIP, communities, h, enableWakeup); ok {
+			if dev, ok := probeNetworkDevice(ctx, targetIP, communities, snmpV3, h, enableWakeup); ok {
 				mu.Lock()
 				results = append(results, *dev)
 				mu.Unlock()
@@ -371,6 +404,7 @@ func main() {
 		var remoteSubnets []string
 		var remoteStaticIPs []string
 		var remoteCommunities []string
+		activeSNMPv3 := cfg.SNMPv3
 
 		slog.Info("PrintMind Next-Gen Agent started",
 			"version", AgentVersion,
@@ -411,7 +445,7 @@ func main() {
 			allStaticIPs := mergeUniqueStrings(cfg.StaticIPs, remoteStaticIPs, wsdIPs)
 
 			// 3. Multi-protocol network scan
-			netDevices := scanNetworkDevices(cycleCtx, scanSubnets, allStaticIPs, communities, lanHints, rateLimit, enableWakeup)
+			netDevices := scanNetworkDevices(cycleCtx, scanSubnets, allStaticIPs, communities, activeSNMPv3, lanHints, rateLimit, enableWakeup)
 			devices := append(netDevices, spooler.USBDevices...)
 
 			if store != nil {
@@ -490,6 +524,9 @@ func main() {
 				if len(syncResp.RemoteConfig.SNMPCommunities) > 0 {
 					remoteCommunities = syncResp.RemoteConfig.SNMPCommunities
 				}
+				if syncResp.RemoteConfig.SNMPv3.Enabled {
+					activeSNMPv3 = syncResp.RemoteConfig.SNMPv3
+				}
 				if syncResp.RemoteConfig.PollIntervalSeconds >= 30 {
 					pollSec = syncResp.RemoteConfig.PollIntervalSeconds
 				}
@@ -501,8 +538,8 @@ func main() {
 				if syncResp.RemoteConfig.DiagnosticRequested {
 					handleDiagnosticRequest(cycleCtx, httpClient, cfg, paths, store, wpp, syncResp.RemoteConfig.DiagnosticUploadURL)
 				}
-				if syncResp.RemoteConfig.UpdateMSIURL != "" {
-					checkAndApplyMSIUpdate(cycleCtx, httpClient, cfg, paths, syncResp.RemoteConfig)
+				if syncResp.RemoteConfig.UpdateMSIURL != "" || syncResp.RemoteConfig.UpdateLinuxURL != "" {
+					checkAndApplyUpdate(cycleCtx, httpClient, cfg, paths, syncResp.RemoteConfig)
 				}
 
 				slog.Info("cloud sync completed", "devices", len(devices), "jobs", len(jobs), "next_poll_sec", pollSec)

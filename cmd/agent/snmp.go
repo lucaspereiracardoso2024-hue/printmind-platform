@@ -226,63 +226,7 @@ func parseSNMPResponse(pkt []byte) (reqID uint32, errStatus int, varBinds []SNMP
 		return 0, 0, nil, fmt.Errorf("expected GetResponse PDU, got 0x%02X", pduTag)
 	}
 
-	// request-id
-	_, reqIDBytes, n, err := readBERTLV(pduBody)
-	if err != nil {
-		return 0, 0, nil, err
-	}
-	for _, b := range reqIDBytes {
-		reqID = (reqID << 8) | uint32(b)
-	}
-	pduRest := pduBody[n:]
-
-	// error-status
-	_, errBytes, n, err := readBERTLV(pduRest)
-	if err != nil {
-		return 0, 0, nil, err
-	}
-	errStatus = decodeASN1Int(errBytes)
-	pduRest = pduRest[n:]
-
-	// error-index
-	_, _, n, err = readBERTLV(pduRest)
-	if err != nil {
-		return 0, 0, nil, err
-	}
-	pduRest = pduRest[n:]
-
-	// varbind list
-	vbListTag, vbListBody, _, err := readBERTLV(pduRest)
-	if err != nil || vbListTag != asn1Sequence {
-		return 0, 0, nil, fmt.Errorf("invalid varbind list")
-	}
-
-	for len(vbListBody) > 0 {
-		vbTag, vbBody, consumed, err := readBERTLV(vbListBody)
-		if err != nil || vbTag != asn1Sequence {
-			break
-		}
-		vbListBody = vbListBody[consumed:]
-
-		oidTag, oidBytes, n1, err := readBERTLV(vbBody)
-		if err != nil || oidTag != asn1OID {
-			continue
-		}
-		oidStr, err := decodeOID(oidBytes)
-		if err != nil {
-			continue
-		}
-		valTag, valBytes, _, err := readBERTLV(vbBody[n1:])
-		if err != nil {
-			continue
-		}
-		varBinds = append(varBinds, SNMPVarBind{
-			OID:   oidStr,
-			Tag:   valTag,
-			Value: valBytes,
-		})
-	}
-	return reqID, errStatus, varBinds, nil
+	return parseSNMPPDUFields(pduBody)
 }
 
 func decodeASN1Int(b []byte) int {
@@ -627,25 +571,119 @@ func lastOIDIndex(oid, prefix string) string {
 	return strings.TrimPrefix(oid, prefix+".")
 }
 
+type snmpClient struct {
+	ip        string
+	community string
+	v3        *SNMPv3Session
+}
+
+func (c *snmpClient) sourceLabel() string {
+	if c.v3 != nil {
+		return "snmp_v3"
+	}
+	return "snmp_v2c"
+}
+
+func (c *snmpClient) getMulti(ctx context.Context, oids []string, timeout time.Duration) (map[string]SNMPVarBind, error) {
+	if c.v3 != nil {
+		vbs, errStatus, err := exchangeSNMPv3(ctx, c.ip, c.v3, pduGetRequest, oids, timeout)
+		if err != nil {
+			return nil, err
+		}
+		if errStatus != 0 && len(vbs) == 0 {
+			return nil, fmt.Errorf("snmp error-status %d", errStatus)
+		}
+		res := make(map[string]SNMPVarBind, len(vbs))
+		for _, vb := range vbs {
+			if vb.Tag == snmpNoSuchObj || vb.Tag == snmpNoSuchInst || vb.Tag == snmpEndOfMib || vb.Tag == asn1Null {
+				continue
+			}
+			res[vb.OID] = vb
+		}
+		return res, nil
+	}
+	return getSNMPMulti(ctx, c.ip, c.community, oids, timeout)
+}
+
+func (c *snmpClient) getOID(ctx context.Context, oidStr string, timeout time.Duration) ([]byte, error) {
+	res, err := c.getMulti(ctx, []string{oidStr}, timeout)
+	if err != nil {
+		return nil, err
+	}
+	vb, ok := res[strings.Trim(oidStr, ".")]
+	if !ok {
+		return nil, fmt.Errorf("not found")
+	}
+	return vb.Value, nil
+}
+
+func (c *snmpClient) getUint32(ctx context.Context, oidStr string, timeout time.Duration) (uint32, bool) {
+	val, err := c.getOID(ctx, oidStr, timeout)
+	if err != nil || len(val) == 0 {
+		return 0, false
+	}
+	return decodeASN1Uint32(val)
+}
+
+func (c *snmpClient) walk(ctx context.Context, rootOID string, maxRows int, timeout time.Duration) ([]SNMPVarBind, error) {
+	if c.v3 == nil {
+		return walkSNMP(ctx, c.ip, c.community, rootOID, maxRows, timeout)
+	}
+	if maxRows <= 0 {
+		maxRows = 64
+	}
+	root := strings.Trim(rootOID, ".")
+	cur := root
+	var results []SNMPVarBind
+	for i := 0; i < maxRows; i++ {
+		if ctx.Err() != nil {
+			return results, ctx.Err()
+		}
+		vbs, errStatus, err := exchangeSNMPv3(ctx, c.ip, c.v3, pduGetNextRequest, []string{cur}, timeout)
+		if err != nil {
+			if len(results) > 0 {
+				return results, nil
+			}
+			return nil, err
+		}
+		if errStatus != 0 || len(vbs) == 0 {
+			break
+		}
+		vb := vbs[0]
+		if vb.Tag == snmpEndOfMib || vb.Tag == snmpNoSuchObj || vb.Tag == snmpNoSuchInst {
+			break
+		}
+		if vb.OID != root && !strings.HasPrefix(vb.OID, root+".") {
+			break
+		}
+		if compareOIDs(vb.OID, cur) <= 0 {
+			break
+		}
+		results = append(results, vb)
+		cur = vb.OID
+	}
+	return results, nil
+}
+
 func probeDeviceSNMP(ctx context.Context, ip, community string, enableWakeup bool) (*DiscoveredDevice, bool) {
+	return probeDeviceWithSNMPClient(ctx, &snmpClient{ip: ip, community: community}, enableWakeup)
+}
+
+func probeDeviceWithSNMPClient(ctx context.Context, client *snmpClient, enableWakeup bool) (*DiscoveredDevice, bool) {
 	timeout := 900 * time.Millisecond
-	baseVars, err := getSNMPMulti(ctx, ip, community, []string{
+	baseOIDs := []string{
 		"1.3.6.1.2.1.1.1.0",        // sysDescr
 		"1.3.6.1.2.1.1.2.0",        // sysObjectID
 		"1.3.6.1.2.1.1.3.0",        // sysUpTime
 		"1.3.6.1.2.1.25.3.2.1.3.1", // hrDeviceDescr
-	}, timeout)
+	}
+	baseVars, err := client.getMulti(ctx, baseOIDs, timeout)
 	if err != nil && enableWakeup {
-		if c, dErr := net.DialTimeout("tcp", net.JoinHostPort(ip, "80"), 250*time.Millisecond); dErr == nil {
+		if c, dErr := net.DialTimeout("tcp", net.JoinHostPort(client.ip, "80"), 250*time.Millisecond); dErr == nil {
 			_, _ = c.Write([]byte("HEAD / HTTP/1.0\r\n\r\n"))
 			_ = c.Close()
 			time.Sleep(150 * time.Millisecond)
-			baseVars, err = getSNMPMulti(ctx, ip, community, []string{
-				"1.3.6.1.2.1.1.1.0",
-				"1.3.6.1.2.1.1.2.0",
-				"1.3.6.1.2.1.1.3.0",
-				"1.3.6.1.2.1.25.3.2.1.3.1",
-			}, timeout)
+			baseVars, err = client.getMulti(ctx, baseOIDs, timeout)
 		}
 	}
 	if err != nil || len(baseVars) == 0 {
@@ -673,7 +711,7 @@ func probeDeviceSNMP(ctx context.Context, ip, community string, enableWakeup boo
 
 	// Real MAC address from ifPhysAddress
 	mac := ""
-	if macRows, wErr := walkSNMP(ctx, ip, community, "1.3.6.1.2.1.2.2.1.6", 16, timeout); wErr == nil {
+	if macRows, wErr := client.walk(ctx, "1.3.6.1.2.1.2.2.1.6", 16, timeout); wErr == nil {
 		for _, r := range macRows {
 			if m := formatMAC(r.Value); m != "" {
 				mac = m
@@ -690,7 +728,7 @@ func probeDeviceSNMP(ctx context.Context, ip, community string, enableWakeup boo
 		"1.3.6.1.4.1.2435.2.3.9.4.2.1.5.5.1.0",
 		"1.3.6.1.4.1.367.3.2.1.2.1.4.0",
 	} {
-		if b, sErr := getSNMPOID(ip, community, sOID, timeout); sErr == nil {
+		if b, sErr := client.getOID(ctx, sOID, timeout); sErr == nil {
 			cleaned := sanitizeSerial(string(b))
 			if cleaned != "" {
 				serial = cleaned
@@ -702,7 +740,7 @@ func probeDeviceSNMP(ctx context.Context, ip, community string, enableWakeup boo
 	// Status + Error state bitmask
 	status := "online"
 	var reasons []string
-	if hrVars, hErr := getSNMPMulti(ctx, ip, community, []string{
+	if hrVars, hErr := client.getMulti(ctx, []string{
 		"1.3.6.1.2.1.25.3.5.1.1.1", // hrPrinterStatus
 		"1.3.6.1.2.1.25.3.5.1.2.1", // hrPrinterDetectedErrorState
 	}, timeout); hErr == nil {
@@ -730,16 +768,16 @@ func probeDeviceSNMP(ctx context.Context, ip, community string, enableWakeup boo
 
 	// prtAlertTable walk
 	var alerts []PrinterAlert
-	if alertDescs, aErr := walkSNMP(ctx, ip, community, "1.3.6.1.2.1.43.18.1.1.8", 24, timeout); aErr == nil && len(alertDescs) > 0 {
+	if alertDescs, aErr := client.walk(ctx, "1.3.6.1.2.1.43.18.1.1.8", 24, timeout); aErr == nil && len(alertDescs) > 0 {
 		codeMap := make(map[string]int)
-		if alertCodes, cErr := walkSNMP(ctx, ip, community, "1.3.6.1.2.1.43.18.1.1.7", 24, timeout); cErr == nil {
+		if alertCodes, cErr := client.walk(ctx, "1.3.6.1.2.1.43.18.1.1.7", 24, timeout); cErr == nil {
 			for _, c := range alertCodes {
 				idx := lastOIDIndex(c.OID, "1.3.6.1.2.1.43.18.1.1.7")
 				codeMap[idx] = decodeASN1Int(c.Value)
 			}
 		}
 		sevMap := make(map[string]int)
-		if alertSevs, sErr := walkSNMP(ctx, ip, community, "1.3.6.1.2.1.43.18.1.1.2", 24, timeout); sErr == nil {
+		if alertSevs, sErr := client.walk(ctx, "1.3.6.1.2.1.43.18.1.1.2", 24, timeout); sErr == nil {
 			for _, s := range alertSevs {
 				idx := lastOIDIndex(s.OID, "1.3.6.1.2.1.43.18.1.1.2")
 				sevMap[idx] = decodeASN1Int(s.Value)
@@ -773,7 +811,7 @@ func probeDeviceSNMP(ctx context.Context, ip, community string, enableWakeup boo
 		"1.3.6.1.4.1.236.11.5.1.1.9.2.0",
 		"1.3.6.1.4.1.40093.10.3.1.1",
 	} {
-		if v, ok := getSNMPUint32(ip, community, tOID, timeout); ok && v > 0 {
+		if v, ok := client.getUint32(ctx, tOID, timeout); ok && v > 0 {
 			counters.LifetimeEngineTotal = v
 			break
 		}
@@ -783,7 +821,7 @@ func probeDeviceSNMP(ctx context.Context, ip, community string, enableWakeup boo
 		"1.3.6.1.4.1.2435.2.3.9.4.2.1.5.5.52.2.1.3.2",
 		"1.3.6.1.4.1.1602.1.11.1.3.1.4.108",
 	} {
-		if v, ok := getSNMPUint32(ip, community, mOID, timeout); ok && v > 0 {
+		if v, ok := client.getUint32(ctx, mOID, timeout); ok && v > 0 {
 			counters.MonoTotal = v
 			break
 		}
@@ -793,7 +831,7 @@ func probeDeviceSNMP(ctx context.Context, ip, community string, enableWakeup boo
 		"1.3.6.1.4.1.2435.2.3.9.4.2.1.5.5.52.2.1.3.3",
 		"1.3.6.1.4.1.1602.1.11.1.3.1.4.122",
 	} {
-		if v, ok := getSNMPUint32(ip, community, cOID, timeout); ok && v > 0 {
+		if v, ok := client.getUint32(ctx, cOID, timeout); ok && v > 0 {
 			counters.ColorTotal = v
 			break
 		}
@@ -801,7 +839,7 @@ func probeDeviceSNMP(ctx context.Context, ip, community string, enableWakeup boo
 
 	// Zebra ZEBRA-QL-MIB (1.3.6.1.4.1.10642.200.17.*)
 	if vendor == "Zebra" || strings.Contains(sysObjID, "1.3.6.1.4.1.10642") {
-		if zVars, zErr := getSNMPMulti(ctx, ip, community, []string{
+		if zVars, zErr := client.getMulti(ctx, []string{
 			"1.3.6.1.4.1.10642.200.17.1.0", // zql-odometer-user-label-count
 			"1.3.6.1.4.1.10642.200.17.2.0", // zql-odometer-total-label-count
 			"1.3.6.1.4.1.10642.200.17.3.0", // zql-odometer-total-print-length
@@ -823,7 +861,7 @@ func probeDeviceSNMP(ctx context.Context, ip, community string, enableWakeup boo
 	}
 
 	// RFC 3805 Supplies Walk (no hardcoded 1..4 limit)
-	supplies, colorCapable := walkRFC3805Supplies(ctx, ip, community, timeout)
+	supplies, colorCapable := walkRFC3805SuppliesWithClient(ctx, client, timeout)
 	if counters.ColorTotal > 0 {
 		colorCapable = true
 	}
@@ -834,9 +872,14 @@ func probeDeviceSNMP(ctx context.Context, ip, community string, enableWakeup boo
 		counters.LifetimeEngineTotal = counters.MonoTotal + counters.ColorTotal
 	}
 
+	odometerSource := ""
+	if counters.LifetimeEngineTotal > 0 || counters.LabelCount > 0 {
+		odometerSource = "snmp"
+	}
+
 	return &DiscoveredDevice{
-		DiscoverySource: "snmp_v2c",
-		IPAddress:       ip,
+		DiscoverySource: client.sourceLabel(),
+		IPAddress:       client.ip,
 		MACAddress:      mac,
 		SerialNumber:    serial,
 		SysObjectID:     sysObjID,
@@ -848,12 +891,17 @@ func probeDeviceSNMP(ctx context.Context, ip, community string, enableWakeup boo
 		StatusReasons:   reasons,
 		Alerts:          alerts,
 		IsColorCapable:  colorCapable,
+		OdometerSource:  odometerSource,
 		Counters:        counters,
 		Supplies:        supplies,
 	}, true
 }
 
 func walkRFC3805Supplies(ctx context.Context, ip, community string, timeout time.Duration) ([]SupplyItem, bool) {
+	return walkRFC3805SuppliesWithClient(ctx, &snmpClient{ip: ip, community: community}, timeout)
+}
+
+func walkRFC3805SuppliesWithClient(ctx context.Context, client *snmpClient, timeout time.Duration) ([]SupplyItem, bool) {
 	const (
 		baseClass = "1.3.6.1.2.1.43.11.1.1.4"
 		baseType  = "1.3.6.1.2.1.43.11.1.1.5"
@@ -862,38 +910,38 @@ func walkRFC3805Supplies(ctx context.Context, ip, community string, timeout time
 		baseLevel = "1.3.6.1.2.1.43.11.1.1.9"
 	)
 
-	descRows, err := walkSNMP(ctx, ip, community, baseDesc, 32, timeout)
+	descRows, err := client.walk(ctx, baseDesc, 32, timeout)
 	if err != nil || len(descRows) == 0 {
 		return nil, false
 	}
 
 	classMap := make(map[string]int)
-	if rows, rErr := walkSNMP(ctx, ip, community, baseClass, 32, timeout); rErr == nil {
+	if rows, rErr := client.walk(ctx, baseClass, 32, timeout); rErr == nil {
 		for _, r := range rows {
 			classMap[lastOIDIndex(r.OID, baseClass)] = decodeASN1Int(r.Value)
 		}
 	}
 	typeMap := make(map[string]int)
-	if rows, rErr := walkSNMP(ctx, ip, community, baseType, 32, timeout); rErr == nil {
+	if rows, rErr := client.walk(ctx, baseType, 32, timeout); rErr == nil {
 		for _, r := range rows {
 			typeMap[lastOIDIndex(r.OID, baseType)] = decodeASN1Int(r.Value)
 		}
 	}
 	maxMap := make(map[string]int)
-	if rows, rErr := walkSNMP(ctx, ip, community, baseMax, 32, timeout); rErr == nil {
+	if rows, rErr := client.walk(ctx, baseMax, 32, timeout); rErr == nil {
 		for _, r := range rows {
 			maxMap[lastOIDIndex(r.OID, baseMax)] = decodeASN1Int(r.Value)
 		}
 	}
 	lvlMap := make(map[string]int)
-	if rows, rErr := walkSNMP(ctx, ip, community, baseLevel, 32, timeout); rErr == nil {
+	if rows, rErr := client.walk(ctx, baseLevel, 32, timeout); rErr == nil {
 		for _, r := range rows {
 			lvlMap[lastOIDIndex(r.OID, baseLevel)] = decodeASN1Int(r.Value)
 		}
 	}
 
 	colorCapable := false
-	if colorants, cErr := walkSNMP(ctx, ip, community, "1.3.6.1.2.1.43.12.1.1.4", 16, timeout); cErr == nil {
+	if colorants, cErr := client.walk(ctx, "1.3.6.1.2.1.43.12.1.1.4", 16, timeout); cErr == nil {
 		for _, c := range colorants {
 			cv := strings.ToLower(string(c.Value))
 			if strings.Contains(cv, "cyan") || strings.Contains(cv, "magenta") || strings.Contains(cv, "yellow") {

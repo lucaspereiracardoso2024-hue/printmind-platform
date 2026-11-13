@@ -14,16 +14,18 @@ import (
 
 // LANDiscoveryHint stores passive/active LAN discovery metadata for an IP before protocol probing.
 type LANDiscoveryHint struct {
-	IPAddress   string
-	MACAddress  string
-	ModelHint   string
-	VendorHint  string
-	IPPPort     int
-	IPPPath     string
-	HasIPPS     bool
-	ColorHint   bool
-	UUIDHint    string
-	DiscoveryBy string
+	IPAddress    string
+	MACAddress   string
+	ModelHint    string
+	VendorHint   string
+	SerialHint   string
+	IPPPort      int
+	IPPPath      string
+	HasIPPS      bool
+	ColorHint    bool
+	UUIDHint     string
+	CommandHints []string
+	DiscoveryBy  string
 }
 
 func isPrivateIPv4(ip net.IP) bool {
@@ -605,6 +607,12 @@ func discoverLANHints(ctx context.Context) map[string]LANDiscoveryHint {
 			if cur.VendorHint == "" {
 				cur.VendorHint = h.VendorHint
 			}
+			if cur.SerialHint == "" {
+				cur.SerialHint = h.SerialHint
+			}
+			if len(cur.CommandHints) == 0 && len(h.CommandHints) > 0 {
+				cur.CommandHints = h.CommandHints
+			}
 			if cur.IPPPort == 0 {
 				cur.IPPPort = h.IPPPort
 			}
@@ -623,12 +631,13 @@ func discoverLANHints(ctx context.Context) map[string]LANDiscoveryHint {
 		}
 	}
 
-	ch := make(chan []LANDiscoveryHint, 3)
+	ch := make(chan []LANDiscoveryHint, 4)
 	go func() { ch <- discoverMDNS(ctx, 1100*time.Millisecond) }()
 	go func() { ch <- discoverWSD(ctx, 1100*time.Millisecond) }()
 	go func() { ch <- discoverEpsonENPC(ctx, 900*time.Millisecond) }()
+	go func() { ch <- discoverCanonBJNP(ctx, 900*time.Millisecond) }()
 
-	for i := 0; i < 3; i++ {
+	for i := 0; i < 4; i++ {
 		merge(<-ch)
 	}
 	return hints

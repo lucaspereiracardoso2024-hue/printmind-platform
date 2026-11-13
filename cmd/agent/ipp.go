@@ -387,6 +387,10 @@ func ParseIPPPrinterAttributes(ip string, source string, resp *IPPResponse) (*Di
 	if imp := ippGetInts(merged, "printer-impressions-completed"); len(imp) > 0 && imp[0] > 0 {
 		impressions = uint32(imp[0])
 	}
+	odometerSource := ""
+	if impressions > 0 {
+		odometerSource = "ipp"
+	}
 
 	return &DiscoveredDevice{
 		DiscoverySource: source,
@@ -398,6 +402,7 @@ func ParseIPPPrinterAttributes(ip string, source string, resp *IPPResponse) (*Di
 		Status:          status,
 		StatusReasons:   cleanReasons,
 		IsColorCapable:  colorCapable,
+		OdometerSource:  odometerSource,
 		Counters: DeviceCounters{
 			LifetimeEngineTotal: impressions,
 		},

@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"context"
 	"encoding/xml"
 	"fmt"
 	"io"
@@ -264,6 +265,7 @@ func CorrelatePrintJobs(events []PrintServiceEvent, lookup DeviceColorLookup, de
 			UserName:       user,
 			MachineName:    machine,
 			Domain:         domain,
+			Department:     domain,
 			DocumentName:   ev.DocumentName,
 			PagesPrinted:   pages,
 			Copies:         copies,
@@ -280,25 +282,42 @@ func CorrelatePrintJobs(events []PrintServiceEvent, lookup DeviceColorLookup, de
 	return jobs
 }
 
-// AggregateJobSummaries rolls up print job records by printer, user, machine, and domain.
+// EnrichPrintJobsDepartment resolves AD/LDAP departments for correlated print jobs with safe domain fallback.
+func EnrichPrintJobsDepartment(ctx context.Context, jobs []PrintJobRecord, resolver *LDAPDepartmentResolver) {
+	if resolver == nil || len(jobs) == 0 {
+		return
+	}
+	for i := range jobs {
+		dept := resolver.ResolveDepartment(ctx, jobs[i].Domain, jobs[i].UserName, jobs[i].MachineName)
+		if dept != "" {
+			jobs[i].Department = dept
+		} else if jobs[i].Department == "" {
+			jobs[i].Department = jobs[i].Domain
+		}
+	}
+}
+
+// AggregateJobSummaries rolls up print job records by printer, user, machine, domain, and department.
 func AggregateJobSummaries(jobs []PrintJobRecord) []JobSummary {
 	type key struct {
-		printer string
-		ip      string
-		user    string
-		machine string
-		domain  string
+		printer    string
+		ip         string
+		user       string
+		machine    string
+		domain     string
+		department string
 	}
 	agg := make(map[key]*JobSummary)
 	var order []key
 
 	for _, j := range jobs {
 		k := key{
-			printer: j.PrinterName,
-			ip:      j.PrinterIP,
-			user:    j.UserName,
-			machine: j.MachineName,
-			domain:  j.Domain,
+			printer:    j.PrinterName,
+			ip:         j.PrinterIP,
+			user:       j.UserName,
+			machine:    j.MachineName,
+			domain:     j.Domain,
+			department: j.Department,
 		}
 		s, ok := agg[k]
 		if !ok {
@@ -308,6 +327,7 @@ func AggregateJobSummaries(jobs []PrintJobRecord) []JobSummary {
 				UserName:    j.UserName,
 				MachineName: j.MachineName,
 				Domain:      j.Domain,
+				Department:  j.Department,
 			}
 			agg[k] = s
 			order = append(order, k)

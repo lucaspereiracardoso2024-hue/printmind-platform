@@ -1,7 +1,7 @@
 package main
 
 const (
-	AgentVersion      = "4.0.0"
+	AgentVersion      = "4.1.0"
 	ServiceName       = "PrintMindAgent"
 	ServiceDisplay    = "PrintMind Satellite Agent"
 	ServiceDesc       = "Agente autonomo PrintMind de monitoramento de impressoras, telemetria e auditoria de impressao."
@@ -13,17 +13,29 @@ const (
 	DefaultAnonAPIKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inpic216Y2JjaXZoenNsY25meG1xIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTQ0NDUxNTcsImV4cCI6MjExMDAyMTE1N30.U9F-EL3ddBBqEK0MqkNuZBC6ZvwtuEElN6Z_VpEGT7Q"
 )
 
+// SNMPv3Config holds optional SNMPv3 USM authentication and privacy credentials.
+type SNMPv3Config struct {
+	Enabled        bool   `json:"enabled"`
+	Username       string `json:"username,omitempty"`
+	SecurityLevel  string `json:"security_level,omitempty"` // "noAuthNoPriv" | "authNoPriv" | "authPriv"
+	AuthProtocol   string `json:"auth_protocol,omitempty"`  // "MD5" | "SHA1" | "SHA256"
+	AuthPassphrase string `json:"auth_passphrase,omitempty"`
+	PrivProtocol   string `json:"priv_protocol,omitempty"` // "DES" | "AES"
+	PrivPassphrase string `json:"priv_passphrase,omitempty"`
+}
+
 // Config holds the persistent local agent configuration.
 type Config struct {
-	ServerURL         string   `json:"server_url"`
-	APIKey            string   `json:"api_key"`
-	PairingToken      string   `json:"pairing_token"`
-	PollIntervalSec   int      `json:"poll_interval_sec"`
-	EnableUSB         bool     `json:"enable_usb"`
-	Subnets           []string `json:"subnets,omitempty"`
-	StaticIPs         []string `json:"static_ips,omitempty"`
-	SNMPCommunities   []string `json:"snmp_communities,omitempty"`
-	DisableAutoUpdate bool     `json:"disable_auto_update,omitempty"`
+	ServerURL         string       `json:"server_url"`
+	APIKey            string       `json:"api_key"`
+	PairingToken      string       `json:"pairing_token"`
+	PollIntervalSec   int          `json:"poll_interval_sec"`
+	EnableUSB         bool         `json:"enable_usb"`
+	Subnets           []string     `json:"subnets,omitempty"`
+	StaticIPs         []string     `json:"static_ips,omitempty"`
+	SNMPCommunities   []string     `json:"snmp_communities,omitempty"`
+	SNMPv3            SNMPv3Config `json:"snmp_v3,omitempty"`
+	DisableAutoUpdate bool         `json:"disable_auto_update,omitempty"`
 }
 
 // OSPaths resolves the OS-appropriate paths for config, SQLite DB, logs, and staging.
@@ -89,6 +101,7 @@ type DiscoveredDevice struct {
 	Alerts             []PrinterAlert `json:"alerts,omitempty"`
 	IsColorCapable     bool           `json:"is_color_capable"`
 	SupportedLanguages []string       `json:"supported_languages,omitempty"`
+	OdometerSource     string         `json:"odometer_source,omitempty"`
 	Counters           DeviceCounters `json:"counters"`
 	Supplies           []SupplyItem   `json:"supplies"`
 }
@@ -104,6 +117,7 @@ type PrintJobRecord struct {
 	UserName       string `json:"user_name"`
 	MachineName    string `json:"machine_name"`
 	Domain         string `json:"domain,omitempty"`
+	Department     string `json:"department,omitempty"`
 	DocumentName   string `json:"document_name,omitempty"`
 	PagesPrinted   int    `json:"pages_printed"`
 	Copies         int    `json:"copies"`
@@ -124,6 +138,7 @@ type JobSummary struct {
 	UserName      string `json:"user_name"`
 	MachineName   string `json:"machine_name"`
 	Domain        string `json:"domain,omitempty"`
+	Department    string `json:"department,omitempty"`
 	JobCount      int    `json:"job_count"`
 	TotalPages    int    `json:"total_pages"`
 	MonoPages     int    `json:"mono_pages"`
@@ -162,18 +177,21 @@ type SupabaseRPCPayload struct {
 
 // RemoteConfig holds dynamic directives returned by the PrintMind backend.
 type RemoteConfig struct {
-	PollIntervalSeconds       int      `json:"poll_interval_seconds"`
-	RateLimitPacketsPerSec    int      `json:"rate_limit_packets_per_sec"`
-	ScanSubnets               []string `json:"scan_subnets"`
-	StaticIPs                 []string `json:"static_ips"`
-	SNMPCommunities           []string `json:"snmp_communities,omitempty"`
-	EnableUSBSpooler          bool     `json:"enable_usb_spooler"`
-	EnableHTTPWakeupForPantum bool     `json:"enable_http_wakeup_for_pantum"`
-	DiagnosticRequested       bool     `json:"diagnostic_requested,omitempty"`
-	DiagnosticUploadURL       string   `json:"diagnostic_upload_url,omitempty"`
-	UpdateMSIURL              string   `json:"update_msi_url,omitempty"`
-	UpdateSHA256              string   `json:"update_sha256,omitempty"`
-	UpdateVersion             string   `json:"update_version,omitempty"`
+	PollIntervalSeconds       int          `json:"poll_interval_seconds"`
+	RateLimitPacketsPerSec    int          `json:"rate_limit_packets_per_sec"`
+	ScanSubnets               []string     `json:"scan_subnets"`
+	StaticIPs                 []string     `json:"static_ips"`
+	SNMPCommunities           []string     `json:"snmp_communities,omitempty"`
+	SNMPv3                    SNMPv3Config `json:"snmp_v3,omitempty"`
+	EnableUSBSpooler          bool         `json:"enable_usb_spooler"`
+	EnableHTTPWakeupForPantum bool         `json:"enable_http_wakeup_for_pantum"`
+	DiagnosticRequested       bool         `json:"diagnostic_requested,omitempty"`
+	DiagnosticUploadURL       string       `json:"diagnostic_upload_url,omitempty"`
+	UpdateMSIURL              string       `json:"update_msi_url,omitempty"`
+	UpdateSHA256              string       `json:"update_sha256,omitempty"`
+	UpdateLinuxURL            string       `json:"update_linux_url,omitempty"`
+	UpdateLinuxSHA256         string       `json:"update_linux_sha256,omitempty"`
+	UpdateVersion             string       `json:"update_version,omitempty"`
 }
 
 // SyncResponse is the response returned by the PrintMind server or Supabase RPC.

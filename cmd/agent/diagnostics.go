@@ -27,6 +27,12 @@ func redactSecrets(s string, cfg Config) string {
 	if cfg.PairingToken != "" && len(cfg.PairingToken) > 8 {
 		out = strings.ReplaceAll(out, cfg.PairingToken, cfg.PairingToken[:8]+"****")
 	}
+	if cfg.SNMPv3.AuthPassphrase != "" {
+		out = strings.ReplaceAll(out, cfg.SNMPv3.AuthPassphrase, "****")
+	}
+	if cfg.SNMPv3.PrivPassphrase != "" {
+		out = strings.ReplaceAll(out, cfg.SNMPv3.PrivPassphrase, "****")
+	}
 	return out
 }
 
@@ -46,6 +52,12 @@ func BuildDiagnosticZip(cfg Config, paths OSPaths, store *SQLiteStore, wpp *WPPR
 		sanitizedCfg.APIKey = sanitizedCfg.APIKey[:4] + "****" + sanitizedCfg.APIKey[len(sanitizedCfg.APIKey)-4:]
 	} else if sanitizedCfg.APIKey != "" {
 		sanitizedCfg.APIKey = "****"
+	}
+	if sanitizedCfg.SNMPv3.AuthPassphrase != "" {
+		sanitizedCfg.SNMPv3.AuthPassphrase = "****"
+	}
+	if sanitizedCfg.SNMPv3.PrivPassphrase != "" {
+		sanitizedCfg.SNMPv3.PrivPassphrase = "****"
 	}
 	if cfgBytes, err := json.MarshalIndent(sanitizedCfg, "", "  "); err == nil {
 		if w, err := zw.Create("sanitized_config.json"); err == nil {

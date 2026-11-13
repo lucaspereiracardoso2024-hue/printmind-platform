@@ -449,6 +449,7 @@ func MergeIPPAndHPLEDM(dev *DiscoveredDevice, ledm *HPLEDMData) {
 	}
 	if dev.Counters.LifetimeEngineTotal == 0 && ledm.Counters.LifetimeEngineTotal > 0 {
 		dev.Counters = ledm.Counters
+		dev.OdometerSource = "ews"
 	} else {
 		if dev.Counters.MonoTotal == 0 {
 			dev.Counters.MonoTotal = ledm.Counters.MonoTotal
@@ -546,48 +547,53 @@ func ParseBrotherEWSHTML(htmlStr string) (total uint32, supplies []SupplyItem) {
 	return total, supplies
 }
 
-func enrichBrotherFromSNMP(ctx context.Context, dev *DiscoveredDevice, community string) {
+func enrichBrotherFromSNMP(ctx context.Context, dev *DiscoveredDevice, snmpCli *snmpClient) {
 	const (
 		oidMaint    = "1.3.6.1.4.1.2435.2.3.9.4.2.1.5.5.8.0"
 		oidCounter  = "1.3.6.1.4.1.2435.2.3.9.4.2.1.5.5.10.0"
 		oidNextCare = "1.3.6.1.4.1.2435.2.3.9.4.2.1.5.5.11.0"
 	)
-	vbs, err := getSNMPMulti(ctx, dev.IPAddress, community, []string{oidMaint, oidCounter, oidNextCare}, 1200*time.Millisecond)
-	if err == nil {
-		if vb, ok := vbs[oidCounter]; ok {
-			tags := ParseBrotherTLV(vb.Value)
-			if v, exists := tags[0x00]; exists && v > 0 {
-				dev.Counters.LifetimeEngineTotal = v
-			}
-			if v, exists := tags[0x01]; exists && v > 0 {
-				dev.Counters.MonoTotal = v
-			}
-			if v, exists := tags[0x06]; exists && v > 0 && dev.Counters.MonoTotal == 0 {
-				dev.Counters.MonoTotal = v
-			}
-			if v, exists := tags[0x02]; exists && v > 0 {
-				dev.Counters.ColorTotal = v
-				dev.IsColorCapable = true
-			}
-		}
-		if vb, ok := vbs[oidMaint]; ok {
-			tags := ParseBrotherTLV(vb.Value)
-			if len(dev.Supplies) == 0 {
-				tagNames := map[byte]string{
-					0x81: "Black Toner",
-					0x82: "Cyan Toner",
-					0x83: "Magenta Toner",
-					0x84: "Yellow Toner",
-					0x6F: "Drum Unit",
-					0x79: "Fuser Unit",
+	if snmpCli != nil {
+		vbs, err := snmpCli.getMulti(ctx, []string{oidMaint, oidCounter, oidNextCare}, 1200*time.Millisecond)
+		if err == nil {
+			if vb, ok := vbs[oidCounter]; ok {
+				tags := ParseBrotherTLV(vb.Value)
+				if v, exists := tags[0x00]; exists && v > 0 {
+					dev.Counters.LifetimeEngineTotal = v
+					if dev.OdometerSource == "" {
+						dev.OdometerSource = "snmp"
+					}
 				}
-				for tag, name := range tagNames {
-					if pct, exists := tags[tag]; exists && pct <= 100 {
-						item := buildSupplyItem(name, inferSupplyColor(name), 3, 3, int(pct), 100)
-						if item.Color == "cyan" || item.Color == "magenta" || item.Color == "yellow" {
-							dev.IsColorCapable = true
+				if v, exists := tags[0x01]; exists && v > 0 {
+					dev.Counters.MonoTotal = v
+				}
+				if v, exists := tags[0x06]; exists && v > 0 && dev.Counters.MonoTotal == 0 {
+					dev.Counters.MonoTotal = v
+				}
+				if v, exists := tags[0x02]; exists && v > 0 {
+					dev.Counters.ColorTotal = v
+					dev.IsColorCapable = true
+				}
+			}
+			if vb, ok := vbs[oidMaint]; ok {
+				tags := ParseBrotherTLV(vb.Value)
+				if len(dev.Supplies) == 0 {
+					tagNames := map[byte]string{
+						0x81: "Black Toner",
+						0x82: "Cyan Toner",
+						0x83: "Magenta Toner",
+						0x84: "Yellow Toner",
+						0x6F: "Drum Unit",
+						0x79: "Fuser Unit",
+					}
+					for tag, name := range tagNames {
+						if pct, exists := tags[tag]; exists && pct <= 100 {
+							item := buildSupplyItem(name, inferSupplyColor(name), 3, 3, int(pct), 100)
+							if item.Color == "cyan" || item.Color == "magenta" || item.Color == "yellow" {
+								dev.IsColorCapable = true
+							}
+							dev.Supplies = append(dev.Supplies, item)
 						}
-						dev.Supplies = append(dev.Supplies, item)
 					}
 				}
 			}
@@ -600,6 +606,7 @@ func enrichBrotherFromSNMP(ctx context.Context, dev *DiscoveredDevice, community
 			tot, sups := ParseBrotherEWSHTML(body)
 			if dev.Counters.LifetimeEngineTotal == 0 && tot > 0 {
 				dev.Counters.LifetimeEngineTotal = tot
+				dev.OdometerSource = "ews"
 			}
 			if len(dev.Supplies) == 0 && len(sups) > 0 {
 				dev.Supplies = sups
@@ -710,15 +717,17 @@ func ParseEpsonEWSHTML(htmlStr string) (serial string, total uint32, supplies []
 	return serial, total, supplies, isColor
 }
 
-func enrichEpsonProtected(ctx context.Context, dev *DiscoveredDevice, community string) {
+func enrichEpsonProtected(ctx context.Context, dev *DiscoveredDevice, snmpCli *snmpClient) {
 	// 1. Network SNMP @BDC ST2 ONLY (NEVER .44.1.1.2.1 EEPROM!)
-	if raw, err := getSNMPOID(dev.IPAddress, community, "1.3.6.1.4.1.1248.1.2.2.1.1.1.1.1", 1200*time.Millisecond); err == nil {
-		if st, ok := ParseEpsonBDCST2(raw); ok {
-			if len(dev.Supplies) == 0 && len(st.Supplies) > 0 {
-				dev.Supplies = st.Supplies
-			}
-			if st.IsColor {
-				dev.IsColorCapable = true
+	if snmpCli != nil {
+		if raw, err := snmpCli.getOID(ctx, "1.3.6.1.4.1.1248.1.2.2.1.1.1.1.1", 1200*time.Millisecond); err == nil {
+			if st, ok := ParseEpsonBDCST2(raw); ok {
+				if len(dev.Supplies) == 0 && len(st.Supplies) > 0 {
+					dev.Supplies = st.Supplies
+				}
+				if st.IsColor {
+					dev.IsColorCapable = true
+				}
 			}
 		}
 	}
@@ -740,6 +749,7 @@ func enrichEpsonProtected(ctx context.Context, dev *DiscoveredDevice, community 
 			}
 			if dev.Counters.LifetimeEngineTotal == 0 && tot > 0 {
 				dev.Counters.LifetimeEngineTotal = tot
+				dev.OdometerSource = "ews"
 			}
 			if len(dev.Supplies) == 0 && len(sups) > 0 {
 				dev.Supplies = sups
