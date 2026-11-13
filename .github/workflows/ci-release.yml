@@ -26,7 +26,7 @@ jobs:
       - name: Run Go Vet & Automated Tests
         run: |
           go vet ./...
-          go test -v -race ./...
+          go test -v -count=1 -race ./...
 
       - name: Verify & Build PrintMind Cloud Server (Linux AMD64)
         run: |
@@ -34,21 +34,28 @@ jobs:
 
       - name: Build PrintMind Server Standalone (Windows AMD64)
         run: |
-          CGO_ENABLED=0 GOOS=windows GOARCH=amd64 go build -ldflags="-s -w" -o dist/printmind-server.exe .
+          CGO_ENABLED=0 GOOS=windows GOARCH=amd64 go build -o dist/printmind-server.exe .
 
-      - name: Build PrintMind Scanner Agent V3.2 (Windows AMD64 + PE Resources)
+      - name: Build PrintMind Scanner Agent V4.0 (Windows AMD64 - Zero-AV Hygiene, Preserves Symbols)
         run: |
           cd cmd/agent
-          CGO_ENABLED=0 GOOS=windows GOARCH=amd64 go build -ldflags="-s -w" -o ../../dist/printmind-agent.exe .
+          CGO_ENABLED=0 GOOS=windows GOARCH=amd64 go build -trimpath -o ../../dist/printmind-agent.exe .
 
-      - name: Build PrintMind Scanner Agent V3.2 (Linux AMD64 Pure Go)
+      - name: Build PrintMind Scanner Agent V4.0 (Linux AMD64 Pure Go)
         run: |
           cd cmd/agent
-          CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -ldflags="-s -w" -o ../../dist/printmind-agent-linux-amd64 .
+          CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -trimpath -o ../../dist/printmind-agent-linux-amd64 .
+
+      - name: Verify Cross-Compilation & Copy Packaging Templates
+        run: |
+          mkdir -p dist/packaging
+          cp cmd/agent/packaging/printmind-agent.service dist/packaging/
+          cp cmd/agent/packaging/printmind-agent.wxs dist/packaging/
+          sha256sum dist/printmind-agent.exe dist/printmind-agent-linux-amd64 > dist/SHA256SUMS.txt
 
       - name: Upload Compiled Binaries as Artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: printmind-v3-binaries
+          name: printmind-v4-binaries
           path: dist/*
           retention-days: 30
