@@ -83,7 +83,8 @@ jobs:
         shell: pwsh
         run: |
           wix --version
-          wix build cmd/agent/packaging/printmind-agent.wxs -arch x64 -o dist/PrintMindAgentSetup-v4.1.0-x64.msi
+          wix extension add -g WixToolset.Util.wixext/5.0.2
+          wix build cmd/agent/packaging/printmind-agent.wxs -arch x64 -b dist -ext WixToolset.Util.wixext -o dist/PrintMindAgentSetup-v4.1.0-x64.msi
           $msiHash = (Get-FileHash -Algorithm SHA256 -Path dist/PrintMindAgentSetup-v4.1.0-x64.msi).Hash.ToLower()
           Add-Content -Path dist/SHA256SUMS.txt -Value "$msiHash  dist/PrintMindAgentSetup-v4.1.0-x64.msi"
 
