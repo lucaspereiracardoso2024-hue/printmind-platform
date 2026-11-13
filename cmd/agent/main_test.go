@@ -497,8 +497,12 @@ func TestEvent307And805PhysicalColorGateAndCUPSPageLog(t *testing.T) {
 	}
 
 	summaries := AggregateJobSummaries(jobs)
-	if len(summaries) != 2 || summaries[0].ColorGatedOut != 15 {
+	if len(summaries) != 2 || summaries[0].ColorGatedOut != 15 || !summaries[0].IsDelta || !summaries[1].IsDelta {
 		t.Errorf("unexpected JobSummary: %+v", summaries)
+	}
+	rawSummaryJSON, _ := json.Marshal(summaries[0])
+	if !strings.Contains(string(rawSummaryJSON), `"is_delta":true`) {
+		t.Errorf("expected JobSummary JSON to serialize is_delta:true, got %s", string(rawSummaryJSON))
 	}
 
 	// CUPS page_log parser

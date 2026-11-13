@@ -328,6 +328,7 @@ func AggregateJobSummaries(jobs []PrintJobRecord) []JobSummary {
 				MachineName: j.MachineName,
 				Domain:      j.Domain,
 				Department:  j.Department,
+				IsDelta:     true,
 			}
 			agg[k] = s
 			order = append(order, k)

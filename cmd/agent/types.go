@@ -146,6 +146,7 @@ type JobSummary struct {
 	DuplexPages   int    `json:"duplex_pages"`
 	SimplexPages  int    `json:"simplex_pages"`
 	ColorGatedOut int    `json:"color_gated_out_pages,omitempty"`
+	IsDelta       bool   `json:"is_delta"`
 }
 
 // WPPReadiness captures Windows 11 24H2 / Server 2025 Protected Print Mode policy state.
