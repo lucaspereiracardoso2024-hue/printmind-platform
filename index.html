@@ -356,7 +356,7 @@
               <span id="topTenantName" class="font-black text-base tracking-tight">PrintMind</span>
 
               <button onclick="openModal('pricingModal')" id="topPlanBadge" class="text-[10px] font-bold uppercase px-2 py-0.5 rounded-full bg-emerald-400/20 text-emerald-200 border border-emerald-300/30 hover:bg-emerald-400/30 transition">
-                MÓDULO 1 (R$ 1/MÊS)
+                ESSENCIAL (R$ 1/MÁQ)
               </button>
             </div>
             <p id="topUserEmail" class="text-[11px] text-blue-100 mono"></p>
@@ -373,12 +373,19 @@
             <i data-lucide="file-check-2" class="w-3.5 h-3.5"></i>
             <span>Relatórios & Faturamento</span>
           </button>
-
+          <button id="navTabGrafica" data-client-only="true" onclick="switchTab('grafica')" class="px-3.5 py-1.5 rounded-xl text-white/80 hover:text-white hover:bg-white/10 transition flex items-center space-x-1.5">
+            <i data-lucide="bar-chart-3" class="w-3.5 h-3.5"></i>
+            <span>Produção Diária</span>
+          </button>
         </nav>
 
         <!-- BOTÕES DE AÇÃO RÁPIDA -->
-        <div class="flex items-center gap-2">
-          <button data-client-only="true" onclick="openModal('welcomeTourModal')" class="px-3 py-1.5 rounded-xl bg-amber-400/20 hover:bg-amber-400/30 text-amber-200 text-xs font-bold flex items-center space-x-1 border border-amber-300/30 transition shadow-sm" title="Ver como funciona o sistema">
+        <div class="flex flex-wrap items-center gap-2">
+          <button id="btnQuickGuide" data-client-only="true" onclick="openOnboardingOnDemand()" class="px-2.5 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 text-blue-100 text-xs font-semibold flex items-center space-x-1 border border-white/15 transition" title="Abrir Guia Rápido de configuração">
+            <i data-lucide="sparkles" class="w-3.5 h-3.5 text-amber-300"></i>
+            <span>Guia Rápido</span>
+          </button>
+          <button data-client-only="true" onclick="openModal('welcomeTourModal')" class="px-2.5 py-1.5 rounded-xl bg-amber-400/20 hover:bg-amber-400/30 text-amber-200 text-xs font-bold flex items-center space-x-1 border border-amber-300/30 transition shadow-sm" title="Ver como funciona o sistema">
             <i data-lucide="help-circle" class="w-3.5 h-3.5 text-amber-300"></i>
             <span>Como Funciona?</span>
           </button>
@@ -392,7 +399,7 @@
             <i data-lucide="radar" class="w-3.5 h-3.5"></i><span>Scanner de Impressoras</span>
           </button>
           <button data-client-only="true" onclick="openModal('pricingModal')" class="px-3 py-1.5 rounded-xl bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-100 text-xs font-bold flex items-center space-x-1 border border-emerald-400/30 transition">
-            <i data-lucide="calculator" class="w-3.5 h-3.5"></i><span>Módulos (R$ 1 a R$ 6)</span>
+            <i data-lucide="calculator" class="w-3.5 h-3.5"></i><span>Planos (R$ 1 / R$ 4 / R$ 6)</span>
           </button>
           <button onclick="handleLogout()" class="px-2.5 py-1.5 rounded-xl bg-rose-500/20 hover:bg-rose-500/30 text-rose-100 text-xs font-bold border border-rose-400/30 transition" title="Sair">
             <i data-lucide="log-out" class="w-3.5 h-3.5"></i>
@@ -414,8 +421,14 @@
           </span>
           <h2 class="text-2xl font-black text-slate-900 tracking-tight" id="mainSectionTitle">Painel de Controle & Telemetria</h2>
           <p class="text-xs text-slate-500 mt-0.5" id="mainSectionSubtitle">
-            Telemetria automática SNMP/USB, rateio por centro de custo hospitalar e fechamentos contratuais inteligentes.
+            Telemetria automática SNMP/USB, rateio por centro de custo e fechamentos contratuais inteligentes.
           </p>
+          <div class="mt-2 flex flex-wrap items-center justify-center gap-2">
+            <button onclick="openGeminiConsultantFromOverview()" class="px-3.5 py-1.5 rounded-full bg-indigo-50 hover:bg-indigo-100 text-indigo-800 border border-indigo-200 text-xs font-bold transition inline-flex items-center space-x-1.5 shadow-sm">
+              <i data-lucide="sparkles" class="w-3.5 h-3.5 text-indigo-600"></i>
+              <span>Consultor IA PrintMind (Gemini)</span>
+            </button>
+          </div>
         </div>
 
         <!-- 4 KPIS PRINCIPAIS -->
@@ -433,9 +446,9 @@
 
           <div class="bg-white p-5 rounded-3xl border border-slate-200 shadow-sm flex items-center justify-between">
             <div>
-              <span class="text-[11px] font-bold uppercase text-slate-400">Máquinas Ativas</span>
+              <span class="text-[11px] font-bold uppercase text-slate-400">Máquinas Monitoradas</span>
               <div id="kpiPrinters" class="text-3xl font-black text-emerald-600 mt-1 mono">0</div>
-              <span class="text-xs text-slate-500">SNMPv2c (RFC 3805) + USB</span>
+              <span id="kpiPrintersSub" class="text-xs text-slate-500">SNMPv2c (RFC 3805) + USB</span>
             </div>
             <div class="w-10 h-10 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center">
               <i data-lucide="printer" class="w-5 h-5"></i>
@@ -546,7 +559,7 @@
               <span class="px-3 py-1 rounded-full text-[11px] font-black bg-emerald-400/20 text-emerald-300 border border-emerald-400/30">
                 🎁 2 IMPRESSORAS GRÁTIS PARA TESTAR
               </span>
-              <button onclick="toggleOnboardingGuide()" class="text-xs text-blue-200 hover:text-white px-2 py-1 rounded-lg hover:bg-white/10 transition" title="Ocultar ou expandir guia">Ocultar</button>
+              <button onclick="toggleOnboardingGuide(this)" class="text-xs text-blue-200 hover:text-white px-2 py-1 rounded-lg hover:bg-white/10 transition" title="Ocultar ou expandir guia">Ocultar</button>
             </div>
           </div>
 
@@ -628,12 +641,12 @@
                 <span class="text-xs font-bold text-amber-800" id="trialLockCountMsg">Você possui 3 impressoras conectadas</span>
               </div>
               <h4 class="text-sm font-black text-slate-900 mt-0.5">Ative seu plano para monitorar todo o seu parque de impressoras</h4>
-              <p class="text-xs text-slate-600 mt-0.5">Suas 2 primeiras máquinas continuam no teste gratuito. Ative o Módulo 1 (R$ 1,00/mês por máquina) para desbloquear a telemetria completa.</p>
+              <p class="text-xs text-slate-600 mt-0.5">Suas 2 primeiras máquinas continuam no teste gratuito. Ative o Plano Essencial (R$ 1,00/mês por máquina) para desbloquear a telemetria completa.</p>
             </div>
           </div>
           <button onclick="openModal('pricingModal')" class="px-5 py-2.5 rounded-xl bg-[#0038A8] hover:bg-blue-800 text-white font-black text-xs shadow-md transition flex items-center space-x-1.5 whitespace-nowrap">
             <i data-lucide="credit-card" class="w-4 h-4"></i>
-            <span>Ativar Assinatura (R$ 1,00/máquina)</span>
+            <span>Ativar Assinatura (a partir de R$ 1,00/máquina)</span>
           </button>
         </div>
 
@@ -762,47 +775,161 @@
         </div>
 
         <!-- SUB-ABA CONTEÚDO: FECHAMENTO MENSAL -->
-        <div id="subViewFechamento" class="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden space-y-4">
-          <div class="p-5 border-b border-slate-100 flex flex-wrap items-center justify-between gap-3">
-            <div>
-              <h3 class="text-base font-black text-slate-900">Demonstrativo Consolidado de Contratos (Mês Atual)</h3>
-              <p class="text-xs text-slate-500">Contadores auditados via SNMP na data de corte contratual de cada cliente</p>
+        <div id="subViewFechamento" class="space-y-6">
+          <div class="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden space-y-4">
+            <div class="p-5 border-b border-slate-100 flex flex-wrap items-center justify-between gap-3">
+              <div>
+                <h3 class="text-base font-black text-slate-900">Demonstrativo Consolidado de Contratos (Mês Atual)</h3>
+                <p class="text-xs text-slate-500">Contadores auditados via SNMP/USB na data de corte contratual de cada cliente</p>
+              </div>
+              <button onclick="freezeAllClosings()" class="px-4 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold transition flex items-center space-x-1.5 shadow">
+                <i data-lucide="lock" class="w-3.5 h-3.5"></i>
+                <span>Congelar Lote</span>
+              </button>
             </div>
-            <button onclick="freezeAllClosings()" class="px-4 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold transition flex items-center space-x-1.5 shadow">
-              <i data-lucide="lock" class="w-3.5 h-3.5"></i>
-              <span>Congelar Lote</span>
-            </button>
+            <div class="overflow-x-auto">
+              <table class="w-full text-left text-xs">
+                <thead class="bg-slate-50 text-slate-500 uppercase text-[10px] font-bold border-b border-slate-200">
+                  <tr>
+                    <th class="py-3 px-4">Cliente</th>
+                    <th class="py-3 px-4">Corte Contratual</th>
+                    <th class="py-3 px-4 text-center">Máquinas</th>
+                    <th class="py-3 px-4 text-right">Páginas Apuradas</th>
+                    <th class="py-3 px-4 text-right">Fatura a Cobrar</th>
+                    <th class="py-3 px-4 text-center">Trava Contábil</th>
+                    <th class="py-3 px-4 text-right">Documento Oficial</th>
+                  </tr>
+                </thead>
+                <tbody id="reportsTableBody" class="divide-y divide-slate-100"></tbody>
+              </table>
+            </div>
           </div>
-          <div class="overflow-x-auto">
-            <table class="w-full text-left text-xs">
-              <thead class="bg-slate-50 text-slate-500 uppercase text-[10px] font-bold border-b border-slate-200">
-                <tr>
-                  <th class="py-3 px-4">Cliente</th>
-                  <th class="py-3 px-4">Corte Contratual</th>
-                  <th class="py-3 px-4 text-center">Máquinas</th>
-                  <th class="py-3 px-4 text-right">Páginas Apuradas</th>
-                  <th class="py-3 px-4 text-right">Fatura a Cobrar</th>
-                  <th class="py-3 px-4 text-center">Trava Contábil</th>
-                  <th class="py-3 px-4 text-right">Documento Oficial</th>
-                </tr>
-              </thead>
-              <tbody id="reportsTableBody" class="divide-y divide-slate-100"></tbody>
-            </table>
+
+          <!-- FECHAMENTO DETALHADO POR MÁQUINA + CSV + PRONTIDÃO WPP -->
+          <div class="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden">
+            <div class="p-5 border-b border-slate-100 flex flex-wrap items-center justify-between gap-3">
+              <div>
+                <div class="flex flex-wrap items-center gap-2">
+                  <h3 class="text-base font-black text-slate-900">Fechamento Detalhado por Máquina (Mês Atual)</h3>
+                  <span id="wppReadinessSummary" class="hidden px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200"></span>
+                </div>
+                <p class="text-xs text-slate-500">Contador inicial (1ª leitura do mês em <code class="mono">telemetry_readings</code> ou base inicial), contador final, delta real e excedente.</p>
+              </div>
+              <button onclick="exportMachineClosingCSV()" class="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition flex items-center space-x-1.5 shadow-sm">
+                <i data-lucide="download" class="w-3.5 h-3.5"></i>
+                <span>Exportar CSV</span>
+              </button>
+            </div>
+            <div class="overflow-x-auto">
+              <table class="w-full text-left text-xs">
+                <thead class="bg-slate-50 text-slate-500 uppercase text-[10px] font-bold border-b border-slate-200">
+                  <tr>
+                    <th class="py-3 px-4">Cliente / Unidade</th>
+                    <th class="py-3 px-4">Impressora / Serial</th>
+                    <th class="py-3 px-4 text-center">Status (last_seen)</th>
+                    <th class="py-3 px-4 text-right">Cont. Inicial</th>
+                    <th class="py-3 px-4 text-right">Cont. Final</th>
+                    <th class="py-3 px-4 text-right">Delta (P&B / Cor)</th>
+                    <th class="py-3 px-4 text-right">Franquia / Excedente</th>
+                  </tr>
+                </thead>
+                <tbody id="machineClosingTableBody" class="divide-y divide-slate-100"></tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- RATEIO POR SETOR / PC / USUÁRIO (print_jobs_summary) -->
+          <div class="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden">
+            <div class="p-5 border-b border-slate-100 flex flex-wrap items-center justify-between gap-3">
+              <div>
+                <h3 class="text-base font-black text-slate-900">Rateio por Setor / PC / Usuário (Mês Atual)</h3>
+                <p class="text-xs text-slate-500">Bilhetagem detalhada de estações e usuários coletada via spooler/agente v4.0 (<code class="mono">print_jobs_summary</code>).</p>
+              </div>
+              <span id="jobsBreakdownCountBadge" class="px-2.5 py-1 rounded-full text-[10px] font-bold bg-slate-100 text-slate-600">0 registros</span>
+            </div>
+            <div id="jobsBreakdownContainer" class="p-5"></div>
           </div>
         </div>
 
         <!-- SUB-ABA CONTEÚDO: SUPRIMENTOS & DESPERDÍCIO -->
-        <div id="subViewSuprimentos" class="hidden bg-white p-6 rounded-3xl border border-slate-200 shadow-sm space-y-4">
-          <h3 class="text-base font-black text-slate-900">Auditoria Preventiva de Consumíveis</h3>
-          <p class="text-xs text-slate-500">Detecta impressoras com toner abaixo de 15% ou trocas prematuras de cartuchos com tinta restante.</p>
-          <div id="suppliesAuditGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 pt-2"></div>
+        <div id="subViewSuprimentos" class="hidden space-y-5">
+          <div class="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm space-y-4">
+            <div class="flex flex-wrap items-center justify-between gap-2">
+              <div>
+                <h3 class="text-base font-black text-slate-900">Alertas de Suprimentos & Auditoria Anti-Desperdício</h3>
+                <p class="text-xs text-slate-500">Eventos reais (<code class="mono">supply_alerts</code>): toner baixo (&le;15%), caixa de resíduo cheia (&ge;85%), troca prematura e dreno por limpeza de cabeçote.</p>
+              </div>
+              <span id="supplyAlertsBadge" class="px-2.5 py-1 rounded-full text-[10px] font-bold bg-slate-100 text-slate-600">0 alertas</span>
+            </div>
+            <div id="supplyAlertsFeed" class="space-y-2.5"></div>
+          </div>
+
+          <div class="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm space-y-4">
+            <div>
+              <h3 class="text-base font-black text-slate-900">Leitura Real de Consumíveis & Caixas de Resíduo por Máquina</h3>
+              <p class="text-xs text-slate-500">Exibe somente percentuais reais informados pelo hardware ou o estado honesto quando o equipamento não reporta porcentagem exata.</p>
+            </div>
+            <div id="suppliesAuditGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 pt-1"></div>
+          </div>
         </div>
 
         <!-- SUB-ABA CONTEÚDO: OCIOSIDADE -->
         <div id="subViewOciosidade" class="hidden bg-white p-6 rounded-3xl border border-slate-200 shadow-sm space-y-4">
-          <h3 class="text-base font-black text-slate-900">Análise de Ociosidade & Remanejamento de Máquinas</h3>
-          <p class="text-xs text-slate-500">Identifica equipamentos alugados com menos de 20% da franquia utilizada para realocação estratégica.</p>
+          <h3 class="text-base font-black text-slate-900">Análise de Ociosidade, Máquinas Offline & Remanejamento</h3>
+          <p class="text-xs text-slate-500">Calculado sobre o delta real de <code class="mono">telemetry_readings</code>: destaca máquinas offline (&gt; 25 min sem sinal) e equipamentos com menos de 50 páginas ou &lt; 20% da franquia.</p>
           <div id="idlePrintersList" class="space-y-3 pt-2"></div>
+        </div>
+
+        <!-- CONSULTOR IA PRINTMIND (GOOGLE GEMINI CLOUD AI) -->
+        <div id="geminiConsultantCard" class="bg-gradient-to-br from-slate-900 via-[#002266] to-indigo-950 text-white rounded-3xl p-6 shadow-xl border border-indigo-400/20 space-y-4">
+          <div class="flex flex-wrap items-center justify-between gap-3">
+            <div class="flex items-center space-x-3">
+              <div class="w-11 h-11 rounded-2xl bg-indigo-500/25 border border-indigo-300/30 flex items-center justify-center">
+                <i data-lucide="sparkles" class="w-5 h-5 text-amber-300"></i>
+              </div>
+              <div>
+                <div class="flex flex-wrap items-center gap-2">
+                  <h3 class="text-base font-black text-white">Consultor IA PrintMind (Gemini)</h3>
+                  <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-400/20 text-emerald-200 border border-emerald-300/30">Gemini 2.5 Flash</span>
+                </div>
+                <p class="text-xs text-blue-100 mt-0.5">Diagnóstico executivo da frota, anomalias, ações urgentes, economia de insumos e briefing pronto para WhatsApp.</p>
+              </div>
+            </div>
+            <div class="flex flex-wrap items-center gap-2">
+              <button type="button" onclick="toggleGeminiKeyBox()" class="px-3 py-2 rounded-xl bg-white/10 hover:bg-white/20 text-blue-100 text-xs font-bold border border-white/15 transition flex items-center space-x-1.5">
+                <i data-lucide="key-round" class="w-3.5 h-3.5"></i>
+                <span>Chave API Gemini</span>
+              </button>
+              <button id="btnGenerateGeminiInsights" type="button" onclick="generateGeminiInsights()" class="px-4 py-2 rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-950 font-black text-xs shadow-md transition flex items-center space-x-1.5">
+                <i data-lucide="wand-2" class="w-4 h-4"></i>
+                <span>Gerar Insights com Gemini IA</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Configuração Opcional Inline da Chave Gemini (LocalStorage do Admin) -->
+          <div id="geminiKeyConfigBox" class="hidden p-4 rounded-2xl bg-white/10 border border-white/20 space-y-2.5 text-xs">
+            <div class="flex flex-wrap items-center justify-between gap-2">
+              <strong class="text-white">Configurar Chave Google Gemini API (Opcional / Fallback Direto)</strong>
+              <span class="text-[11px] text-blue-200">Armazenada apenas no seu navegador (<code class="mono">localStorage</code>), nunca exposta no código.</span>
+            </div>
+            <div class="flex flex-wrap gap-2">
+              <input id="geminiApiKeyInput" type="password" placeholder="Cole sua chave AIza... do Google AI Studio" class="flex-1 min-w-[220px] px-3.5 py-2 rounded-xl bg-slate-950/70 border border-white/20 text-white placeholder-slate-400 mono text-xs focus:outline-none focus:ring-2 focus:ring-amber-400" />
+              <button type="button" onclick="saveGeminiKeyAndRun()" class="px-4 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black text-xs transition">
+                Salvar Chave & Analisar
+              </button>
+              <button type="button" onclick="clearGeminiApiKey()" class="px-3 py-2 rounded-xl bg-white/10 hover:bg-white/20 text-rose-200 font-bold text-xs transition">
+                Limpar
+              </button>
+            </div>
+          </div>
+
+          <div id="geminiStatusMessage" class="hidden p-3 rounded-2xl text-xs font-semibold"></div>
+          <div id="geminiInsightsBody" class="space-y-4">
+            <div class="p-4 rounded-2xl bg-white/5 border border-white/10 text-xs text-blue-100">
+              Clique em <strong>"Gerar Insights com Gemini IA"</strong> para analisar contadores reais, níveis de suprimentos, alertas de desperdício, máquinas offline e oportunidades de economia da sua frota.
+            </div>
+          </div>
         </div>
       </section>
 
@@ -849,15 +976,15 @@
         <div class="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm space-y-4">
           <div class="flex flex-wrap items-center justify-between gap-3">
             <div>
-              <h3 class="text-base font-black text-slate-900">Curva de Produção Diária (Volume por Dia do Mês)</h3>
-              <p class="text-xs text-slate-500">Passe o cursor sobre os dias para verificar a tiragem diária P&B vs Color</p>
+              <h3 class="text-base font-black text-slate-900">Curva de Produção Diária (Últimos 14 Dias • Dados Reais)</h3>
+              <p class="text-xs text-slate-500">Calculada a partir dos deltas diários reais em <code class="mono">telemetry_readings</code> (P&B vs Color).</p>
             </div>
             <div class="flex items-center space-x-3 text-xs font-semibold">
               <span class="flex items-center space-x-1"><span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span><span>Coloridas</span></span>
               <span class="flex items-center space-x-1"><span class="w-2.5 h-2.5 rounded-full bg-blue-700"></span><span>P&B</span></span>
             </div>
           </div>
-          <!-- Barras de Produção (Dias 01 a 30) -->
+          <!-- Barras de Produção (Últimos 14 Dias) -->
           <div id="graficaDailyBars" class="h-48 flex items-end gap-1.5 pt-6 pb-2 border-b border-slate-100 overflow-x-auto"></div>
         </div>
 
@@ -1145,7 +1272,7 @@
               <div class="p-3.5 rounded-2xl bg-blue-50/60 border border-blue-200 text-[#0038A8] text-xs space-y-1">
                 <strong>💡 O que acontece quando ele clica no link:</strong>
                 <p class="text-[11px] text-slate-600">
-                  A locadora faz o cadastro dela, escolhe o Módulo 1 (R$ 1,00/mês por impressora) e já pode baixar o Scanner de Impressoras para conectar os equipamentos automaticamente.
+                  A locadora faz o cadastro dela, começa no teste grátis ou escolhe um dos 3 planos (R$ 1, R$ 4 ou R$ 6/mês por impressora) e já pode baixar o Scanner para conectar os equipamentos automaticamente.
                 </p>
               </div>
             </div>
@@ -1200,12 +1327,12 @@
     <!-- FOOTER SERENO -->
     <footer class="bg-white border-t border-slate-200 py-4 px-6 text-xs text-slate-500 flex flex-wrap items-center justify-between gap-3 no-print">
       <div>
-        <strong>PrintMind V3.0</strong> • Telemetria SNMP RFC 3805 & Gestão de Contratos de Impressão
+        <strong>PrintMind V4.0</strong> • Telemetria SNMP/USB, Auditoria de Insumos & Consultor IA Gemini
       </div>
       <div data-client-only="true" class="flex items-center space-x-4">
         <button onclick="openModal('pricingModal')" class="hover:text-[#0038A8] font-bold transition flex items-center space-x-1">
           <i data-lucide="calculator" class="w-3.5 h-3.5 text-blue-700"></i>
-          <span>Tabela de Módulos & Preços (R$ 1 a R$ 6)</span>
+          <span>Planos & Preços (R$ 1 / R$ 4 / R$ 6)</span>
         </button>
         <span class="text-slate-300">|</span>
         <button onclick="openModal('agentModal')" class="hover:text-[#0038A8] font-bold transition">Scanner de Impressoras</button>
@@ -1214,7 +1341,7 @@
   </div>
 
   <!-- =========================================================================
-       MODAL 1: TABELA DE MÓDULOS & PREÇOS (R$ 1 A R$ 6) + SIMULADOR INTERATIVO
+       MODAL 1: PLANOS & PREÇOS (R$ 1 / R$ 4 / R$ 6) + SIMULADOR INTERATIVO
        ========================================================================= -->
   <div id="pricingModal" class="hidden fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
     <div class="bg-white rounded-3xl max-w-4xl w-full p-6 space-y-5 shadow-2xl max-h-[92vh] overflow-y-auto">
@@ -1224,8 +1351,8 @@
             <i data-lucide="sparkles" class="w-5 h-5"></i>
           </div>
           <div>
-            <h3 class="font-black text-lg text-slate-900">Módulos & Precificação PrintMind</h3>
-            <p class="text-xs text-slate-500">Pague apenas pelas impressoras que você tem. Sem fidelidade e sem mensalidade mínima fixa.</p>
+            <h3 class="font-black text-lg text-slate-900">Planos & Precificação PrintMind</h3>
+            <p class="text-xs text-slate-500">3 planos diretos por impressora monitorada. Sem fidelidade e sem mensalidade mínima fixa.</p>
           </div>
         </div>
         <button onclick="closeModal('pricingModal')" class="text-slate-400 hover:text-slate-600 text-lg">✕</button>
@@ -1234,96 +1361,60 @@
       <!-- Banner de Confirmação Instantânea -->
       <div id="moduleSuccessBanner" class="hidden p-3 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-900 text-xs font-semibold flex items-center space-x-2 transition-all"></div>
 
-      <!-- GRID DOS 5 MÓDULOS COM FOCO VISUAL ATIVO -->
-      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 text-xs" id="modulesCardsContainer">
-        <!-- Módulo 1 -->
-        <div id="moduleCard1" class="p-4 rounded-2xl border-2 border-slate-200 bg-slate-50 flex flex-col justify-between transition-all duration-200">
-          <div class="space-y-2">
+      <!-- GRID DOS 3 PLANOS OFICIAIS (starter / pro / enterprise) -->
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs" id="modulesCardsContainer">
+        <!-- Plano 1: starter -->
+        <div id="planCardStarter" class="p-5 rounded-2xl border-2 border-slate-200 bg-slate-50 flex flex-col justify-between transition-all duration-200">
+          <div class="space-y-2.5">
             <div class="flex justify-between items-center">
-              <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">Módulo 1</span>
-              <div id="moduleBadge1"></div>
+              <span class="text-[10px] font-bold uppercase tracking-wider text-slate-500 block">Plano 1 • starter</span>
+              <div id="planBadgeStarter"></div>
             </div>
-            <strong class="block text-slate-900 font-extrabold text-sm">Contador Essencial</strong>
-            <div class="text-2xl font-black text-slate-900 mono">R$ 1,00<span class="text-[10px] text-slate-400 block font-normal">/máq/mês</span></div>
-            <ul class="text-[11px] text-slate-600 space-y-1 pt-1">
-              <li>✓ Coleta SNMP RFC 3805</li>
-              <li>✓ Contador Total P&B/Color</li>
-              <li>✓ Zero visita técnica</li>
+            <strong class="block text-slate-900 font-extrabold text-base">Essencial</strong>
+            <div class="text-3xl font-black text-slate-900 mono">R$ 1,00<span class="text-[11px] text-slate-500 block font-normal">/impressora/mês</span></div>
+            <ul class="text-[11px] text-slate-600 space-y-1.5 pt-1">
+              <li>✓ Coleta automática rede (SNMP) e USB</li>
+              <li>✓ Contador total P&amp;B / Color</li>
+              <li>✓ Fechamento mensal básico por máquina + CSV</li>
             </ul>
           </div>
-          <button id="moduleBtn1" onclick="selectModularPlan(1, 'Contador Essencial')" class="mt-4 w-full py-2 rounded-xl bg-white border border-slate-200 hover:bg-slate-100 text-slate-800 font-bold transition">Escolher</button>
+          <button id="planBtnStarter" onclick="selectModularPlan('starter', 'Essencial')" class="mt-5 w-full py-2.5 rounded-xl bg-white border border-slate-300 hover:bg-slate-100 text-slate-800 font-bold transition">Escolher Essencial</button>
         </div>
 
-        <!-- Módulo 2 -->
-        <div id="moduleCard2" class="p-4 rounded-2xl border-2 border-slate-200 bg-slate-50 flex flex-col justify-between transition-all duration-200">
-          <div class="space-y-2">
+        <!-- Plano 2: pro -->
+        <div id="planCardPro" class="p-5 rounded-2xl border-2 border-slate-200 bg-slate-50 flex flex-col justify-between transition-all duration-200">
+          <div class="space-y-2.5">
             <div class="flex justify-between items-center">
-              <span class="text-[10px] font-bold uppercase tracking-wider text-cyan-600 block">Módulo 2</span>
-              <div id="moduleBadge2"></div>
+              <span class="text-[10px] font-bold uppercase tracking-wider text-[#0038A8] block">Plano 2 • pro</span>
+              <div id="planBadgePro"></div>
             </div>
-            <strong class="block text-slate-900 font-extrabold text-sm">Suprimentos & Insumos</strong>
-            <div class="text-2xl font-black text-slate-900 mono">R$ 2,00<span class="text-[10px] text-slate-400 block font-normal">/máq/mês</span></div>
-            <ul class="text-[11px] text-slate-600 space-y-1 pt-1">
-              <li>✓ Tudo do Módulo 1</li>
-              <li>✓ Nível Toner % tempo real</li>
-              <li>✓ Alerta preventivo</li>
+            <strong class="block text-[#0038A8] font-extrabold text-base">Gestão &amp; Insumos</strong>
+            <div class="text-3xl font-black text-[#0038A8] mono">R$ 4,00<span class="text-[11px] text-slate-500 block font-normal">/impressora/mês</span></div>
+            <ul class="text-[11px] text-slate-600 space-y-1.5 pt-1">
+              <li>✓ Tudo do Essencial + produção diária real</li>
+              <li>✓ Níveis reais de tinta/toner + caixa de resíduo</li>
+              <li>✓ Alerta preventivo (&le;15%), troca prematura, limpeza de cabeçote e máquinas ociosas/offline</li>
             </ul>
           </div>
-          <button id="moduleBtn2" onclick="selectModularPlan(2, 'Suprimentos & Insumos')" class="mt-4 w-full py-2 rounded-xl bg-white border border-slate-200 hover:bg-slate-100 text-slate-800 font-bold transition">Escolher</button>
+          <button id="planBtnPro" onclick="selectModularPlan('pro', 'Gestão & Insumos')" class="mt-5 w-full py-2.5 rounded-xl bg-white border border-slate-300 hover:bg-slate-100 text-slate-800 font-bold transition">Escolher Gestão &amp; Insumos</button>
         </div>
 
-        <!-- Módulo 3 -->
-        <div id="moduleCard3" class="p-4 rounded-2xl border-2 border-slate-200 bg-slate-50 flex flex-col justify-between transition-all duration-200">
-          <div class="space-y-2">
+        <!-- Plano 3: enterprise -->
+        <div id="planCardEnterprise" class="p-5 rounded-2xl border-2 border-slate-200 bg-slate-50 flex flex-col justify-between transition-all duration-200">
+          <div class="space-y-2.5">
             <div class="flex justify-between items-center">
-              <span class="text-[10px] font-bold uppercase tracking-wider text-[#0038A8] block">Módulo 3</span>
-              <div id="moduleBadge3"></div>
+              <span class="text-[10px] font-bold uppercase tracking-wider text-emerald-700 block">Plano 3 • enterprise</span>
+              <div id="planBadgeEnterprise"></div>
             </div>
-            <strong class="block text-[#0038A8] font-extrabold text-sm">Telemetria & Gráficos</strong>
-            <div class="text-2xl font-black text-[#0038A8] mono">R$ 3,00<span class="text-[10px] text-slate-400 block font-normal">/máq/mês</span></div>
-            <ul class="text-[11px] text-slate-600 space-y-1 pt-1">
-              <li>✓ Tudo do Módulo 2</li>
-              <li>✓ Gráficos diários P&B vs Cor</li>
-              <li>✓ Picos e médias</li>
+            <strong class="block text-slate-900 font-extrabold text-base">Completo / Automação</strong>
+            <div class="text-3xl font-black text-slate-900 mono">R$ 6,00<span class="text-[11px] text-slate-500 block font-normal">/impressora/mês</span></div>
+            <ul class="text-[11px] text-slate-600 space-y-1.5 pt-1">
+              <li>✓ Tudo do Gestão + franquia/excedente por cliente/setor e rateio por PC/usuário</li>
+              <li>✓ Espelho Formal A4 + WhatsApp em 1 clique + PIX / Asaas</li>
+              <li>✓ <strong>Consultor IA Gemini</strong> incluso</li>
             </ul>
           </div>
-          <button id="moduleBtn3" onclick="selectModularPlan(3, 'Telemetria & Gráficos')" class="mt-4 w-full py-2 rounded-xl bg-white border border-slate-200 hover:bg-slate-100 text-slate-800 font-bold transition">Escolher</button>
-        </div>
-
-        <!-- Módulo 4 -->
-        <div id="moduleCard4" class="p-4 rounded-2xl border-2 border-slate-200 bg-slate-50 flex flex-col justify-between transition-all duration-200">
-          <div class="space-y-2">
-            <div class="flex justify-between items-center">
-              <span class="text-[10px] font-bold uppercase tracking-wider text-amber-600 block">Módulo 4</span>
-              <div id="moduleBadge4"></div>
-            </div>
-            <strong class="block text-slate-900 font-extrabold text-sm">Gestão & Auditoria</strong>
-            <div class="text-2xl font-black text-slate-900 mono">R$ 4,00<span class="text-[10px] text-slate-400 block font-normal">/máq/mês</span></div>
-            <ul class="text-[11px] text-slate-600 space-y-1 pt-1">
-              <li>✓ Tudo do Módulo 3</li>
-              <li>✓ Franquia & Excedentes</li>
-              <li>✓ Auditoria Troca Prematura</li>
-            </ul>
-          </div>
-          <button id="moduleBtn4" onclick="selectModularPlan(4, 'Gestão & Auditoria')" class="mt-4 w-full py-2 rounded-xl bg-white border border-slate-200 hover:bg-slate-100 text-slate-800 font-bold transition">Escolher</button>
-        </div>
-
-        <!-- Módulo 5 -->
-        <div id="moduleCard5" class="p-4 rounded-2xl border-2 border-slate-200 bg-slate-50 flex flex-col justify-between transition-all duration-200">
-          <div class="space-y-2">
-            <div class="flex justify-between items-center">
-              <span class="text-[10px] font-bold uppercase tracking-wider text-emerald-600 block">Módulo 5</span>
-              <div id="moduleBadge5"></div>
-            </div>
-            <strong class="block text-slate-900 font-extrabold text-sm">Full Automation</strong>
-            <div class="text-2xl font-black text-slate-900 mono">R$ 6,00<span class="text-[10px] text-slate-400 block font-normal">/máq/mês</span></div>
-            <ul class="text-[11px] text-slate-600 space-y-1 pt-1">
-              <li>✓ Tudo do Módulo 4</li>
-              <li>✓ WhatsApp em 1 Clique</li>
-              <li>✓ PIX Dinâmico com QR Code</li>
-            </ul>
-          </div>
-          <button id="moduleBtn5" onclick="selectModularPlan(5, 'Full Automation')" class="mt-4 w-full py-2 rounded-xl bg-white border border-slate-200 hover:bg-slate-100 text-slate-800 font-bold transition">Escolher</button>
+          <button id="planBtnEnterprise" onclick="selectModularPlan('enterprise', 'Completo / Automação')" class="mt-5 w-full py-2.5 rounded-xl bg-white border border-slate-300 hover:bg-slate-100 text-slate-800 font-bold transition">Escolher Completo / IA</button>
         </div>
       </div>
 
@@ -1347,22 +1438,20 @@
           </div>
 
           <div>
-            <label class="block text-slate-700 font-semibold mb-1">Módulo Selecionado:</label>
+            <label class="block text-slate-700 font-semibold mb-1">Plano Selecionado:</label>
             <select id="simPlanRate" onchange="onSimPlanRateChange(this.value)" class="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-xs text-slate-800">
-              <option value="1">Módulo 1: Contador Essencial (R$ 1,00/mês)</option>
-              <option value="2">Módulo 2: Suprimentos & Insumos (R$ 2,00/mês)</option>
-              <option value="3" selected>Módulo 3: Telemetria & Gráficos (R$ 3,00/mês)</option>
-              <option value="4">Módulo 4: Gestão & Auditoria (R$ 4,00/mês)</option>
-              <option value="6">Módulo 5: Full Automation (R$ 6,00/mês)</option>
+              <option value="1">Plano 1: Essencial — R$ 1,00/máq/mês</option>
+              <option value="4" selected>Plano 2: Gestão &amp; Insumos — R$ 4,00/máq/mês</option>
+              <option value="6">Plano 3: Completo / Automação + IA — R$ 6,00/máq/mês</option>
             </select>
             <span class="text-[10px] text-slate-400 block mt-1">Sem fidelidade. Cancele ou mude a qualquer momento.</span>
           </div>
 
           <div class="bg-blue-50/70 border border-blue-200 rounded-2xl p-4 text-center">
             <span class="text-xs text-[#0038A8] font-bold">Total Mensal PrintMind</span>
-            <div class="text-2xl font-black text-[#0038A8] mono" id="simMonthlyTotal">R$ 45,00</div>
+            <div class="text-2xl font-black text-[#0038A8] mono" id="simMonthlyTotal">R$ 60,00</div>
             <div class="text-[11px] text-emerald-700 font-semibold" id="simSavings">
-              Economia de R$ 305,00 vs concorrência (PrintWayy: R$ 350+)
+              Economia de R$ 290,00 vs concorrência (PrintWayy: R$ 350+)
             </div>
           </div>
         </div>
@@ -1376,7 +1465,7 @@
             <h4 class="font-bold text-slate-900 text-xs">Chave PIX para Receber dos seus Clientes</h4>
           </div>
           <p class="text-[11px] text-slate-500 mt-0.5">
-            Esta chave PIX é para que os <strong>seus clientes (hospitais, clínicas)</strong> façam o pagamento das faturas emitidas por você. <em>Não é obrigatória para usar os módulos do PrintMind.</em>
+            Esta chave PIX é para que os <strong>seus clientes (hospitais, clínicas)</strong> façam o pagamento das faturas emitidas por você. <em>Não é obrigatória para usar os planos do PrintMind.</em>
           </p>
         </div>
 
@@ -1879,8 +1968,63 @@
     let currentTenant = null;
     let activeClientForInvoice = null;
     let clients = [], units = [], printers = [], closings = [];
+    let telemetryReadings = [];
+    let supplyAlerts = [];
+    let printJobsSummary = [];
+    let latestAiInsight = null;
+    let forceShowOnboarding = false;
     let currentTab = 'clients';
     let currentMode = 'hibrido';
+    const GEMINI_KEY_STORAGE = 'printmind_gemini_api_key';
+
+    function escapeHtml(str) {
+      return String(str ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    }
+
+    const PLAN_CATALOG = {
+      starter: {
+        key: 'starter',
+        rate: 1,
+        title: 'Plano 1 — Essencial',
+        short: 'ESSENCIAL (R$ 1/MÁQ)',
+        cardId: 'planCardStarter',
+        badgeId: 'planBadgeStarter',
+        btnId: 'planBtnStarter',
+        btnLabel: 'Escolher Essencial'
+      },
+      pro: {
+        key: 'pro',
+        rate: 4,
+        title: 'Plano 2 — Gestão & Insumos',
+        short: 'GESTÃO & INSUMOS (R$ 4/MÁQ)',
+        cardId: 'planCardPro',
+        badgeId: 'planBadgePro',
+        btnId: 'planBtnPro',
+        btnLabel: 'Escolher Gestão & Insumos'
+      },
+      enterprise: {
+        key: 'enterprise',
+        rate: 6,
+        title: 'Plano 3 — Completo / Automação',
+        short: 'COMPLETO / IA (R$ 6/MÁQ)',
+        cardId: 'planCardEnterprise',
+        badgeId: 'planBadgeEnterprise',
+        btnId: 'planBtnEnterprise',
+        btnLabel: 'Escolher Completo / IA'
+      }
+    };
+
+    function normalizePlanTierKey(planTier) {
+      const pTier = String(planTier || 'starter').toLowerCase().trim();
+      if (pTier === 'enterprise' || pTier.includes('5') || pTier.includes('6')) return 'enterprise';
+      if (pTier === 'pro' || pTier.includes('4') || pTier.includes('3') || pTier.includes('2')) return 'pro';
+      return 'starter';
+    }
 
     function openModal(id) {
       document.getElementById(id).classList.remove('hidden');
@@ -2025,52 +2169,51 @@
       lucide.createIcons();
     }
 
-    // --- SIMULADOR INTERATIVO DE MÓDULOS (R$ 1 A R$ 6) & FOCO VISUAL ATIVO ---
-    let activeModuleTier = 1;
+    // --- SIMULADOR INTERATIVO DE PLANOS (R$ 1 / R$ 4 / R$ 6) & FOCO VISUAL ATIVO ---
+    let activeModuleTier = 'starter';
 
-    function applyModuleVisualFocus(tierNum) {
-      activeModuleTier = tierNum;
-      for (let i = 1; i <= 5; i++) {
-        const card = document.getElementById(`moduleCard${i}`);
-        const badge = document.getElementById(`moduleBadge${i}`);
-        const btn = document.getElementById(`moduleBtn${i}`);
-        if (!card || !btn) continue;
+    function applyModuleVisualFocus(planOrTier) {
+      const planKey = normalizePlanTierKey(planOrTier);
+      activeModuleTier = planKey;
 
-        if (i === tierNum) {
-          // Visual Ativo em Destaque
-          card.className = "p-4 rounded-2xl border-2 border-[#0038A8] bg-blue-50/50 flex flex-col justify-between relative shadow-lg ring-2 ring-blue-500/20 transition-all duration-200";
+      Object.values(PLAN_CATALOG).forEach(plan => {
+        const card = document.getElementById(plan.cardId);
+        const badge = document.getElementById(plan.badgeId);
+        const btn = document.getElementById(plan.btnId);
+        if (!card || !btn) return;
+
+        if (plan.key === planKey) {
+          card.className = "p-5 rounded-2xl border-2 border-[#0038A8] bg-blue-50/50 flex flex-col justify-between relative shadow-lg ring-2 ring-blue-500/20 transition-all duration-200";
           if (badge) badge.innerHTML = `<span class="px-2 py-0.5 rounded-full text-[9px] font-black bg-[#0038A8] text-white uppercase shadow-sm">✓ Ativo</span>`;
-          btn.className = "mt-4 w-full py-2 rounded-xl bg-[#0038A8] text-white font-black text-xs shadow-md transition";
-          btn.innerText = "✓ Módulo Ativo";
+          btn.className = "mt-5 w-full py-2.5 rounded-xl bg-[#0038A8] text-white font-black text-xs shadow-md transition";
+          btn.innerText = "✓ Plano Ativo";
         } else {
-          // Inativo / Selecionável
-          card.className = "p-4 rounded-2xl border-2 border-slate-200 bg-slate-50 flex flex-col justify-between hover:border-slate-300 transition-all duration-200";
+          card.className = "p-5 rounded-2xl border-2 border-slate-200 bg-slate-50 flex flex-col justify-between hover:border-slate-300 transition-all duration-200";
           if (badge) badge.innerHTML = "";
-          btn.className = "mt-4 w-full py-2 rounded-xl bg-white border border-slate-200 hover:bg-slate-100 text-slate-800 font-bold text-xs transition";
-          btn.innerText = "Escolher";
+          btn.className = "mt-5 w-full py-2.5 rounded-xl bg-white border border-slate-300 hover:bg-slate-100 text-slate-800 font-bold text-xs transition";
+          btn.innerText = plan.btnLabel;
         }
-      }
+      });
 
-      // Sincroniza o seletor do simulador
       const select = document.getElementById('simPlanRate');
       if (select) {
-        select.value = String(tierNum === 5 ? 6 : tierNum);
+        select.value = String(PLAN_CATALOG[planKey].rate);
         updatePricingSimulation();
       }
     }
 
     function onSimPlanRateChange(rateVal) {
-      const tier = rateVal == '1' ? 1 : rateVal == '2' ? 2 : rateVal == '3' ? 3 : rateVal == '4' ? 4 : 5;
-      selectModularPlan(tier, getTierName(tier), false);
+      const planKey = String(rateVal) === '1' ? 'starter' : String(rateVal) === '4' ? 'pro' : 'enterprise';
+      selectModularPlan(planKey, PLAN_CATALOG[planKey].title, false);
     }
 
-    function getTierName(tier) {
-      return tier === 1 ? 'Contador Essencial' : tier === 2 ? 'Suprimentos & Insumos' : tier === 3 ? 'Telemetria & Gráficos' : tier === 4 ? 'Gestão & Auditoria' : 'Full Automation';
+    function getTierName(planOrTier) {
+      return PLAN_CATALOG[normalizePlanTierKey(planOrTier)].title;
     }
 
     function updatePricingSimulation() {
       const count = Math.max(1, parseInt(document.getElementById('simPrintersCount').value || 15));
-      const rate = parseFloat(document.getElementById('simPlanRate').value || 3);
+      const rate = parseFloat(document.getElementById('simPlanRate').value || 4);
       const total = count * rate;
       document.getElementById('simMonthlyTotal').innerText = total.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
       const pwCost = Math.max(350, count * 6.5);
@@ -2083,32 +2226,38 @@
       updatePricingSimulation();
     }
 
-    // 1-Clique para Escolher Módulo (Foco Visual Imediato + Zero Obrigação de PIX)
-    async function selectModularPlan(tierNum, tierName, notify = true) {
-      applyModuleVisualFocus(tierNum);
+    // 1-Clique para Escolher Plano ('starter' | 'pro' | 'enterprise')
+    async function selectModularPlan(planOrTier, tierName, notify = true) {
+      const planKey = normalizePlanTierKey(planOrTier);
+      const plan = PLAN_CATALOG[planKey];
+      applyModuleVisualFocus(planKey);
 
-      const rateVal = tierNum === 5 ? 6 : tierNum;
-      const planName = `modulo_${tierNum}`;
+      const topBadge = document.getElementById('topPlanBadge');
+      if (topBadge) topBadge.innerText = plan.short;
 
-      // Atualiza badge no topo imediatamente
-      const badgeText = `MÓDULO ${tierNum}: R$ ${rateVal},00/MÊS`;
-      document.getElementById('topPlanBadge').innerText = badgeText;
-
-      // Feedback visual dentro do modal (sem alert bloqueante)
       const banner = document.getElementById('moduleSuccessBanner');
       if (banner && notify) {
         banner.classList.remove('hidden');
-        banner.innerHTML = `✓ <strong>Módulo ${tierNum} (${tierName} • R$ ${rateVal},00/máq/mês)</strong> ativado com sucesso! Não exige chave PIX nem fidelidade.`;
+        banner.innerHTML = `✓ <strong>${escapeHtml(plan.title)} (R$ ${plan.rate},00/máq/mês)</strong> selecionado com sucesso! Não exige chave PIX nem fidelidade.`;
         setTimeout(() => { if (banner) banner.classList.add('hidden'); }, 3500);
       }
 
-      // Persiste no Supabase tenants sem bloquear a usuária
       if (currentTenant && currentTenant.id) {
-        currentTenant.plan_tier = planName;
-        await sb.from('tenants').update({
-          plan_tier: planName,
+        const { error } = await sb.from('tenants').update({
+          plan_tier: planKey,
           subscription_status: 'active'
         }).eq('id', currentTenant.id);
+
+        if (error) {
+          if (banner) {
+            banner.classList.remove('hidden');
+            banner.innerHTML = `⚠️ Não foi possível salvar o plano no Supabase: ${escapeHtml(error.message)}`;
+          }
+          return;
+        }
+        currentTenant.plan_tier = planKey;
+        currentTenant.subscription_status = 'active';
+        checkTrialPrinterLock();
       }
     }
 
@@ -2316,8 +2465,13 @@
         currentTenant = ten;
         if (ten) {
           document.getElementById('topTenantName').innerText = ten.trade_name || 'PrintMind';
-          const pTier = ten.plan_tier || 'modulo_1';
-          document.getElementById('topPlanBadge').innerText = (pTier.replace('_', ' ') + (pTier.includes('1') ? ' (R$ 1/MÊS)' : '')).toUpperCase();
+          const pTierRaw = (ten.plan_tier || 'trial').toLowerCase();
+          const normKey = normalizePlanTierKey(pTierRaw);
+          activeModuleTier = normKey;
+          const badgeLabel = pTierRaw === 'trial'
+            ? 'TESTE GRÁTIS'
+            : PLAN_CATALOG[normKey].short;
+          document.getElementById('topPlanBadge').innerText = badgeLabel;
           document.getElementById('tenantPixKey').value = ten.pix_key || ten.cnpj_cpf || '';
           document.getElementById('tenantWalletId').value = ten.baas_wallet_id || '';
           if (ten.operation_mode) {
@@ -2355,16 +2509,43 @@
     // =========================================================================
     const FREE_TRIAL_PRINTER_LIMIT = 2;
 
-    function toggleOnboardingGuide() {
+    function toggleOnboardingGuide(btnEl) {
+      const card = document.getElementById('onboardingCard');
       const grid = document.getElementById('onboardingStepsGrid');
+      const isOperationalReady = clients.length >= 1 && printers.length >= 1;
+      if (isOperationalReady && card) {
+        forceShowOnboarding = false;
+        card.classList.add('hidden');
+        return;
+      }
+      if (!grid) return;
       const isHidden = grid.classList.toggle('hidden');
-      event.target.innerText = isHidden ? 'Expandir' : 'Ocultar';
+      const targetBtn = btnEl || (typeof event !== 'undefined' ? event.target : null);
+      if (targetBtn) targetBtn.innerText = isHidden ? 'Expandir' : 'Ocultar';
+    }
+
+    function openOnboardingOnDemand() {
+      if (currentTab !== 'clients') switchTab('clients');
+      const card = document.getElementById('onboardingCard');
+      const grid = document.getElementById('onboardingStepsGrid');
+      if (!card) return;
+      const currentlyHidden = card.classList.contains('hidden');
+      if (clients.length >= 1 && printers.length >= 1 && !currentlyHidden) {
+        forceShowOnboarding = false;
+        card.classList.add('hidden');
+        return;
+      }
+      forceShowOnboarding = true;
+      card.classList.remove('hidden');
+      if (grid) grid.classList.remove('hidden');
+      card.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
 
     function checkTrialPrinterLock() {
       const lockBanner = document.getElementById('trialLockBanner');
       const lockMsg = document.getElementById('trialLockCountMsg');
       const topBadge = document.getElementById('topPlanBadge');
+      const accountStatusEl = document.getElementById('accountCurrentPlanStatus');
       const suspOverlay = document.getElementById('suspendedTenantOverlay');
       const suspReason = document.getElementById('suspendedTenantReason');
       const count = printers.length;
@@ -2388,6 +2569,13 @@
       }
 
       const hasPaidPlan = currentTenant && currentTenant.subscription_status === 'active' && currentTenant.plan_tier && currentTenant.plan_tier !== 'trial';
+      const normPlan = currentTenant ? PLAN_CATALOG[normalizePlanTierKey(currentTenant.plan_tier)] : PLAN_CATALOG.starter;
+
+      if (accountStatusEl) {
+        accountStatusEl.innerText = hasPaidPlan
+          ? `Status: ${normPlan.title} (R$ ${normPlan.rate},00/máq/mês)`
+          : `Status: Teste Gratuito (${count}/${FREE_TRIAL_PRINTER_LIMIT} Máquinas)`;
+      }
 
       if (!hasPaidPlan && count > FREE_TRIAL_PRINTER_LIMIT) {
         if (lockBanner) {
@@ -2400,9 +2588,11 @@
         }
       } else {
         if (lockBanner) lockBanner.classList.add('hidden');
-        if (topBadge && (!currentTenant || currentTenant.plan_tier === 'trial')) {
+        if (topBadge) {
           topBadge.className = "text-[10px] font-bold uppercase px-2 py-0.5 rounded-full bg-emerald-400/20 text-emerald-200 border border-emerald-300/30 hover:bg-emerald-400/30 transition";
-          topBadge.innerText = `TESTE GRÁTIS (${count}/${FREE_TRIAL_PRINTER_LIMIT} MÁQ)`;
+          topBadge.innerText = hasPaidPlan
+            ? normPlan.short
+            : `TESTE GRÁTIS (${count}/${FREE_TRIAL_PRINTER_LIMIT} MÁQ)`;
         }
       }
     }
@@ -2461,6 +2651,7 @@
     // =========================================================================
     function updateInteractiveWalkthrough() {
       const card = document.getElementById('walkthroughCard');
+      const onboardingCard = document.getElementById('onboardingCard');
       const badge = document.getElementById('wtStepBadge');
       const desc = document.getElementById('wtDesc');
       const indicator = document.getElementById('wtStatusIndicator');
@@ -2479,6 +2670,19 @@
 
       const hasClients = clients.length > 0;
       const hasPrinters = printers.length > 0;
+      const isOperationalReady = hasClients && hasPrinters;
+
+      // Tela inicial limpa: oculta guias automaticamente quando já existe >= 1 cliente e >= 1 impressora
+      if (isOperationalReady) {
+        card.classList.add('hidden');
+        if (onboardingCard && !forceShowOnboarding) {
+          onboardingCard.classList.add('hidden');
+        }
+        return;
+      }
+
+      card.classList.remove('hidden');
+      if (onboardingCard) onboardingCard.classList.remove('hidden');
 
       if (!hasClients) {
         // CASO 1: CONTA NOVA (0 CLIENTES) -> FOCO TOTAL NO PASSO 1 COM SETA PULSANTE
@@ -2635,24 +2839,286 @@
       a.remove();
     }
 
+    async function safeQueryList(queryPromise) {
+      try {
+        const res = await queryPromise;
+        if (res && !res.error && Array.isArray(res.data)) return res.data;
+      } catch (_) {}
+      return [];
+    }
+
+    async function loadDashboardData() {
+      return loadTenantData();
+    }
+
     async function loadTenantData() {
       if (!currentSession) return;
-      const [cRes, uRes, pRes, clRes] = await Promise.all([
+      const tenantId = (currentTenant && currentTenant.id) || (currentProfile && currentProfile.tenant_id) || null;
+      const thirtyDaysAgoIso = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
+
+      let trQuery = sb.from('telemetry_readings')
+        .select('printer_id, total_pages, mono_pages, color_pages, c_level, m_level, y_level, k_level, recorded_at')
+        .gte('recorded_at', thirtyDaysAgoIso)
+        .order('recorded_at', { ascending: true })
+        .limit(5000);
+      if (tenantId) trQuery = trQuery.eq('tenant_id', tenantId);
+
+      let saQuery = sb.from('supply_alerts')
+        .select('*')
+        .order('created_at', { ascending: false })
+        .limit(100);
+      if (tenantId) saQuery = saQuery.eq('tenant_id', tenantId);
+
+      let pjQuery = sb.from('print_jobs_summary')
+        .select('*')
+        .limit(1000);
+      if (tenantId) pjQuery = pjQuery.eq('tenant_id', tenantId);
+
+      let aiQuery = sb.from('ai_insights')
+        .select('*')
+        .order('created_at', { ascending: false })
+        .limit(1);
+      if (tenantId) aiQuery = aiQuery.eq('tenant_id', tenantId);
+
+      const [cRes, uRes, pRes, clRes, trData, saData, pjData, aiData] = await Promise.all([
         sb.from('clients').select('*').order('created_at', { ascending: false }),
         sb.from('client_units').select('*').order('created_at', { ascending: false }),
         sb.from('printers').select('*').order('created_at', { ascending: false }),
-        sb.from('closings').select('*').order('created_at', { ascending: false })
+        sb.from('closings').select('*').order('created_at', { ascending: false }),
+        safeQueryList(trQuery),
+        safeQueryList(saQuery),
+        safeQueryList(pjQuery),
+        safeQueryList(aiQuery)
       ]);
+
       clients = cRes.data || [];
       units = uRes.data || [];
       printers = pRes.data || [];
       closings = clRes.data || [];
+      telemetryReadings = trData || [];
+      supplyAlerts = saData || [];
+      printJobsSummary = pjData || [];
+
+      if (aiData && aiData.length > 0 && !latestAiInsight) {
+        const row = aiData[0];
+        latestAiInsight = row.insights || row.payload || row.content || row;
+      }
 
       renderDashboard();
       updateInteractiveWalkthrough();
       checkFirstTimeUserTour();
       if (currentTab === 'reports') renderReportsView();
       if (currentTab === 'grafica') renderGraficaView();
+    }
+
+    // --- HELPERS v4.0: STATUS REAL (last_seen), INSUMOS HONESTOS, DELTAS & WPP ---
+    function formatElapsedSince(diffMs) {
+      if (!Number.isFinite(diffMs) || diffMs < 0) return 'Sem sinal';
+      const totalMin = Math.floor(diffMs / 60000);
+      if (totalMin < 1) return 'agora';
+      if (totalMin < 60) return `${totalMin}m`;
+      const hrs = Math.floor(totalMin / 60);
+      const mins = totalMin % 60;
+      if (hrs < 24) return mins > 0 ? `${hrs}h ${mins}m` : `${hrs}h`;
+      const days = Math.floor(hrs / 24);
+      const remHrs = hrs % 24;
+      return remHrs > 0 ? `${days}d ${remHrs}h` : `${days}d`;
+    }
+
+    function getEffectivePrinterStatus(p) {
+      const rawStatus = String((p && p.status) || '').toLowerCase().trim();
+      const lastSeenMs = p && p.last_seen ? new Date(p.last_seen).getTime() : NaN;
+      const diffMs = Number.isFinite(lastSeenMs) ? Math.max(0, Date.now() - lastSeenMs) : Infinity;
+      const stale = !p || !p.last_seen || diffMs > 25 * 60 * 1000;
+      const elapsedLabel = Number.isFinite(lastSeenMs) ? formatElapsedSince(diffMs) : 'sem registro';
+      const isOffline = rawStatus === 'offline' || stale;
+      const isError = !isOffline && (rawStatus === 'error' || (Array.isArray(p && p.error_flags) && p.error_flags.length > 0));
+      const isMaintenance = !isOffline && rawStatus === 'maintenance';
+
+      if (isOffline) {
+        return {
+          isOffline: true,
+          isError: false,
+          stale,
+          elapsedLabel,
+          label: p && p.last_seen ? `Offline • Sem sinal há ${elapsedLabel}` : 'Offline • Sem sinal',
+          badgeClass: 'bg-rose-50 text-rose-700 border border-rose-200'
+        };
+      }
+      if (isError) {
+        return {
+          isOffline: false,
+          isError: true,
+          stale: false,
+          elapsedLabel,
+          label: 'Alerta / Erro',
+          badgeClass: 'bg-amber-50 text-amber-800 border border-amber-200'
+        };
+      }
+      if (isMaintenance) {
+        return {
+          isOffline: false,
+          isError: false,
+          stale: false,
+          elapsedLabel,
+          label: 'Manutenção',
+          badgeClass: 'bg-slate-100 text-slate-700 border border-slate-200'
+        };
+      }
+      return {
+        isOffline: false,
+        isError: false,
+        stale: false,
+        elapsedLabel,
+        label: 'Online',
+        badgeClass: 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+      };
+    }
+
+    function normalizeSupplyItem(s) {
+      const rawName = String((s && s.name) || 'Consumível').trim();
+      const rawColor = String((s && s.color) || '').toLowerCase();
+      const supplyClass = String((s && s.supply_class) || '').toLowerCase();
+      const levelState = String((s && s.level_state) || '').toLowerCase();
+      const rawLevel = s && s.level !== undefined && s.level !== null ? Number(s.level) : null;
+
+      const isWaste = supplyClass === 'waste' || /waste|res[ií]duo|manuten[cç][aã]o|maintenance/i.test(rawName);
+      const rawPct = s ? s.percent : null;
+      const numericPct = (rawPct !== null && rawPct !== undefined && rawPct !== '' && Number.isFinite(Number(rawPct))) ? Number(rawPct) : null;
+      const hasKnownPct = levelState !== 'unknown' && numericPct !== null && numericPct >= 0 && numericPct <= 100 && rawLevel !== -2 && rawLevel !== -3;
+
+      let pct = hasKnownPct ? Math.round(numericPct) : null;
+      let honestLabel = '';
+      if (hasKnownPct) {
+        honestLabel = `${pct}%`;
+      } else if (rawLevel === -3 || levelState === 'some_remaining' || levelState === 'ok' || levelState === 'present') {
+        honestLabel = 'Com tinta (sem % exato)';
+      } else {
+        honestLabel = 'Nível não informado pela impressora';
+      }
+
+      const displayName = isWaste
+        ? (/caixa|res[ií]duo|manuten/i.test(rawName) ? `Caixa de Manutenção / Resíduo (${rawName})` : 'Caixa de Manutenção / Resíduo')
+        : rawName;
+
+      const isWasteAlert = isWaste && hasKnownPct && pct >= 85;
+      const isLowAlert = !isWaste && hasKnownPct && pct <= 15;
+
+      let barColor = 'bg-blue-600';
+      if (isWaste) {
+        barColor = pct >= 85 ? 'bg-rose-600' : pct >= 65 ? 'bg-amber-500' : 'bg-slate-600';
+      } else if (rawColor.includes('black') || rawColor === 'k' || /preto|black|\bk\b/i.test(rawName)) {
+        barColor = 'bg-slate-900';
+      } else if (rawColor.includes('cyan') || rawColor === 'c' || /ciano|cyan/i.test(rawName)) {
+        barColor = 'bg-cyan-500';
+      } else if (rawColor.includes('magenta') || rawColor === 'm' || /magenta/i.test(rawName)) {
+        barColor = 'bg-pink-500';
+      } else if (rawColor.includes('yellow') || rawColor === 'y' || /amarelo|yellow/i.test(rawName)) {
+        barColor = 'bg-amber-400';
+      }
+
+      let colorKey = null;
+      if (!isWaste) {
+        if (rawColor.includes('black') || rawColor === 'k' || /preto|black|\bk\b/i.test(rawName)) colorKey = 'K';
+        else if (rawColor.includes('cyan') || rawColor === 'c' || /ciano|cyan/i.test(rawName)) colorKey = 'C';
+        else if (rawColor.includes('magenta') || rawColor === 'm' || /magenta/i.test(rawName)) colorKey = 'M';
+        else if (rawColor.includes('yellow') || rawColor === 'y' || /amarelo|yellow/i.test(rawName)) colorKey = 'Y';
+      }
+
+      return {
+        raw: s,
+        displayName,
+        isWaste,
+        hasKnownPct,
+        pct,
+        honestLabel,
+        isWasteAlert,
+        isLowAlert,
+        barColor,
+        colorKey
+      };
+    }
+
+    function renderSupplyListHtml(supplies, compact = false) {
+      const list = Array.isArray(supplies) ? supplies : [];
+      if (list.length === 0) {
+        return `<div class="text-[11px] text-slate-400 italic">Sem leitura de insumos informada pela impressora</div>`;
+      }
+      return list.map(raw => {
+        const item = normalizeSupplyItem(raw);
+        const alertBadge = item.isWasteAlert
+          ? `<span class="ml-1 px-1.5 py-0.5 rounded bg-rose-100 text-rose-800 text-[9px] font-black uppercase">Cheia (&ge;85%)</span>`
+          : item.isLowAlert
+            ? `<span class="ml-1 px-1.5 py-0.5 rounded bg-amber-100 text-amber-800 text-[9px] font-black uppercase">Baixo (&le;15%)</span>`
+            : '';
+
+        if (!item.hasKnownPct) {
+          return `
+            <div class="flex items-center justify-between gap-2 text-[11px] py-0.5">
+              <span class="${item.isWaste ? 'font-bold text-amber-900' : 'text-slate-600'} truncate">${escapeHtml(item.displayName)}${alertBadge}</span>
+              <span class="px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 text-[10px] font-semibold whitespace-nowrap">${escapeHtml(item.honestLabel)}</span>
+            </div>
+          `;
+        }
+
+        return `
+          <div class="space-y-1 ${item.isWasteAlert ? 'p-2 rounded-xl bg-rose-50 border border-rose-200' : (item.isWaste ? 'p-1.5 rounded-xl bg-amber-50/50 border border-amber-100' : '')}">
+            <div class="flex items-center justify-between gap-2 text-[11px]">
+              <span class="${item.isWaste ? 'font-bold text-slate-900' : 'text-slate-700'} truncate">${escapeHtml(item.displayName)}${alertBadge}</span>
+              <strong class="mono ${item.isWasteAlert || item.isLowAlert ? 'text-rose-700' : 'text-slate-900'}">${item.pct}%</strong>
+            </div>
+            <div class="w-full bg-slate-200 rounded-full ${compact ? 'h-1.5' : 'h-2'}">
+              <div class="${item.barColor} ${compact ? 'h-1.5' : 'h-2'} rounded-full transition-all" style="width: ${item.pct}%"></div>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function getCurrentMonthPrefix() {
+      const now = new Date();
+      return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+    }
+
+    function getPrinterPeriodMetrics(p) {
+      const monthPrefix = getCurrentMonthPrefix();
+      const readings = telemetryReadings
+        .filter(r => r.printer_id === p.id && String(r.recorded_at || '').startsWith(monthPrefix))
+        .sort((a, b) => new Date(a.recorded_at) - new Date(b.recorded_at));
+
+      const earliest = readings.length > 0 ? readings[0] : null;
+      const startTotal = earliest && earliest.total_pages != null ? Number(earliest.total_pages) : Number(p.initial_total_pages || 0);
+      const startMono = earliest && earliest.mono_pages != null ? Number(earliest.mono_pages) : Number(p.initial_mono_pages || 0);
+      const startColor = earliest && earliest.color_pages != null ? Number(earliest.color_pages) : Number(p.initial_color_pages || 0);
+
+      const finalTotal = Number(p.total_pages || 0);
+      const finalMono = Number(p.mono_pages || 0);
+      const finalColor = Number(p.color_pages || 0);
+
+      const deltaMono = Math.max(0, finalMono - startMono);
+      const deltaColor = Math.max(0, finalColor - startColor);
+      const rawTotalDelta = Math.max(0, finalTotal - startTotal);
+      const deltaTotal = rawTotalDelta > 0 ? rawTotalDelta : (deltaMono + deltaColor);
+
+      return {
+        startTotal,
+        finalTotal,
+        startSource: earliest ? '1ª leitura mês' : 'Base cadastro',
+        deltaMono,
+        deltaColor,
+        deltaTotal,
+        readingsCount: readings.length
+      };
+    }
+
+    function isUnitWppReady(p) {
+      if (!p) return false;
+      const u = units.find(x => (p.unit_id && x.id === p.unit_id) || (x.client_id === p.client_id && x.unit_name === p.unit));
+      return !!(u && u.wpp_enabled === true);
+    }
+
+    function isClientWppReady(clientId) {
+      return units.some(u => u.client_id === clientId && u.wpp_enabled === true);
     }
 
     // --- CÁLCULO DE MÉTRICAS AUDITADAS (DELTA SNMP) ---
@@ -2677,6 +3143,15 @@
       document.getElementById('kpiPrinters').innerText = printers.length;
       document.getElementById('clientsCountBadge').innerText = clients.length;
       document.getElementById('printersCountBadge').innerText = printers.length;
+
+      const offlineCount = printers.filter(p => getEffectivePrinterStatus(p).isOffline).length;
+      const onlineCount = Math.max(0, printers.length - offlineCount);
+      const kpiPrintersSub = document.getElementById('kpiPrintersSub');
+      if (kpiPrintersSub) {
+        kpiPrintersSub.innerText = printers.length > 0
+          ? `${onlineCount} online • ${offlineCount} offline (SNMP/USB)`
+          : 'SNMPv2c (RFC 3805) + USB';
+      }
 
       let sumPages = 0, sumBill = 0;
       let dueClient = null;
@@ -2710,16 +3185,19 @@
           const badge = m.isFrozen
             ? '<span class="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-blue-100 text-[#0038A8]">● CONGELADO</span>'
             : '<span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 text-amber-700">● EM ABERTO</span>';
+          const wppBadge = isClientWppReady(c.id)
+            ? '<span class="ml-1.5 px-1.5 py-0.5 rounded-full text-[9px] font-bold bg-emerald-100 text-emerald-800">WPP Win11</span>'
+            : '';
 
           return `
             <tr class="hover:bg-slate-50 transition">
               <td class="py-3.5 px-4">
-                <strong class="text-slate-900 block text-xs">${c.name}</strong>
-                <span class="text-[11px] text-slate-400 mono">${c.cnpj || ''} • Corte Dia ${c.closing_day}</span>
+                <strong class="text-slate-900 block text-xs">${escapeHtml(c.name)}${wppBadge}</strong>
+                <span class="text-[11px] text-slate-400 mono">${escapeHtml(c.cnpj || '')} • Corte Dia ${c.closing_day}</span>
               </td>
               <td class="py-3.5 px-4 text-[11px] text-slate-600">
-                <span>${(c.units || ['Matriz']).join(', ')}</span><br>
-                <span class="text-indigo-600 font-semibold">${(c.departments || ['Geral']).join(', ')}</span>
+                <span>${escapeHtml((c.units || ['Matriz']).join(', '))}</span><br>
+                <span class="text-indigo-600 font-semibold">${escapeHtml((c.departments || ['Geral']).join(', '))}</span>
               </td>
               <td class="py-3.5 px-4 text-center font-bold mono">${m.linked.length} máq</td>
               <td class="py-3.5 px-4 text-right mono font-bold">
@@ -2757,7 +3235,7 @@
         dueCard.classList.add('hidden');
       }
 
-      // Grid de Impressoras
+      // Grid de Impressoras (com status real via last_seen e insumos reais v4.0)
       if (printers.length === 0) {
         document.getElementById('printersGrid').innerHTML = `
           <div class="col-span-full p-8 rounded-3xl bg-white border border-slate-200 text-center text-xs text-slate-400 space-y-2">
@@ -2769,18 +3247,21 @@
           const dMono = Math.max(0, (p.mono_pages || 0) - (p.initial_mono_pages || 0));
           const dColor = Math.max(0, (p.color_pages || 0) - (p.initial_color_pages || 0));
           const c = clients.find(x => x.id === p.client_id);
+          const st = getEffectivePrinterStatus(p);
+          const wppReady = isUnitWppReady(p);
           return `
-            <div class="bg-white p-5 rounded-3xl border border-slate-200 shadow-sm space-y-3 hover:shadow-md transition">
-              <div class="flex justify-between items-start">
-                <div>
-                  <h4 class="font-black text-slate-900 text-sm">${p.model}</h4>
-                  <span class="text-xs text-slate-400 mono">Serial: ${p.serial} • IP: ${p.ip || p.usb_port || 'Local'}</span>
-                  <div class="text-[11px] font-bold text-indigo-700 mt-1 flex items-center space-x-1">
+            <div class="bg-white p-5 rounded-3xl border ${st.isOffline ? 'border-rose-200' : 'border-slate-200'} shadow-sm space-y-3 hover:shadow-md transition">
+              <div class="flex justify-between items-start gap-2">
+                <div class="min-w-0">
+                  <h4 class="font-black text-slate-900 text-sm truncate">${escapeHtml(p.model)}</h4>
+                  <span class="text-xs text-slate-400 mono block truncate">Serial: ${escapeHtml(p.serial)} • ${escapeHtml(p.ip || p.usb_port || 'Local')}</span>
+                  <div class="text-[11px] font-bold text-indigo-700 mt-1 flex flex-wrap items-center gap-1">
                     <i data-lucide="map-pin" class="w-3 h-3"></i>
-                    <span>${c ? c.name : 'Avulsa'} • ${p.unit || 'Matriz'} (${p.department || 'Geral'})</span>
+                    <span>${escapeHtml(c ? c.name : 'Avulsa')} • ${escapeHtml(p.unit || 'Matriz')} (${escapeHtml(p.department || 'Geral')})</span>
+                    ${wppReady ? '<span class="px-1.5 py-0.5 rounded-full text-[9px] font-bold bg-emerald-100 text-emerald-800">WPP Win11</span>' : ''}
                   </div>
                 </div>
-                <span class="px-2 py-0.5 rounded-full text-[10px] font-black bg-emerald-50 text-emerald-700 uppercase border border-emerald-200">${p.status || 'online'}</span>
+                <span class="px-2 py-0.5 rounded-full text-[10px] font-black uppercase whitespace-nowrap ${st.badgeClass}">${escapeHtml(st.label)}</span>
               </div>
               <div class="pt-2 border-t border-slate-100 grid grid-cols-3 gap-2 text-center text-xs mono">
                 <div class="bg-slate-50 p-2 rounded-xl">
@@ -2796,12 +3277,88 @@
                   <strong class="text-[#0038A8]">${(dMono + dColor).toLocaleString('pt-BR')}</strong>
                 </div>
               </div>
+              <div class="pt-2 border-t border-slate-100 space-y-1.5">
+                <div class="flex items-center justify-between text-[10px] font-bold uppercase text-slate-400">
+                  <span>Insumos &amp; Resíduo</span>
+                  <span class="mono">${escapeHtml(p.discovery_source || 'snmp')}</span>
+                </div>
+                ${renderSupplyListHtml(p.supplies, true)}
+              </div>
             </div>
           `;
         }).join('');
       }
       checkTrialPrinterLock();
       lucide.createIcons();
+    }
+
+    // --- EXPORTAÇÃO CSV DO FECHAMENTO POR MÁQUINA (UTF-8 BOM) ---
+    function exportMachineClosingCSV() {
+      const header = [
+        'Cliente', 'Unidade', 'Setor', 'WPP_Win11', 'Impressora', 'Serial',
+        'Status_Real', 'Origem_Cont_Inicial', 'Contador_Inicial', 'Contador_Final',
+        'Delta_Total', 'Delta_PB', 'Delta_Color', 'Franquia_Maq_Est', 'Excedente_Est_Pags'
+      ];
+      const lines = [header.join(';')];
+      printers.forEach(p => {
+        const c = clients.find(x => x.id === p.client_id);
+        const st = getEffectivePrinterStatus(p);
+        const pm = getPrinterPeriodMetrics(p);
+        const clientMachCount = c ? Math.max(1, printers.filter(x => x.client_id === c.id).length) : 1;
+        const franqPerMach = c ? Math.round((Number(c.franchise_mono || 0) + Number(c.franchise_color || 0)) / clientMachCount) : 0;
+        const excessEst = franqPerMach > 0 ? Math.max(0, pm.deltaTotal - franqPerMach) : 0;
+        const row = [
+          c ? c.name : 'Avulsa',
+          p.unit || 'Matriz',
+          p.department || 'Geral',
+          isUnitWppReady(p) ? 'Pronto' : 'Nao',
+          p.model || '',
+          p.serial || '',
+          st.label,
+          pm.startSource,
+          pm.startTotal,
+          pm.finalTotal,
+          pm.deltaTotal,
+          pm.deltaMono,
+          pm.deltaColor,
+          franqPerMach,
+          excessEst
+        ].map(v => `"${String(v ?? '').replace(/"/g, '""')}"`);
+        lines.push(row.join(';'));
+      });
+      const blob = new Blob(['\uFEFF' + lines.join('\n')], { type: 'text/csv;charset=utf-8;' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = `printmind_fechamento_maquinas_${getCurrentMonthPrefix()}.csv`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+    }
+
+    // --- RESOLUÇÃO DE ALERTA DE SUPRIMENTO ---
+    async function resolveSupplyAlert(alertId) {
+      if (!alertId) return;
+      const nowIso = new Date().toISOString();
+      let { error } = await sb.from('supply_alerts').update({ resolved: true, resolved_at: nowIso }).eq('id', alertId);
+      if (error) {
+        const fallback = await sb.from('supply_alerts').update({ status: 'resolved', resolved_at: nowIso }).eq('id', alertId);
+        error = fallback.error;
+      }
+      if (error) {
+        alert('Não foi possível marcar o alerta como resolvido: ' + error.message);
+        return;
+      }
+      supplyAlerts = supplyAlerts.map(a => a.id === alertId ? { ...a, resolved: true, status: 'resolved', resolved_at: nowIso } : a);
+      renderReportsView();
+    }
+
+    function getAlertTypeMeta(alertType) {
+      const t = String(alertType || '').toLowerCase();
+      if (t === 'waste_full') return { label: 'Caixa de Resíduo Cheia', cls: 'bg-rose-100 text-rose-800 border-rose-200' };
+      if (t === 'premature_swap') return { label: 'Troca Prematura', cls: 'bg-rose-100 text-rose-800 border-rose-200' };
+      if (t === 'head_cleaning_drain') return { label: 'Dreno Limpeza de Cabeçote', cls: 'bg-indigo-100 text-indigo-800 border-indigo-200' };
+      if (t === 'toner_low') return { label: 'Toner / Tinta Baixa', cls: 'bg-amber-100 text-amber-800 border-amber-200' };
+      return { label: alertType || 'Alerta de Insumo', cls: 'bg-slate-100 text-slate-700 border-slate-200' };
     }
 
     // --- RENDERIZAÇÃO DA ABA 2: RELATÓRIOS & FATURAMENTO ---
@@ -2825,7 +3382,19 @@
       const colorRatio = sumPages > 0 ? Math.round((sumColor / sumPages) * 100) : 0;
       document.getElementById('repColorRatio').innerText = `${colorRatio}% Coloridas • ${100 - colorRatio}% Monocromáticas`;
 
-      // Tabela Consolidada de Fechamento
+      // Prontidão WPP Windows 11 summary
+      const wppUnitsCount = units.filter(u => u.wpp_enabled === true).length;
+      const wppSummaryEl = document.getElementById('wppReadinessSummary');
+      if (wppSummaryEl) {
+        if (wppUnitsCount > 0) {
+          wppSummaryEl.classList.remove('hidden');
+          wppSummaryEl.innerText = `✓ Prontidão WPP Windows 11: ${wppUnitsCount} unidade(s) ativa(s)`;
+        } else {
+          wppSummaryEl.classList.add('hidden');
+        }
+      }
+
+      // Tabela Consolidada de Fechamento por Cliente
       document.getElementById('reportsTableBody').innerHTML = clients.length === 0
         ? `<tr><td colspan="7" class="py-8 text-center text-slate-400">Nenhum cliente cadastrado ainda.</td></tr>`
         : clients.map(c => {
@@ -2833,9 +3402,12 @@
             const badge = m.isFrozen
               ? '<span class="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-blue-100 text-[#0038A8]">● TRAVADO</span>'
               : '<span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 text-amber-700">● ABERTO</span>';
+            const wppPill = isClientWppReady(c.id)
+              ? '<span class="ml-1.5 px-2 py-0.5 rounded-full text-[9px] font-bold bg-emerald-100 text-emerald-800">✓ WPP Win11</span>'
+              : '';
             return `
               <tr class="hover:bg-slate-50 transition">
-                <td class="py-3 px-4 font-bold text-slate-900">${c.name}</td>
+                <td class="py-3 px-4 font-bold text-slate-900">${escapeHtml(c.name)}${wppPill}</td>
                 <td class="py-3 px-4 mono text-slate-600">Corte Dia ${c.closing_day}</td>
                 <td class="py-3 px-4 text-center mono font-bold">${m.linked.length}</td>
                 <td class="py-3 px-4 text-right mono font-bold">${m.dTotal.toLocaleString('pt-BR')} págs</td>
@@ -2850,44 +3422,291 @@
             `;
           }).join('');
 
-      // Sub-aba Suprimentos
+      // Fechamento Detalhado por Máquina
+      const machineBody = document.getElementById('machineClosingTableBody');
+      if (machineBody) {
+        machineBody.innerHTML = printers.length === 0
+          ? `<tr><td colspan="7" class="py-8 text-center text-slate-400">Nenhuma impressora conectada para fechamento.</td></tr>`
+          : printers.map(p => {
+              const c = clients.find(x => x.id === p.client_id);
+              const st = getEffectivePrinterStatus(p);
+              const pm = getPrinterPeriodMetrics(p);
+              const clientMachCount = c ? Math.max(1, printers.filter(x => x.client_id === c.id).length) : 1;
+              const franqPerMach = c ? Math.round((Number(c.franchise_mono || 0) + Number(c.franchise_color || 0)) / clientMachCount) : 0;
+              const excessPages = franqPerMach > 0 ? Math.max(0, pm.deltaTotal - franqPerMach) : 0;
+              const wppPill = isUnitWppReady(p)
+                ? '<span class="inline-block mt-0.5 px-1.5 py-0.5 rounded-full text-[9px] font-bold bg-emerald-100 text-emerald-800">✓ WPP Win11</span>'
+                : '';
+              return `
+                <tr class="hover:bg-slate-50 transition">
+                  <td class="py-3 px-4">
+                    <strong class="text-slate-900 block">${escapeHtml(c ? c.name : 'Avulsa')}</strong>
+                    <span class="text-[11px] text-slate-500">${escapeHtml(p.unit || 'Matriz')} • ${escapeHtml(p.department || 'Geral')}</span>
+                    <div>${wppPill}</div>
+                  </td>
+                  <td class="py-3 px-4">
+                    <strong class="text-slate-900 block">${escapeHtml(p.model)}</strong>
+                    <span class="text-[11px] text-slate-400 mono">${escapeHtml(p.serial)}</span>
+                  </td>
+                  <td class="py-3 px-4 text-center">
+                    <span class="px-2 py-0.5 rounded-full text-[10px] font-bold ${st.badgeClass}">${escapeHtml(st.label)}</span>
+                  </td>
+                  <td class="py-3 px-4 text-right mono">
+                    <strong>${pm.startTotal.toLocaleString('pt-BR')}</strong>
+                    <span class="block text-[10px] text-slate-400">${escapeHtml(pm.startSource)}</span>
+                  </td>
+                  <td class="py-3 px-4 text-right mono font-bold text-slate-800">${pm.finalTotal.toLocaleString('pt-BR')}</td>
+                  <td class="py-3 px-4 text-right mono">
+                    <strong class="text-[#0038A8]">${pm.deltaTotal.toLocaleString('pt-BR')} págs</strong>
+                    <span class="block text-[10px] text-slate-400">${pm.deltaMono.toLocaleString('pt-BR')} P&B • ${pm.deltaColor.toLocaleString('pt-BR')} Cor</span>
+                  </td>
+                  <td class="py-3 px-4 text-right mono">
+                    ${franqPerMach > 0
+                      ? `<span class="text-slate-700">${franqPerMach.toLocaleString('pt-BR')} franq.</span><span class="block text-[10px] ${excessPages > 0 ? 'text-amber-700 font-bold' : 'text-emerald-700'}">${excessPages > 0 ? '+' + excessPages.toLocaleString('pt-BR') + ' exced.' : 'Dentro da franquia'}</span>`
+                      : '<span class="text-slate-400">Sem franquia</span>'}
+                  </td>
+                </tr>
+              `;
+            }).join('');
+      }
+
+      // Rateio por Setor / PC / Usuário (print_jobs_summary)
+      const jobsContainer = document.getElementById('jobsBreakdownContainer');
+      const jobsBadge = document.getElementById('jobsBreakdownCountBadge');
+      const monthPrefix = getCurrentMonthPrefix();
+      const monthJobs = printJobsSummary.filter(j => {
+        const dtField = String(j.period_month || j.month_year || j.job_date || j.recorded_at || j.created_at || '');
+        return !dtField || dtField.startsWith(monthPrefix) || dtField.includes(monthPrefix.split('-').reverse().join('/'));
+      });
+      if (jobsBadge) jobsBadge.innerText = `${monthJobs.length} registro${monthJobs.length === 1 ? '' : 's'}`;
+
+      if (jobsContainer) {
+        if (monthJobs.length === 0) {
+          jobsContainer.innerHTML = `
+            <div class="p-5 rounded-2xl bg-slate-50 border border-slate-200 text-center text-xs text-slate-500 space-y-1">
+              <strong class="text-slate-700 block">Aguardando trabalhos do agente v4.0 (<code class="mono">print_jobs_summary</code>)</strong>
+              <span>Quando o agente Windows/USB v4.0 enviar o resumo de spooler por estação e usuário neste mês, o rateio detalhado aparecerá automaticamente aqui.</span>
+            </div>`;
+        } else {
+          const grouped = {};
+          monthJobs.forEach(j => {
+            const dept = j.department || j.sector || 'Geral';
+            const pc = j.pc_name || j.hostname || j.workstation || j.computer_name || 'Estação não informada';
+            const usr = j.user_name || j.username || j.os_user || 'Usuário';
+            const key = `${dept}||${pc}||${usr}`;
+            if (!grouped[key]) grouped[key] = { dept, pc, usr, jobs: 0, mono: 0, color: 0, total: 0 };
+            const g = grouped[key];
+            const mono = Number(j.mono_pages || 0);
+            const color = Number(j.color_pages || 0);
+            const tot = Number(j.total_pages || j.pages || (mono + color));
+            g.jobs += Number(j.jobs_count || j.job_count || 1);
+            g.mono += mono;
+            g.color += color;
+            g.total += tot;
+          });
+          const rows = Object.values(grouped).sort((a, b) => b.total - a.total);
+          jobsContainer.innerHTML = `
+            <div class="overflow-x-auto">
+              <table class="w-full text-left text-xs">
+                <thead class="bg-slate-50 text-slate-500 uppercase text-[10px] font-bold border-b border-slate-200">
+                  <tr>
+                    <th class="py-2.5 px-3">Setor</th>
+                    <th class="py-2.5 px-3">PC / Estação</th>
+                    <th class="py-2.5 px-3">Usuário</th>
+                    <th class="py-2.5 px-3 text-center">Trabalhos</th>
+                    <th class="py-2.5 px-3 text-right">P&B</th>
+                    <th class="py-2.5 px-3 text-right">Color</th>
+                    <th class="py-2.5 px-3 text-right">Total Págs</th>
+                  </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100">
+                  ${rows.map(r => `
+                    <tr class="hover:bg-slate-50">
+                      <td class="py-2.5 px-3 font-bold text-indigo-800">${escapeHtml(r.dept)}</td>
+                      <td class="py-2.5 px-3 mono text-slate-700">${escapeHtml(r.pc)}</td>
+                      <td class="py-2.5 px-3 text-slate-800">${escapeHtml(r.usr)}</td>
+                      <td class="py-2.5 px-3 text-center mono">${r.jobs.toLocaleString('pt-BR')}</td>
+                      <td class="py-2.5 px-3 text-right mono">${r.mono.toLocaleString('pt-BR')}</td>
+                      <td class="py-2.5 px-3 text-right mono text-indigo-700">${r.color.toLocaleString('pt-BR')}</td>
+                      <td class="py-2.5 px-3 text-right mono font-black text-slate-900">${r.total.toLocaleString('pt-BR')}</td>
+                    </tr>
+                  `).join('')}
+                </tbody>
+              </table>
+            </div>`;
+        }
+      }
+
+      // Sub-aba Suprimentos: Feed real de supply_alerts
+      const alertsFeed = document.getElementById('supplyAlertsFeed');
+      const alertsBadge = document.getElementById('supplyAlertsBadge');
+      const openAlerts = supplyAlerts.filter(a => !a.resolved && String(a.status || '').toLowerCase() !== 'resolved');
+      if (alertsBadge) alertsBadge.innerText = `${openAlerts.length} pendente${openAlerts.length === 1 ? '' : 's'} • ${supplyAlerts.length} total`;
+
+      if (alertsFeed) {
+        if (supplyAlerts.length === 0) {
+          alertsFeed.innerHTML = `<div class="p-4 rounded-2xl bg-slate-50 border border-slate-200 text-xs text-slate-500 text-center">Nenhum alerta registrado em <code class="mono">supply_alerts</code> (troca prematura, resíduo cheio, limpeza de cabeçote ou toner &le; 15%).</div>`;
+        } else {
+          alertsFeed.innerHTML = supplyAlerts.map(a => {
+            const prt = printers.find(p => p.id === a.printer_id);
+            const cli = prt ? clients.find(c => c.id === prt.client_id) : null;
+            const meta = getAlertTypeMeta(a.alert_type || a.type);
+            const isResolved = !!a.resolved || String(a.status || '').toLowerCase() === 'resolved';
+            const dt = a.created_at ? new Date(a.created_at).toLocaleString('pt-BR') : '';
+            return `
+              <div class="p-3.5 rounded-2xl border ${isResolved ? 'bg-slate-50 border-slate-200 opacity-70' : 'bg-white border-amber-200 shadow-sm'} flex flex-wrap items-center justify-between gap-3 text-xs">
+                <div class="space-y-1">
+                  <div class="flex flex-wrap items-center gap-2">
+                    <span class="px-2 py-0.5 rounded-full text-[10px] font-black uppercase border ${meta.cls}">${escapeHtml(meta.label)}</span>
+                    <strong class="text-slate-900">${escapeHtml(prt ? prt.model : (a.printer_model || 'Impressora'))}</strong>
+                    <span class="text-[11px] text-slate-400 mono">${escapeHtml(prt ? prt.serial : (a.serial || ''))}</span>
+                    ${cli ? `<span class="text-[11px] text-indigo-700 font-semibold">• ${escapeHtml(cli.name)}</span>` : ''}
+                  </div>
+                  <p class="text-slate-600">${escapeHtml(a.message || a.details || a.supply_name || 'Evento de auditoria de insumo detectado pelo agente.')} ${dt ? `<span class="text-[10px] text-slate-400 mono">(${dt})</span>` : ''}</p>
+                </div>
+                <div>
+                  ${isResolved
+                    ? '<span class="px-2.5 py-1 rounded-xl bg-emerald-50 text-emerald-700 font-bold text-[11px] border border-emerald-200">✓ Resolvido</span>'
+                    : `<button type="button" onclick="resolveSupplyAlert('${a.id}')" class="px-3 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-[11px] transition">Marcar como Resolvido</button>`
+                  }
+                </div>
+              </div>
+            `;
+          }).join('');
+        }
+      }
+
+      // Sub-aba Suprimentos: Grid real por impressora (ZERO 88%/74%/OK hardcoded!)
       document.getElementById('suppliesAuditGrid').innerHTML = printers.length === 0
         ? `<div class="col-span-full text-slate-400 py-4 text-center">Nenhuma impressora no radar.</div>`
-        : printers.map(p => `
-          <div class="p-4 rounded-2xl bg-slate-50 border border-slate-200 space-y-2">
-            <div class="flex justify-between items-start">
-              <div><strong class="text-slate-900 block">${p.model}</strong><span class="text-xs text-slate-400 mono">${p.serial}</span></div>
-              <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800">OK</span>
-            </div>
-            <div class="space-y-1.5 pt-1 text-xs">
-              <div class="flex justify-between text-[11px]"><span>Toner Preto:</span><strong class="mono">88%</strong></div>
-              <div class="w-full bg-slate-200 rounded-full h-1.5"><div class="bg-slate-900 h-1.5 rounded-full" style="width: 88%"></div></div>
-              <div class="flex justify-between text-[11px]"><span>Ciano:</span><strong class="mono">74%</strong></div>
-              <div class="w-full bg-slate-200 rounded-full h-1.5"><div class="bg-cyan-500 h-1.5 rounded-full" style="width: 74%"></div></div>
-            </div>
-          </div>
-        `).join('');
+        : printers.map(p => {
+            const supplies = Array.isArray(p.supplies) ? p.supplies : [];
+            const normalized = supplies.map(normalizeSupplyItem);
+            const hasCritical = normalized.some(x => x.isWasteAlert || x.isLowAlert) || openAlerts.some(a => a.printer_id === p.id);
+            const hasAnyKnown = normalized.some(x => x.hasKnownPct);
+            const badgeText = hasCritical ? 'ATENÇÃO' : (hasAnyKnown ? 'MONITORADO' : 'SEM % EXATO');
+            const badgeCls = hasCritical ? 'bg-rose-100 text-rose-800' : (hasAnyKnown ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-200 text-slate-700');
+            return `
+              <div class="p-4 rounded-2xl bg-slate-50 border ${hasCritical ? 'border-rose-200' : 'border-slate-200'} space-y-2.5">
+                <div class="flex justify-between items-start gap-2">
+                  <div class="min-w-0">
+                    <strong class="text-slate-900 block truncate">${escapeHtml(p.model)}</strong>
+                    <span class="text-xs text-slate-400 mono block truncate">${escapeHtml(p.serial)}</span>
+                  </div>
+                  <span class="px-2 py-0.5 rounded-full text-[10px] font-bold whitespace-nowrap ${badgeCls}">${badgeText}</span>
+                </div>
+                <div class="space-y-2 pt-1 text-xs">
+                  ${renderSupplyListHtml(supplies, false)}
+                </div>
+              </div>
+            `;
+          }).join('');
 
-      // Sub-aba Ociosidade
+      // Sub-aba Ociosidade (calculada sobre telemetry_readings + last_seen > 25 min)
       document.getElementById('idlePrintersList').innerHTML = printers.length === 0
         ? `<div class="text-slate-400 py-4 text-center">Nenhuma impressora em análise.</div>`
-        : printers.map(p => `
-          <div class="p-4 rounded-2xl bg-slate-50 border border-slate-200 flex justify-between items-center text-xs">
-            <div>
-              <strong class="text-slate-900">${p.model} (${p.serial})</strong>
-              <div class="text-slate-500">${p.unit || 'Matriz'} • ${p.department || 'Geral'}</div>
-            </div>
-            <div class="text-right">
-              <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800">Em Operação Normal</span>
-            </div>
-          </div>
-        `).join('');
+        : printers.map(p => {
+            const c = clients.find(x => x.id === p.client_id);
+            const st = getEffectivePrinterStatus(p);
+            const pm = getPrinterPeriodMetrics(p);
+            const clientMachCount = c ? Math.max(1, printers.filter(x => x.client_id === c.id).length) : 1;
+            const machineFranchise = c ? ((Number(c.franchise_mono || 0) + Number(c.franchise_color || 0)) / clientMachCount) : 0;
+            const usagePct = machineFranchise > 0 ? Math.round((pm.deltaTotal / machineFranchise) * 100) : null;
+            const isIdle = !st.isOffline && (pm.deltaTotal < 50 || (machineFranchise > 0 && usagePct < 20));
+
+            let pillCls = 'bg-emerald-100 text-emerald-800';
+            let pillText = `Ativa • ${pm.deltaTotal.toLocaleString('pt-BR')} págs${usagePct !== null ? ` (${usagePct}% da franquia)` : ''}`;
+            let cardBorder = 'border-slate-200 bg-slate-50';
+            if (st.isOffline) {
+              pillCls = 'bg-rose-100 text-rose-800';
+              pillText = st.label;
+              cardBorder = 'border-rose-200 bg-rose-50/40';
+            } else if (isIdle) {
+              pillCls = 'bg-amber-100 text-amber-800';
+              pillText = `Ociosa • ${pm.deltaTotal.toLocaleString('pt-BR')} págs${usagePct !== null ? ` (${usagePct}% da franquia)` : ''}`;
+              cardBorder = 'border-amber-200 bg-amber-50/40';
+            }
+
+            return `
+              <div class="p-4 rounded-2xl border ${cardBorder} flex flex-wrap justify-between items-center gap-3 text-xs">
+                <div>
+                  <strong class="text-slate-900">${escapeHtml(p.model)} (${escapeHtml(p.serial)})</strong>
+                  <div class="text-slate-500">${escapeHtml(c ? c.name : 'Avulsa')} • ${escapeHtml(p.unit || 'Matriz')} • ${escapeHtml(p.department || 'Geral')}</div>
+                </div>
+                <div class="text-right space-y-1">
+                  <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold ${pillCls}">${escapeHtml(pillText)}</span>
+                  <div class="text-[10px] text-slate-400 mono">Base: ${escapeHtml(pm.startSource)}</div>
+                </div>
+              </div>
+            `;
+          }).join('');
+
+      if (latestAiInsight) {
+        renderGeminiInsights(latestAiInsight);
+      }
 
       checkTrialPrinterLock();
       lucide.createIcons();
     }
 
-    // --- RENDERIZAÇÃO DA ABA 3: MINHA GRÁFICA (PRODUÇÃO DIÁRIA) ---
+    // --- RENDERIZAÇÃO DA ABA 3: MINHA GRÁFICA (PRODUÇÃO DIÁRIA 100% REAL) ---
+    function computeDailyProductionSeries(daysCount = 14) {
+      const days = [];
+      const today = new Date();
+      for (let i = daysCount - 1; i >= 0; i--) {
+        const d = new Date(today.getFullYear(), today.getMonth(), today.getDate() - i);
+        const iso = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+        const label = `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}`;
+        days.push({ iso, label, mono: 0, color: 0, total: 0 });
+      }
+      const daySet = new Set(days.map(d => d.iso));
+
+      // Agrupa snapshots por impressora e por dia (min e max do dia)
+      const byPrinterDay = {};
+      telemetryReadings.forEach(r => {
+        if (!r.printer_id || !r.recorded_at) return;
+        const dayIso = String(r.recorded_at).slice(0, 10);
+        if (!byPrinterDay[r.printer_id]) byPrinterDay[r.printer_id] = {};
+        const tot = Number(r.total_pages || 0);
+        const mono = Number(r.mono_pages || 0);
+        const color = Number(r.color_pages || 0);
+        const cur = byPrinterDay[r.printer_id][dayIso];
+        if (!cur) {
+          byPrinterDay[r.printer_id][dayIso] = { minTot: tot, maxTot: tot, minMono: mono, maxMono: mono, minColor: color, maxColor: color };
+        } else {
+          cur.minTot = Math.min(cur.minTot, tot);
+          cur.maxTot = Math.max(cur.maxTot, tot);
+          cur.minMono = Math.min(cur.minMono, mono);
+          cur.maxMono = Math.max(cur.maxMono, mono);
+          cur.minColor = Math.min(cur.minColor, color);
+          cur.maxColor = Math.max(cur.maxColor, color);
+        }
+      });
+
+      const dayTotalsMap = {};
+      days.forEach(d => { dayTotalsMap[d.iso] = d; });
+
+      Object.values(byPrinterDay).forEach(dayMap => {
+        const sortedDays = Object.keys(dayMap).sort();
+        let prev = null;
+        sortedDays.forEach(dayIso => {
+          const cur = dayMap[dayIso];
+          if (daySet.has(dayIso)) {
+            const dMono = prev ? Math.max(0, cur.maxMono - prev.maxMono) : Math.max(0, cur.maxMono - cur.minMono);
+            const dColor = prev ? Math.max(0, cur.maxColor - prev.maxColor) : Math.max(0, cur.maxColor - cur.minColor);
+            const dTotRaw = prev ? Math.max(0, cur.maxTot - prev.maxTot) : Math.max(0, cur.maxTot - cur.minTot);
+            const dTot = dTotRaw > 0 ? dTotRaw : (dMono + dColor);
+            dayTotalsMap[dayIso].mono += dMono;
+            dayTotalsMap[dayIso].color += dColor;
+            dayTotalsMap[dayIso].total += dTot;
+          }
+          prev = cur;
+        });
+      });
+
+      return days;
+    }
+
     function renderGraficaView() {
       let sumPages = 0, sumMono = 0, sumColor = 0;
       printers.forEach(p => {
@@ -2901,64 +3720,411 @@
       document.getElementById('graficaMonoPages').innerText = sumMono.toLocaleString('pt-BR') + ' págs';
 
       const colorPct = sumPages > 0 ? Math.round((sumColor / sumPages) * 100) : 0;
-      document.getElementById('graficaColorPercent').innerText = `${colorPct}% • Adesivos, rótulos e brindes`;
-      document.getElementById('graficaMonoPercent').innerText = `${100 - colorPct}% • Documentos e apostilas`;
+      document.getElementById('graficaColorPercent').innerText = `${colorPct}% • Impressões coloridas`;
+      document.getElementById('graficaMonoPercent').innerText = `${sumPages > 0 ? 100 - colorPct : 0}% • Documentos monocromáticos`;
 
-      const avg = Math.round(sumPages / 12);
+      // Curva diária 100% real sobre telemetry_readings (últimos 14 dias)
+      const series = computeDailyProductionSeries(14);
+      const daysWithProd = series.filter(d => d.total > 0);
+      const total14d = series.reduce((acc, d) => acc + d.total, 0);
+      const avg = daysWithProd.length > 0 ? Math.round(total14d / daysWithProd.length) : 0;
+      const peakDay = series.reduce((best, d) => (d.total > best.total ? d : best), { total: 0, label: '-' });
+
       document.getElementById('graficaAvgDay').innerText = `${avg.toLocaleString('pt-BR')} págs/dia`;
-      document.getElementById('graficaPeakRecord').innerText = `Pico do mês: ${(avg * 2.4).toFixed(0)} págs (Dia 08)`;
+      document.getElementById('graficaPeakRecord').innerText = peakDay.total > 0
+        ? `Pico real (14d): ${peakDay.total.toLocaleString('pt-BR')} págs (${peakDay.label})`
+        : 'Aguardando snapshots diários em telemetry_readings';
 
-      // Gerador das Barras Diárias (Dias 01 a 12)
       const barsContainer = document.getElementById('graficaDailyBars');
-      const dailyData = [1200, 1850, 2100, 950, 1400, 3100, 4100, 2900, 1600, 2400, 3800, sumPages > 0 ? Math.round(sumPages * 0.15) : 1900];
-      const maxVal = Math.max(...dailyData, 1);
-
-      barsContainer.innerHTML = dailyData.map((val, idx) => {
-        const hPct = Math.round((val / maxVal) * 100);
-        const day = String(idx + 1).padStart(2, '0');
-        return `
-          <div class="flex-1 min-w-[28px] flex flex-col items-center gap-1 group relative">
-            <div class="text-[9px] text-slate-400 mono opacity-0 group-hover:opacity-100 transition">${val}</div>
-            <div class="w-full bg-slate-100 rounded-t-lg flex flex-col justify-end overflow-hidden" style="height: 120px">
-              <div class="w-full bg-[#0038A8] group-hover:bg-blue-600 transition" style="height: ${hPct}%"></div>
+      if (telemetryReadings.length === 0 || total14d === 0) {
+        barsContainer.innerHTML = `
+          <div class="w-full h-full flex items-center justify-center text-center text-xs text-slate-400 px-4">
+            Sem histórico diário suficiente em <code class="mono mx-1">telemetry_readings</code> nos últimos 14 dias. Assim que o agente registrar múltiplas leituras por dia, as barras reais P&amp;B vs Color serão exibidas aqui.
+          </div>`;
+      } else {
+        const maxVal = Math.max(...series.map(d => d.total), 1);
+        barsContainer.innerHTML = series.map(d => {
+          const totalPct = Math.round((d.total / maxVal) * 100);
+          const colorShare = d.total > 0 ? Math.round((d.color / d.total) * 100) : 0;
+          const monoShare = Math.max(0, 100 - colorShare);
+          return `
+            <div class="flex-1 min-w-[34px] flex flex-col items-center gap-1 group relative" title="${d.label}: ${d.total.toLocaleString('pt-BR')} págs (${d.mono.toLocaleString('pt-BR')} P&B / ${d.color.toLocaleString('pt-BR')} Cor)">
+              <div class="text-[9px] text-slate-500 mono opacity-0 group-hover:opacity-100 transition">${d.total.toLocaleString('pt-BR')}</div>
+              <div class="w-full bg-slate-100 rounded-t-lg flex flex-col justify-end overflow-hidden" style="height: 120px">
+                <div class="w-full flex flex-col justify-end overflow-hidden" style="height: ${totalPct}%">
+                  <div class="w-full bg-emerald-500" style="height: ${colorShare}%"></div>
+                  <div class="w-full bg-blue-700" style="height: ${monoShare}%"></div>
+                </div>
+              </div>
+              <span class="text-[10px] font-bold text-slate-600 mono">${d.label}</span>
             </div>
-            <span class="text-[10px] font-bold text-slate-600 mono">${day}</span>
-          </div>
-        `;
-      }).join('');
+          `;
+        }).join('');
+      }
 
-      // Parque de Máquinas com Barras CMYK
+      // Médias reais CMYK das impressoras coloridas + cards reais por impressora
+      const cmykBuckets = { K: [], C: [], M: [], Y: [] };
+      const colorPrinters = printers.filter(p => {
+        if (p.is_color_capable) return true;
+        const sup = Array.isArray(p.supplies) ? p.supplies : [];
+        return sup.some(s => {
+          const ck = normalizeSupplyItem(s).colorKey;
+          return ck === 'C' || ck === 'M' || ck === 'Y';
+        });
+      });
+
+      colorPrinters.forEach(p => {
+        const sup = Array.isArray(p.supplies) ? p.supplies : [];
+        sup.forEach(s => {
+          const item = normalizeSupplyItem(s);
+          if (item.colorKey && item.hasKnownPct) {
+            cmykBuckets[item.colorKey].push(item.pct);
+          }
+        });
+      });
+
+      const avgOrNull = arr => arr.length > 0 ? Math.round(arr.reduce((a, b) => a + b, 0) / arr.length) + '%' : 'Sem leitura';
+      const cmykSummaryCard = `
+        <div class="col-span-full p-4 rounded-2xl bg-slate-50 border border-slate-200 space-y-2">
+          <div class="flex flex-wrap items-center justify-between gap-2">
+            <strong class="text-xs font-black text-slate-900">Média Real CMYK (${colorPrinters.length} impressora(s) colorida(s))</strong>
+            <span class="text-[11px] text-slate-500">Calculada apenas com leituras numéricas reais de <code class="mono">printers.supplies</code></span>
+          </div>
+          <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 text-center text-xs mono">
+            <div class="bg-white p-2.5 rounded-xl border border-slate-200"><span class="text-[10px] font-bold text-slate-500 block">BLACK (K)</span><strong class="text-slate-900">${avgOrNull(cmykBuckets.K)}</strong></div>
+            <div class="bg-white p-2.5 rounded-xl border border-slate-200"><span class="text-[10px] font-bold text-cyan-600 block">CYAN (C)</span><strong class="text-cyan-700">${avgOrNull(cmykBuckets.C)}</strong></div>
+            <div class="bg-white p-2.5 rounded-xl border border-slate-200"><span class="text-[10px] font-bold text-pink-600 block">MAGENTA (M)</span><strong class="text-pink-700">${avgOrNull(cmykBuckets.M)}</strong></div>
+            <div class="bg-white p-2.5 rounded-xl border border-slate-200"><span class="text-[10px] font-bold text-amber-500 block">YELLOW (Y)</span><strong class="text-amber-600">${avgOrNull(cmykBuckets.Y)}</strong></div>
+          </div>
+        </div>
+      `;
+
       document.getElementById('graficaSuppliesPark').innerHTML = printers.length === 0
         ? `<div class="col-span-full text-slate-400 py-4 text-center">Nenhuma impressora alocada na oficina.</div>`
-        : printers.map(p => `
-          <div class="p-5 rounded-3xl bg-slate-50 border border-slate-200 space-y-3">
-            <div class="flex justify-between items-start">
-              <div><strong class="text-slate-900 block">${p.model}</strong><span class="text-xs text-slate-400 mono">${p.serial} • IP: ${p.ip || 'USB'}</span></div>
-              <span class="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-emerald-100 text-emerald-800">ATIVO</span>
-            </div>
-            <div class="grid grid-cols-4 gap-2 pt-2 text-center text-xs mono">
-              <div class="bg-white p-2 rounded-xl border border-slate-200">
-                <span class="text-[10px] font-bold text-slate-400 block">BLACK</span>
-                <strong class="text-slate-900">85%</strong>
+        : cmykSummaryCard + printers.map(p => {
+            const st = getEffectivePrinterStatus(p);
+            return `
+              <div class="p-5 rounded-3xl bg-slate-50 border ${st.isOffline ? 'border-rose-200' : 'border-slate-200'} space-y-3">
+                <div class="flex justify-between items-start gap-2">
+                  <div class="min-w-0">
+                    <strong class="text-slate-900 block truncate">${escapeHtml(p.model)}</strong>
+                    <span class="text-xs text-slate-400 mono block truncate">${escapeHtml(p.serial)} • ${escapeHtml(p.ip || p.usb_port || 'USB')}</span>
+                  </div>
+                  <span class="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase whitespace-nowrap ${st.badgeClass}">${escapeHtml(st.label)}</span>
+                </div>
+                <div class="space-y-2 pt-1">
+                  ${renderSupplyListHtml(p.supplies, false)}
+                </div>
               </div>
-              <div class="bg-white p-2 rounded-xl border border-slate-200">
-                <span class="text-[10px] font-bold text-cyan-600 block">CYAN</span>
-                <strong class="text-cyan-700">62%</strong>
-              </div>
-              <div class="bg-white p-2 rounded-xl border border-slate-200">
-                <span class="text-[10px] font-bold text-pink-600 block">MAGENTA</span>
-                <strong class="text-pink-700">71%</strong>
-              </div>
-              <div class="bg-white p-2 rounded-xl border border-slate-200">
-                <span class="text-[10px] font-bold text-amber-500 block">YELLOW</span>
-                <strong class="text-amber-600">90%</strong>
-              </div>
-            </div>
-          </div>
-        `).join('');
+            `;
+          }).join('');
 
       checkTrialPrinterLock();
       lucide.createIcons();
+    }
+
+    // =========================================================================
+    // CONSULTOR IA PRINTMIND (GOOGLE GEMINI CLOUD AI)
+    // =========================================================================
+    function openGeminiConsultantFromOverview() {
+      switchTab('reports');
+      setTimeout(() => {
+        const el = document.getElementById('geminiConsultantCard');
+        if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 100);
+    }
+
+    function toggleGeminiKeyBox(forceShow = null) {
+      const box = document.getElementById('geminiKeyConfigBox');
+      if (!box) return;
+      if (forceShow === true) box.classList.remove('hidden');
+      else if (forceShow === false) box.classList.add('hidden');
+      else box.classList.toggle('hidden');
+      const inp = document.getElementById('geminiApiKeyInput');
+      if (inp && !box.classList.contains('hidden')) {
+        inp.value = localStorage.getItem(GEMINI_KEY_STORAGE) || '';
+      }
+    }
+
+    function clearGeminiApiKey() {
+      localStorage.removeItem(GEMINI_KEY_STORAGE);
+      const inp = document.getElementById('geminiApiKeyInput');
+      if (inp) inp.value = '';
+      setGeminiStatusMessage('Chave Gemini removida deste navegador.', false);
+    }
+
+    async function saveGeminiKeyAndRun() {
+      const inp = document.getElementById('geminiApiKeyInput');
+      const val = inp ? inp.value.trim() : '';
+      if (!val) {
+        setGeminiStatusMessage('Cole uma chave válida da API Google Gemini (AIza...) antes de salvar.', true);
+        return;
+      }
+      localStorage.setItem(GEMINI_KEY_STORAGE, val);
+      toggleGeminiKeyBox(false);
+      await generateGeminiInsights();
+    }
+
+    function setGeminiStatusMessage(msg, isError = false) {
+      const el = document.getElementById('geminiStatusMessage');
+      if (!el) return;
+      if (!msg) {
+        el.classList.add('hidden');
+        return;
+      }
+      el.classList.remove('hidden', 'bg-rose-500/20', 'border-rose-300/40', 'text-rose-100', 'bg-emerald-500/20', 'border-emerald-300/40', 'text-emerald-100');
+      el.classList.add('border');
+      if (isError) el.classList.add('bg-rose-500/20', 'border-rose-300/40', 'text-rose-100');
+      else el.classList.add('bg-emerald-500/20', 'border-emerald-300/40', 'text-emerald-100');
+      el.innerText = msg;
+    }
+
+    function buildDeterministicFleetContext() {
+      const monthPrefix = getCurrentMonthPrefix();
+      return {
+        generated_at: new Date().toISOString(),
+        month: monthPrefix,
+        tenant: {
+          id: currentTenant ? currentTenant.id : null,
+          trade_name: currentTenant ? currentTenant.trade_name : 'PrintMind',
+          plan_tier: currentTenant ? currentTenant.plan_tier : 'trial'
+        },
+        clients: clients.map(c => {
+          const m = computeMetrics(c);
+          return {
+            name: c.name,
+            closing_day: c.closing_day,
+            base_rate: Number(c.base_rate || 0),
+            franchise_mono: Number(c.franchise_mono || 0),
+            franchise_color: Number(c.franchise_color || 0),
+            printers_count: m.linked.length,
+            delta_mono: m.dMono,
+            delta_color: m.dColor,
+            estimated_bill_brl: Number(m.total.toFixed(2)),
+            frozen: m.isFrozen
+          };
+        }),
+        printers: printers.map(p => {
+          const st = getEffectivePrinterStatus(p);
+          const pm = getPrinterPeriodMetrics(p);
+          return {
+            model: p.model,
+            serial: p.serial,
+            unit: p.unit || 'Matriz',
+            department: p.department || 'Geral',
+            effective_status: st.label,
+            is_offline: st.isOffline,
+            total_pages: pm.finalTotal,
+            month_delta_pages: pm.deltaTotal,
+            supplies: (Array.isArray(p.supplies) ? p.supplies : []).map(s => {
+              const n = normalizeSupplyItem(s);
+              return { name: n.displayName, is_waste: n.isWaste, percent: n.pct, state: n.honestLabel };
+            })
+          };
+        }),
+        open_supply_alerts: supplyAlerts
+          .filter(a => !a.resolved && String(a.status || '').toLowerCase() !== 'resolved')
+          .slice(0, 30)
+          .map(a => ({
+            type: a.alert_type || a.type,
+            message: a.message || a.details || '',
+            created_at: a.created_at
+          })),
+        daily_production_14d: computeDailyProductionSeries(14),
+        jobs_summary_count: printJobsSummary.length
+      };
+    }
+
+    function normalizeGeminiPayload(raw) {
+      if (!raw) return null;
+      let parsed = raw;
+      if (typeof raw === 'string') {
+        const cleaned = raw.replace(/^```json\s*/i, '').replace(/```$/i, '').trim();
+        parsed = JSON.parse(cleaned);
+      }
+      if (parsed.insights && typeof parsed.insights === 'object') parsed = parsed.insights;
+      return {
+        executive_summary: String(parsed.executive_summary || ''),
+        urgent_actions: Array.isArray(parsed.urgent_actions) ? parsed.urgent_actions : [],
+        cost_saving_tips: Array.isArray(parsed.cost_saving_tips) ? parsed.cost_saving_tips : [],
+        anomalies: Array.isArray(parsed.anomalies) ? parsed.anomalies : [],
+        whatsapp_briefing_ptbr: String(parsed.whatsapp_briefing_ptbr || '')
+      };
+    }
+
+    function renderGeminiInsights(data) {
+      const container = document.getElementById('geminiInsightsBody');
+      if (!container) return;
+      const norm = normalizeGeminiPayload(data);
+      if (!norm) return;
+      latestAiInsight = norm;
+
+      const formatItem = item => typeof item === 'string'
+        ? item
+        : (item && (item.title || item.action || item.detail || item.description))
+          ? `${item.title || item.action || ''}${item.detail || item.description ? ': ' + (item.detail || item.description) : ''}`
+          : JSON.stringify(item);
+
+      const renderList = (arr, emptyMsg) => arr.length === 0
+        ? `<li class="text-blue-200/70 italic">${emptyMsg}</li>`
+        : arr.map(it => `<li>• ${escapeHtml(formatItem(it))}</li>`).join('');
+
+      container.innerHTML = `
+        <div class="p-4 rounded-2xl bg-white/10 border border-white/15 space-y-1.5">
+          <span class="text-[10px] font-black uppercase tracking-wider text-amber-300 block">Resumo Executivo da Frota</span>
+          <p class="text-xs text-white leading-relaxed">${escapeHtml(norm.executive_summary || 'Análise concluída.')}</p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs">
+          <div class="p-4 rounded-2xl bg-rose-500/15 border border-rose-300/25 space-y-2">
+            <strong class="text-[11px] font-black uppercase text-rose-200 block">Ações Urgentes</strong>
+            <ul class="space-y-1.5 text-rose-50/90 leading-relaxed">${renderList(norm.urgent_actions, 'Nenhuma ação crítica imediata.')}</ul>
+          </div>
+          <div class="p-4 rounded-2xl bg-emerald-500/15 border border-emerald-300/25 space-y-2">
+            <strong class="text-[11px] font-black uppercase text-emerald-200 block">Dicas de Economia</strong>
+            <ul class="space-y-1.5 text-emerald-50/90 leading-relaxed">${renderList(norm.cost_saving_tips, 'Sem recomendações adicionais no momento.')}</ul>
+          </div>
+          <div class="p-4 rounded-2xl bg-amber-500/15 border border-amber-300/25 space-y-2">
+            <strong class="text-[11px] font-black uppercase text-amber-200 block">Anomalias Detectadas</strong>
+            <ul class="space-y-1.5 text-amber-50/90 leading-relaxed">${renderList(norm.anomalies, 'Nenhuma anomalia detectada.')}</ul>
+          </div>
+        </div>
+
+        <div class="p-4 rounded-2xl bg-slate-950/50 border border-white/15 space-y-2.5">
+          <div class="flex flex-wrap items-center justify-between gap-2">
+            <strong class="text-xs font-black text-emerald-300">Briefing Pronto para WhatsApp (PT-BR)</strong>
+            <div class="flex items-center gap-2">
+              <button type="button" id="btnCopyWppBriefing" onclick="copyGeminiWhatsappBriefing()" class="px-3 py-1.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black text-[11px] transition flex items-center space-x-1">
+                <i data-lucide="copy" class="w-3.5 h-3.5"></i>
+                <span>Copiar Briefing p/ WhatsApp</span>
+              </button>
+              <button type="button" onclick="openGeminiBriefingWhatsApp()" class="px-3 py-1.5 rounded-xl bg-white/15 hover:bg-white/25 text-white font-bold text-[11px] transition flex items-center space-x-1">
+                <i data-lucide="message-circle" class="w-3.5 h-3.5"></i>
+                <span>Abrir WhatsApp</span>
+              </button>
+            </div>
+          </div>
+          <pre id="geminiWppBriefingText" class="whitespace-pre-wrap text-[11px] text-blue-50 font-sans leading-relaxed bg-black/25 p-3 rounded-xl border border-white/10">${escapeHtml(norm.whatsapp_briefing_ptbr || norm.executive_summary)}</pre>
+        </div>
+      `;
+      lucide.createIcons();
+    }
+
+    function copyGeminiWhatsappBriefing() {
+      const text = (latestAiInsight && (latestAiInsight.whatsapp_briefing_ptbr || latestAiInsight.executive_summary)) || '';
+      if (!text) return;
+      navigator.clipboard.writeText(text);
+      const btn = document.getElementById('btnCopyWppBriefing');
+      if (btn) {
+        const prev = btn.innerHTML;
+        btn.innerText = '✓ Briefing Copiado!';
+        setTimeout(() => { btn.innerHTML = prev; lucide.createIcons(); }, 2500);
+      }
+    }
+
+    function openGeminiBriefingWhatsApp() {
+      const text = (latestAiInsight && (latestAiInsight.whatsapp_briefing_ptbr || latestAiInsight.executive_summary)) || '';
+      if (!text) return;
+      window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`, '_blank');
+    }
+
+    async function generateGeminiInsights() {
+      if (!currentTenant || !currentTenant.id) {
+        setGeminiStatusMessage('Faça login com um tenant ativo antes de gerar insights.', true);
+        return;
+      }
+
+      const btn = document.getElementById('btnGenerateGeminiInsights');
+      const prevBtnHtml = btn ? btn.innerHTML : '';
+      if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = `<i data-lucide="loader-2" class="w-4 h-4 animate-spin"></i><span>Analisando Frota...</span>`;
+        lucide.createIcons();
+      }
+      setGeminiStatusMessage('', false);
+
+      try {
+        // 1. Tenta primeiro a Supabase Edge Function 'gemini-insights'
+        let edgeWorked = false;
+        try {
+          const { data: fnData, error: fnErr } = await sb.functions.invoke('gemini-insights', {
+            body: { tenant_id: currentTenant.id }
+          });
+          if (!fnErr && fnData && !fnData.error && (fnData.executive_summary || (fnData.insights && fnData.insights.executive_summary))) {
+            renderGeminiInsights(fnData);
+            setGeminiStatusMessage('✓ Insights gerados via PrintMind Cloud AI (Edge Function).', false);
+            edgeWorked = true;
+          }
+        } catch (_) {
+          // Segue para fallback com chave Gemini configurada pelo admin
+        }
+
+        if (edgeWorked) return;
+
+        // 2. Fallback: usa chave Gemini armazenada apenas no localStorage do navegador do admin
+        const apiKey = (localStorage.getItem(GEMINI_KEY_STORAGE) || '').trim();
+        if (!apiKey) {
+          toggleGeminiKeyBox(true);
+          setGeminiStatusMessage('Edge Function gemini-insights ainda não configurada. Cole sua chave da API Gemini abaixo (fica salva somente no seu navegador) e clique em "Salvar Chave & Analisar".', true);
+          return;
+        }
+
+        // Busca contexto determinístico via RPC ou monta localmente com dados reais carregados
+        let contextPayload = null;
+        try {
+          const { data: rpcData, error: rpcErr } = await sb.rpc('get_fleet_ai_context', { p_tenant_id: currentTenant.id });
+          if (!rpcErr && rpcData) contextPayload = rpcData;
+        } catch (_) {}
+        if (!contextPayload) contextPayload = buildDeterministicFleetContext();
+
+        const promptText = `Você é o Consultor IA PrintMind para locadoras de impressão e outsourcing. Analise exclusivamente os dados reais JSON abaixo e responda APENAS com JSON válido contendo exatamente estas 5 chaves:
+- "executive_summary": string (resumo executivo claro em PT-BR)
+- "urgent_actions": array de strings (ações urgentes: máquinas offline >25min, caixa de resíduo >=85%, toner <=15%, trocas prematuras)
+- "cost_saving_tips": array de strings (dicas concretas de economia, remanejamento de ociosas e controle de limpeza de cabeçote)
+- "anomalies": array de strings (anomalias reais observadas ou lista vazia)
+- "whatsapp_briefing_ptbr": string (mensagem pronta e objetiva em PT-BR para enviar no WhatsApp da equipe/cliente)
+
+DADOS REAIS DA FROTA:
+${JSON.stringify(contextPayload)}`;
+
+        const resp = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${encodeURIComponent(apiKey)}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            contents: [{ parts: [{ text: promptText }] }],
+            generationConfig: { responseMimeType: 'application/json', temperature: 0.2 }
+          })
+        });
+
+        if (!resp.ok) {
+          const errText = await resp.text();
+          throw new Error(`Gemini API HTTP ${resp.status}: ${errText.slice(0, 180)}`);
+        }
+
+        const json = await resp.json();
+        const rawText = json && json.candidates && json.candidates[0] && json.candidates[0].content && json.candidates[0].content.parts && json.candidates[0].content.parts[0] && json.candidates[0].content.parts[0].text;
+        if (!rawText) throw new Error('Resposta vazia da API Gemini.');
+
+        const normalized = normalizeGeminiPayload(rawText);
+        renderGeminiInsights(normalized);
+        setGeminiStatusMessage('✓ Insights gerados com sucesso pelo Google Gemini 2.5 Flash.', false);
+
+        try {
+          await sb.from('ai_insights').insert({
+            tenant_id: currentTenant.id,
+            insights: normalized,
+            model: 'gemini-2.5-flash'
+          });
+        } catch (_) {}
+      } catch (err) {
+        setGeminiStatusMessage('Erro ao consultar Gemini IA: ' + (err && err.message ? err.message : String(err)), true);
+      } finally {
+        if (btn) {
+          btn.disabled = false;
+          btn.innerHTML = prevBtnHtml;
+          lucide.createIcons();
+        }
+      }
     }
 
     // --- DEMONSTRATIVO FORMAL A4 DE FECHAMENTO (ESPECIAL HOSPITALAR) ---
@@ -3204,7 +4370,7 @@ Podemos emitir a Nota Fiscal? Obrigado!`);
         openModal('pricingModal');
         alert(`🔒 Limite do Teste Gratuito Atingido (${FREE_TRIAL_PRINTER_LIMIT} impressoras).
 
-Para cadastrar a 3ª máquina e monitorar todo o seu parque, ative o Módulo 1 (apenas R$ 1,00/mês por impressora).`);
+Para cadastrar a 3ª máquina e monitorar todo o seu parque, ative o Plano Essencial (apenas R$ 1,00/mês por impressora).`);
         return;
       }
       const client_id = document.getElementById('prtClientSelect').value;
@@ -3479,12 +4645,12 @@ Para cadastrar a 3ª máquina e monitorar todo o seu parque, ative o Módulo 1 (
     }
 
     function getTenantPlanRate(planTier) {
-      const pTier = (planTier || 'modulo_1').toLowerCase();
-      if (pTier.includes('5') || pTier.includes('enterprise')) return 6;
-      if (pTier.includes('4') || pTier.includes('pro')) return 4;
+      const pTier = (planTier || 'starter').toLowerCase().trim();
+      if (pTier === 'enterprise' || pTier.includes('5') || pTier.includes('6')) return 6;
+      if (pTier === 'pro' || pTier.includes('4')) return 4;
       if (pTier.includes('3')) return 3;
-      if (pTier.includes('2') || pTier.includes('starter')) return 2;
-      return 1;
+      if (pTier.includes('2')) return 2;
+      return 1; // starter, modulo_1, trial
     }
 
     function normalizeDocOrPhone(val) {
@@ -3903,7 +5069,7 @@ Para cadastrar a 3ª máquina e monitorar todo o seu parque, ative o Módulo 1 (
       const rate = getTenantPlanRate(t.plan_tier);
       const totalVal = (tCount * rate).toFixed(2).replace('.', ',');
       const phone = (t.phone || '').replace(/\D/g, '');
-      const text = encodeURIComponent(`Olá ${t.trade_name}!\n\nSegue o demonstrativo da sua assinatura PrintMind Cloud:\n• Máquinas monitoradas: ${tCount}\n• Plano: ${(t.plan_tier || 'modulo_1').replace('_', ' ')} (R$ ${rate},00/máq)\n• Total mensal: R$ ${totalVal}\n\nPodemos enviar a fatura/PIX para manter o monitoramento ativo? Obrigado!`);
+      const text = encodeURIComponent(`Olá ${t.trade_name}!\n\nSegue o demonstrativo da sua assinatura PrintMind Cloud:\n• Máquinas monitoradas: ${tCount}\n• Plano: ${(t.plan_tier || 'starter').replace('_', ' ')} (R$ ${rate},00/máq)\n• Total mensal: R$ ${totalVal}\n\nPodemos enviar a fatura/PIX para manter o monitoramento ativo? Obrigado!`);
       const url = phone ? `https://api.whatsapp.com/send?phone=55${phone}&text=${text}` : `https://api.whatsapp.com/send?text=${text}`;
       window.open(url, '_blank');
     }
