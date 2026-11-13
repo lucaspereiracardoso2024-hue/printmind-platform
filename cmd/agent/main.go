@@ -2,19 +2,38 @@ package main
 
 import (
 	"bytes"
+	"context"
 	"encoding/binary"
 	"encoding/json"
 	"flag"
 	"fmt"
+	"io"
 	"log"
 	"net"
 	"net/http"
 	"os"
+	"os/exec"
 	"runtime"
 	"strings"
 	"sync"
 	"time"
 )
+
+const (
+	AgentVersion      = "3.2.0"
+	DefaultConfigPath = "printmind-config.json"
+	DefaultSupabaseRP = "https://zbsmzcbcivhzslcnfxmq.supabase.co/rest/v1/rpc/sync_agent_telemetry"
+	DefaultAnonAPIKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inpic216Y2JjaXZoenNsY25meG1xIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTQ0NDUxNTcsImV4cCI6MjExMDAyMTE1N30.U9F-EL3ddBBqEK0MqkNuZBC6ZvwtuEElN6Z_VpEGT7Q"
+)
+
+type Config struct {
+	ServerURL       string   `json:"server_url"`
+	APIKey          string   `json:"api_key"`
+	PairingToken    string   `json:"pairing_token"`
+	PollIntervalSec int      `json:"poll_interval_sec"`
+	EnableUSB       bool     `json:"enable_usb"`
+	Subnets         []string `json:"subnets,omitempty"`
+}
 
 type SupplyItem struct {
 	Name        string `json:"name"`
@@ -56,8 +75,15 @@ type SyncRequest struct {
 	Devices      []DiscoveredDevice `json:"devices"`
 }
 
+type SupabaseRPCPayload struct {
+	PairingToken string      `json:"p_pairing_token"`
+	Payload      SyncRequest `json:"p_payload"`
+}
+
 type SyncResponse struct {
 	Status       string `json:"status"`
+	Message      string `json:"message,omitempty"`
+	SyncedCount  int    `json:"synced_devices,omitempty"`
 	RemoteConfig struct {
 		PollIntervalSeconds       int      `json:"poll_interval_seconds"`
 		RateLimitPacketsPerSec    int      `json:"rate_limit_packets_per_sec"`
@@ -68,6 +94,164 @@ type SyncResponse struct {
 	} `json:"remote_config"`
 }
 
+type localSpoolerPrinter struct {
+	Name          string `json:"Name"`
+	PortName      string `json:"PortName"`
+	DriverName    string `json:"DriverName"`
+	PrinterStatus int    `json:"PrinterStatus"`
+	WorkOffline   bool   `json:"WorkOffline"`
+}
+
+func loadOrInitConfig(path, flagServer, flagToken, flagSubnets string) Config {
+	cfg := Config{
+		ServerURL:       DefaultSupabaseRP,
+		APIKey:          DefaultAnonAPIKey,
+		PairingToken:    "pm_live_hosp_central_01",
+		PollIntervalSec: 300,
+		EnableUSB:       true,
+	}
+
+	if data, err := os.ReadFile(path); err == nil {
+		var loaded Config
+		if json.Unmarshal(data, &loaded) == nil {
+			if strings.TrimSpace(loaded.ServerURL) != "" && !strings.Contains(loaded.ServerURL, "localhost:8090") {
+				cfg.ServerURL = strings.TrimSpace(loaded.ServerURL)
+			}
+			if strings.TrimSpace(loaded.APIKey) != "" {
+				cfg.APIKey = strings.TrimSpace(loaded.APIKey)
+			}
+			if strings.TrimSpace(loaded.PairingToken) != "" {
+				cfg.PairingToken = strings.TrimSpace(loaded.PairingToken)
+			}
+			if loaded.PollIntervalSec >= 30 {
+				cfg.PollIntervalSec = loaded.PollIntervalSec
+			}
+			cfg.EnableUSB = loaded.EnableUSB
+			if len(loaded.Subnets) > 0 {
+				cfg.Subnets = loaded.Subnets
+			}
+		}
+	}
+
+	if strings.TrimSpace(flagServer) != "" {
+		cfg.ServerURL = strings.TrimSpace(flagServer)
+	}
+	if strings.TrimSpace(flagToken) != "" {
+		cfg.PairingToken = strings.TrimSpace(flagToken)
+	}
+	if strings.TrimSpace(flagSubnets) != "" {
+		var custom []string
+		for _, s := range strings.Split(flagSubnets, ",") {
+			s = strings.TrimSpace(s)
+			if s != "" {
+				custom = append(custom, s)
+			}
+		}
+		if len(custom) > 0 {
+			cfg.Subnets = custom
+		}
+	}
+
+	if out, err := json.MarshalIndent(cfg, "", "  "); err == nil {
+		_ = os.WriteFile(path, out, 0644)
+	}
+	return cfg
+}
+
+func isPrivateIPv4(ip net.IP) bool {
+	ip4 := ip.To4()
+	if ip4 == nil || ip4.IsLoopback() || ip4.IsLinkLocalUnicast() {
+		return false
+	}
+	switch {
+	case ip4[0] == 10:
+		return true
+	case ip4[0] == 172 && ip4[1] >= 16 && ip4[1] <= 31:
+		return true
+	case ip4[0] == 192 && ip4[1] == 168:
+		return true
+	default:
+		return false
+	}
+}
+
+func detectLocalSubnets() []string {
+	seen := make(map[string]bool)
+	var subnets []string
+
+	ifaces, err := net.Interfaces()
+	if err == nil {
+		for _, iface := range ifaces {
+			if (iface.Flags&net.FlagUp) == 0 || (iface.Flags&net.FlagLoopback) != 0 {
+				continue
+			}
+			addrs, aErr := iface.Addrs()
+			if aErr != nil {
+				continue
+			}
+			for _, addr := range addrs {
+				ipNet, ok := addr.(*net.IPNet)
+				if !ok || !isPrivateIPv4(ipNet.IP) {
+					continue
+				}
+				ip4 := ipNet.IP.To4()
+				cidr := fmt.Sprintf("%d.%d.%d.0/24", ip4[0], ip4[1], ip4[2])
+				if !seen[cidr] {
+					seen[cidr] = true
+					subnets = append(subnets, cidr)
+				}
+			}
+		}
+	}
+
+	if len(subnets) == 0 {
+		subnets = append(subnets, "192.168.1.0/24")
+	}
+	return subnets
+}
+
+func detectVendorFromModel(model string) (string, int) {
+	m := strings.ToLower(model)
+	switch {
+	case strings.Contains(m, "hp") || strings.Contains(m, "hewlett") || strings.Contains(m, "laserjet") || strings.Contains(m, "deskjet") || strings.Contains(m, "officejet"):
+		return "HP", 11
+	case strings.Contains(m, "brother"):
+		return "Brother", 2435
+	case strings.Contains(m, "ricoh") || strings.Contains(m, "aficio"):
+		return "Ricoh", 367
+	case strings.Contains(m, "kyocera") || strings.Contains(m, "ecosys") || strings.Contains(m, "taskalfa"):
+		return "Kyocera", 1347
+	case strings.Contains(m, "samsung"):
+		return "Samsung", 236
+	case strings.Contains(m, "pantum"):
+		return "Pantum", 40093
+	case strings.Contains(m, "epson"):
+		return "Epson", 1248
+	case strings.Contains(m, "canon"):
+		return "Canon", 1602
+	case strings.Contains(m, "konica") || strings.Contains(m, "minolta") || strings.Contains(m, "bizhub"):
+		return "Konica Minolta", 18334
+	case strings.Contains(m, "xerox"):
+		return "Xerox", 253
+	case strings.Contains(m, "lexmark"):
+		return "Lexmark", 641
+	case strings.Contains(m, "zebra"):
+		return "Zebra", 10642
+	default:
+		return "Genérico", 0
+	}
+}
+
+func sanitizeSerial(s string) string {
+	var b strings.Builder
+	for _, r := range strings.TrimSpace(s) {
+		if (r >= '0' && r <= '9') || (r >= 'A' && r <= 'Z') || (r >= 'a' && r <= 'z') || r == '-' || r == '_' {
+			b.WriteRune(r)
+		}
+	}
+	return b.String()
+}
+
 func encodeOID(oidStr string) ([]byte, error) {
 	parts := strings.Split(strings.Trim(oidStr, "."), ".")
 	if len(parts) < 2 {
@@ -76,7 +260,9 @@ func encodeOID(oidStr string) ([]byte, error) {
 	var nums []uint32
 	for _, p := range parts {
 		var n uint32
-		fmt.Sscanf(p, "%d", &n)
+		if _, err := fmt.Sscanf(p, "%d", &n); err != nil {
+			return nil, fmt.Errorf("invalid OID segment %q: %w", p, err)
+		}
 		nums = append(nums, n)
 	}
 	buf := []byte{byte(nums[0]*40 + nums[1])}
@@ -156,7 +342,7 @@ func getSNMPOID(ip, community, oidStr string, timeout time.Duration) ([]byte, er
 		return nil, err
 	}
 	defer conn.Close()
-	conn.SetDeadline(time.Now().Add(timeout))
+	_ = conn.SetDeadline(time.Now().Add(timeout))
 	if _, err := conn.Write(pkt); err != nil {
 		return nil, err
 	}
@@ -204,6 +390,21 @@ func getSNMPUint32(ip, community, oidStr string, timeout time.Duration) (uint32,
 	return out, true
 }
 
+func getSNMPInt(ip, community, oidStr string, timeout time.Duration) (int, bool) {
+	val, err := getSNMPOID(ip, community, oidStr, timeout)
+	if err != nil || len(val) == 0 || len(val) > 4 {
+		return 0, false
+	}
+	var out int32
+	if val[0]&0x80 != 0 {
+		out = -1
+	}
+	for _, b := range val {
+		out = (out << 8) | int32(b)
+	}
+	return int(out), true
+}
+
 func expandCIDRToIPs(cidr string) []string {
 	if !strings.Contains(cidr, "/") {
 		return []string{cidr}
@@ -212,12 +413,9 @@ func expandCIDRToIPs(cidr string) []string {
 	if err != nil {
 		return nil
 	}
-	var ips []string
+	var all []string
 	for cur := ip.Mask(ipnet.Mask); ipnet.Contains(cur); {
-		lastByte := cur[len(cur)-1]
-		if lastByte != 0 && lastByte != 255 {
-			ips = append(ips, cur.String())
-		}
+		all = append(all, cur.String())
 		for i := len(cur) - 1; i >= 0; i-- {
 			cur[i]++
 			if cur[i] > 0 {
@@ -225,7 +423,11 @@ func expandCIDRToIPs(cidr string) []string {
 			}
 		}
 	}
-	return ips
+	ones, bits := ipnet.Mask.Size()
+	if bits == 32 && ones < 31 && len(all) > 2 {
+		return all[1 : len(all)-1]
+	}
+	return all
 }
 
 func probeDevice(ip, community string, enableWakeup bool) (*DiscoveredDevice, bool) {
@@ -233,8 +435,8 @@ func probeDevice(ip, community string, enableWakeup bool) (*DiscoveredDevice, bo
 	desc, err := getSNMPOID(ip, community, "1.3.6.1.2.1.1.1.0", timeout)
 	if err != nil && enableWakeup {
 		if c, dErr := net.DialTimeout("tcp", ip+":80", 250*time.Millisecond); dErr == nil {
-			c.Write([]byte("HEAD / HTTP/1.0\r\n\r\n"))
-			c.Close()
+			_, _ = c.Write([]byte("HEAD / HTTP/1.0\r\n\r\n"))
+			_ = c.Close()
 			time.Sleep(150 * time.Millisecond)
 			desc, err = getSNMPOID(ip, community, "1.3.6.1.2.1.1.1.0", timeout)
 		}
@@ -244,9 +446,10 @@ func probeDevice(ip, community string, enableWakeup bool) (*DiscoveredDevice, bo
 	}
 
 	model := strings.TrimSpace(string(desc))
-	if hrDesc, err := getSNMPOID(ip, community, "1.3.6.1.2.1.25.3.2.1.3.1", timeout); err == nil && len(hrDesc) > 0 {
+	if hrDesc, err := getSNMPOID(ip, community, "1.3.6.1.2.1.25.3.2.1.3.1", timeout); err == nil && len(strings.TrimSpace(string(hrDesc))) > 0 {
 		model = strings.TrimSpace(string(hrDesc))
 	}
+	vendor, pen := detectVendorFromModel(model)
 
 	serial := ""
 	for _, sOID := range []string{
@@ -255,9 +458,12 @@ func probeDevice(ip, community string, enableWakeup bool) (*DiscoveredDevice, bo
 		"1.3.6.1.4.1.2435.2.3.9.4.2.1.5.5.1.0",
 		"1.3.6.1.4.1.367.3.2.1.2.1.4.0",
 	} {
-		if b, err := getSNMPOID(ip, community, sOID, timeout); err == nil && len(strings.TrimSpace(string(b))) > 0 {
-			serial = strings.TrimSpace(string(b))
-			break
+		if b, err := getSNMPOID(ip, community, sOID, timeout); err == nil {
+			cleaned := sanitizeSerial(string(b))
+			if cleaned != "" {
+				serial = cleaned
+				break
+			}
 		}
 	}
 
@@ -268,26 +474,102 @@ func probeDevice(ip, community string, enableWakeup bool) (*DiscoveredDevice, bo
 		"1.3.6.1.4.1.2435.2.3.9.4.2.1.5.5.10.0",
 		"1.3.6.1.4.1.367.3.2.1.2.19.1.0",
 		"1.3.6.1.4.1.1347.43.10.1.1.12.1.1",
+		"1.3.6.1.4.1.236.11.5.1.1.9.2.0",
+		"1.3.6.1.4.1.40093.10.3.1.1",
 	} {
 		if v, ok := getSNMPUint32(ip, community, tOID, timeout); ok && v > 0 {
 			total = v
 			break
 		}
 	}
-	if v, ok := getSNMPUint32(ip, community, "1.3.6.1.4.1.11.2.3.9.4.2.1.4.1.2.6.0", timeout); ok {
-		mono = v
+	for _, mOID := range []string{
+		"1.3.6.1.4.1.11.2.3.9.4.2.1.4.1.2.6.0",
+		"1.3.6.1.4.1.2435.2.3.9.4.2.1.5.5.52.2.1.3.2",
+		"1.3.6.1.4.1.1602.1.11.1.3.1.4.108",
+	} {
+		if v, ok := getSNMPUint32(ip, community, mOID, timeout); ok && v > 0 {
+			mono = v
+			break
+		}
 	}
-	if v, ok := getSNMPUint32(ip, community, "1.3.6.1.4.1.11.2.3.9.4.2.1.4.1.2.7.0", timeout); ok {
-		color = v
+	for _, cOID := range []string{
+		"1.3.6.1.4.1.11.2.3.9.4.2.1.4.1.2.7.0",
+		"1.3.6.1.4.1.2435.2.3.9.4.2.1.5.5.52.2.1.3.3",
+		"1.3.6.1.4.1.1602.1.11.1.3.1.4.122",
+	} {
+		if v, ok := getSNMPUint32(ip, community, cOID, timeout); ok && v > 0 {
+			color = v
+			break
+		}
 	}
 	if mono == 0 && color == 0 {
 		mono = total
+	} else if total == 0 {
+		total = mono + color
+	}
+
+	var supplies []SupplyItem
+	defaultColors := []string{"black", "cyan", "magenta", "yellow"}
+	for idx := 1; idx <= 4; idx++ {
+		nameOID := fmt.Sprintf("1.3.6.1.2.1.43.11.1.1.6.1.%d", idx)
+		maxOID := fmt.Sprintf("1.3.6.1.2.1.43.11.1.1.8.1.%d", idx)
+		lvlOID := fmt.Sprintf("1.3.6.1.2.1.43.11.1.1.9.1.%d", idx)
+
+		nameBytes, nErr := getSNMPOID(ip, community, nameOID, timeout)
+		if nErr != nil || len(strings.TrimSpace(string(nameBytes))) == 0 {
+			continue
+		}
+		supName := strings.TrimSpace(string(nameBytes))
+		if supName == "" {
+			supName = "Toner Principal"
+		}
+		maxCap, okMax := getSNMPInt(ip, community, maxOID, timeout)
+		curLvl, okLvl := getSNMPInt(ip, community, lvlOID, timeout)
+		if !okMax || maxCap <= 0 {
+			maxCap = 100
+		}
+		pct := 0
+		if okLvl {
+			switch {
+			case curLvl == -3:
+				pct = 100
+			case curLvl < 0:
+				pct = 50
+			case curLvl <= maxCap:
+				pct = int((float64(curLvl) / float64(maxCap)) * 100.0)
+			default:
+				pct = 100
+			}
+		}
+
+		col := defaultColors[(idx-1)%4]
+		lower := strings.ToLower(supName)
+		switch {
+		case strings.Contains(lower, "cyan") || strings.Contains(lower, "ciano"):
+			col = "cyan"
+		case strings.Contains(lower, "magenta"):
+			col = "magenta"
+		case strings.Contains(lower, "yellow") || strings.Contains(lower, "amarelo"):
+			col = "yellow"
+		case strings.Contains(lower, "black") || strings.Contains(lower, "preto"):
+			col = "black"
+		}
+
+		supplies = append(supplies, SupplyItem{
+			Name:        supName,
+			Color:       col,
+			Level:       curLvl,
+			MaxCapacity: maxCap,
+			Percent:     pct,
+		})
 	}
 
 	return &DiscoveredDevice{
 		DiscoverySource: "snmp_v2c",
 		IPAddress:       ip,
 		SerialNumber:    serial,
+		VendorPEN:       pen,
+		Vendor:          vendor,
 		Model:           model,
 		Status:          "online",
 		Counters: DeviceCounters{
@@ -295,6 +577,7 @@ func probeDevice(ip, community string, enableWakeup bool) (*DiscoveredDevice, bo
 			MonoTotal:           mono,
 			ColorTotal:          color,
 		},
+		Supplies: supplies,
 	}, true
 }
 
@@ -312,7 +595,7 @@ func scanNetworkSubnets(subnets []string, staticIPs []string, rateLimitPPS int, 
 	}
 
 	if rateLimitPPS <= 0 {
-		rateLimitPPS = 20
+		rateLimitPPS = 25
 	}
 	ticker := time.NewTicker(time.Second / time.Duration(rateLimitPPS))
 	defer ticker.Stop()
@@ -337,26 +620,182 @@ func scanNetworkSubnets(subnets []string, staticIPs []string, rateLimitPPS int, 
 	return results
 }
 
+func isVirtualPrinter(name, port, driver string) bool {
+	combined := strings.ToLower(name + " " + port + " " + driver)
+	virtualKeywords := []string{"microsoft print to pdf", "onenote", "xps document", "fax", "send to onenote", "pdfcreator", "foxit", "adobe pdf", "cutepdf", "nul:"}
+	for _, kw := range virtualKeywords {
+		if strings.Contains(combined, kw) {
+			return true
+		}
+	}
+	return false
+}
+
+func discoverLocalSpoolerPrinters() []DiscoveredDevice {
+	if runtime.GOOS != "windows" {
+		return nil
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), 6*time.Second)
+	defer cancel()
+
+	psCmd := "Get-CimInstance Win32_Printer | Select-Object Name, PortName, DriverName, PrinterStatus, WorkOffline | ConvertTo-Json -Compress"
+	cmd := exec.CommandContext(ctx, "powershell", "-NoProfile", "-NonInteractive", "-Command", psCmd)
+	out, err := cmd.Output()
+	if err != nil || len(bytes.TrimSpace(out)) == 0 {
+		return nil
+	}
+
+	trimmed := bytes.TrimSpace(out)
+	var rawList []localSpoolerPrinter
+	if trimmed[0] == '[' {
+		if err := json.Unmarshal(trimmed, &rawList); err != nil {
+			return nil
+		}
+	} else if trimmed[0] == '{' {
+		var single localSpoolerPrinter
+		if err := json.Unmarshal(trimmed, &single); err != nil {
+			return nil
+		}
+		rawList = append(rawList, single)
+	}
+
+	var devices []DiscoveredDevice
+	for _, p := range rawList {
+		if isVirtualPrinter(p.Name, p.PortName, p.DriverName) {
+			continue
+		}
+		portUpper := strings.ToUpper(p.PortName)
+		isUSB := strings.HasPrefix(portUpper, "USB") || strings.HasPrefix(portUpper, "DOT4") || strings.Contains(portUpper, "WSD")
+		if !isUSB {
+			continue
+		}
+
+		vendor, pen := detectVendorFromModel(p.Name + " " + p.DriverName)
+		status := "online"
+		if p.WorkOffline {
+			status = "offline"
+		}
+		serial := sanitizeSerial("USB-" + p.Name + "-" + p.PortName)
+
+		devices = append(devices, DiscoveredDevice{
+			DiscoverySource: "usb_spooler",
+			IPAddress:       "0.0.0.0",
+			USBPort:         p.PortName,
+			SerialNumber:    serial,
+			VendorPEN:       pen,
+			Vendor:          vendor,
+			Model:           strings.TrimSpace(p.Name),
+			Status:          status,
+			Supplies: []SupplyItem{
+				{Name: "Toner / Tinta Geral", Color: "black", Level: 80, MaxCapacity: 100, Percent: 80},
+			},
+		})
+	}
+	return devices
+}
+
+func sendTelemetry(client *http.Client, cfg Config, reqPayload SyncRequest) (*SyncResponse, error) {
+	isSupabaseRPC := strings.Contains(cfg.ServerURL, "/rest/v1/rpc/")
+	var bodyBytes []byte
+	var err error
+	endpoint := strings.TrimRight(cfg.ServerURL, "/")
+
+	if isSupabaseRPC {
+		bodyBytes, err = json.Marshal(SupabaseRPCPayload{
+			PairingToken: cfg.PairingToken,
+			Payload:      reqPayload,
+		})
+	} else {
+		endpoint = endpoint + "/api/v2/telemetry/sync"
+		bodyBytes, err = json.Marshal(reqPayload)
+	}
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodPost, endpoint, bytes.NewBuffer(bodyBytes))
+	if err != nil {
+		return nil, err
+	}
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("User-Agent", fmt.Sprintf("PrintMind-Agent/%s (%s; %s)", AgentVersion, runtime.GOOS, runtime.GOARCH))
+	if isSupabaseRPC && cfg.APIKey != "" {
+		req.Header.Set("apikey", cfg.APIKey)
+		req.Header.Set("Authorization", "Bearer "+cfg.APIKey)
+	}
+
+	resp, err := client.Do(req)
+	if err != nil {
+		_ = os.WriteFile("agent_buffer.json.tmp", bodyBytes, 0644)
+		_ = os.Rename("agent_buffer.json.tmp", "agent_buffer.json")
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	respData, _ := io.ReadAll(resp.Body)
+	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
+		return nil, fmt.Errorf("HTTP %d: %s", resp.StatusCode, strings.TrimSpace(string(respData)))
+	}
+
+	var syncResp SyncResponse
+	_ = json.Unmarshal(respData, &syncResp)
+	return &syncResp, nil
+}
+
 func main() {
-	serverURL := flag.String("server", "http://localhost:8090", "URL do Servidor Central PrintMind")
-	token := flag.String("token", "pm_live_hosp_central_01", "Token de Pareamento da Unidade/Filial")
-	subnetsFlag := flag.String("subnets", "192.168.1.0/24", "Sub-redes locais ou VLANs remotas separadas por vírgula")
+	serverURL := flag.String("server", "", "URL do Endpoint PrintMind / Supabase RPC")
+	token := flag.String("token", "", "Token de Pareamento da Unidade/Filial")
+	subnetsFlag := flag.String("subnets", "", "Sub-redes locais ou VLANs remotas separadas por vírgula")
+	configPath := flag.String("config", DefaultConfigPath, "Caminho do arquivo de configuração persistente")
 	once := flag.Bool("once", false, "Executa apenas 1 ciclo de varredura e encerra")
 	flag.Parse()
 
+	cfg := loadOrInitConfig(*configPath, *serverURL, *token, *subnetsFlag)
 	hostname, _ := os.Hostname()
-	subnets := strings.Split(*subnetsFlag, ",")
-	pollSec := 900
-	rateLimit := 20
-	enableWakeup := true
+	subnets := cfg.Subnets
+	if len(subnets) == 0 {
+		subnets = detectLocalSubnets()
+	}
 
-	log.Printf("🚀 PrintMind Satellite Agent V3.0 iniciado em %s (%s) • Sub-redes iniciais: %v", hostname, runtime.GOOS, subnets)
+	pollSec := cfg.PollIntervalSec
+	if pollSec < 30 {
+		pollSec = 300
+	}
+	rateLimit := 25
+	enableWakeup := true
+	httpClient := &http.Client{Timeout: 20 * time.Second}
+
+	log.Printf("PrintMind Satellite Agent v%s iniciado em %s (%s/%s)", AgentVersion, hostname, runtime.GOOS, runtime.GOARCH)
+	log.Printf("[Varredura de Rede] Iniciando varredura SNMP em %v...", subnets)
 
 	for {
-		devices := scanNetworkSubnets(subnets, nil, rateLimit, enableWakeup)
+		snmpDevices := scanNetworkSubnets(subnets, nil, rateLimit, enableWakeup)
+		if len(snmpDevices) > 0 {
+			log.Printf("[SNMP Rede] %d impressora(s) respondendo via SNMP RFC 3805:", len(snmpDevices))
+		} else {
+			log.Printf("[SNMP Rede] Nenhuma impressora SNMP respondeu neste ciclo.")
+		}
+
+		var usbDevices []DiscoveredDevice
+		if cfg.EnableUSB {
+			usbDevices = discoverLocalSpoolerPrinters()
+			if len(usbDevices) > 0 {
+				log.Printf("[Spooler/USB] %d impressora(s) local(is) detectada(s):", len(usbDevices))
+			}
+		}
+
+		devices := append(snmpDevices, usbDevices...)
+		for _, dev := range devices {
+			for _, sup := range dev.Supplies {
+				if sup.Percent <= 15 {
+					log.Printf("[Alerta Heurístico] %s (%s): %s em nível crítico (%d%%)", dev.Model, dev.IPAddress, sup.Name, sup.Percent)
+				}
+			}
+		}
+
 		reqPayload := SyncRequest{
-			AgentVersion: "3.0.0",
-			PairingToken: *token,
+			AgentVersion: AgentVersion,
+			PairingToken: cfg.PairingToken,
 			CollectedAt:  time.Now().Format(time.RFC3339),
 			HostInfo: map[string]string{
 				"hostname": hostname,
@@ -365,26 +804,21 @@ func main() {
 			Devices: devices,
 		}
 
-		body, _ := json.Marshal(reqPayload)
-		resp, err := http.Post(strings.TrimRight(*serverURL, "/")+"/api/v2/telemetry/sync", "application/json", bytes.NewBuffer(body))
+		syncResp, err := sendTelemetry(httpClient, cfg, reqPayload)
 		if err != nil {
-			_ = os.WriteFile("agent_buffer.json.tmp", body, 0644)
-			_ = os.Rename("agent_buffer.json.tmp", "agent_buffer.json")
-			log.Printf("⚠️ Sem conexão com a nuvem (%v). Leituras salvas no buffer local.", err)
+			log.Printf("[Nuvem PrintMind] Falha na sincronização (%v). Buffer local salvo em agent_buffer.json.", err)
 		} else {
-			var syncResp SyncResponse
-			if json.NewDecoder(resp.Body).Decode(&syncResp) == nil && len(syncResp.RemoteConfig.ScanSubnets) > 0 {
+			if len(syncResp.RemoteConfig.ScanSubnets) > 0 && len(cfg.Subnets) == 0 {
 				subnets = syncResp.RemoteConfig.ScanSubnets
-				if syncResp.RemoteConfig.PollIntervalSeconds >= 60 {
-					pollSec = syncResp.RemoteConfig.PollIntervalSeconds
-				}
-				if syncResp.RemoteConfig.RateLimitPacketsPerSec > 0 {
-					rateLimit = syncResp.RemoteConfig.RateLimitPacketsPerSec
-				}
-				enableWakeup = syncResp.RemoteConfig.EnableHTTPWakeupForPantum
 			}
-			resp.Body.Close()
-			log.Printf("✅ Sync concluído (%d impressoras reportadas). Próxima varredura em %ds.", len(devices), pollSec)
+			if syncResp.RemoteConfig.PollIntervalSeconds >= 60 {
+				pollSec = syncResp.RemoteConfig.PollIntervalSeconds
+			}
+			if syncResp.RemoteConfig.RateLimitPacketsPerSec > 0 {
+				rateLimit = syncResp.RemoteConfig.RateLimitPacketsPerSec
+			}
+			enableWakeup = syncResp.RemoteConfig.EnableHTTPWakeupForPantum
+			log.Printf("[Nuvem PrintMind] Sync concluído (%d impressoras reportadas). Próxima varredura em %ds.", len(devices), pollSec)
 		}
 
 		if *once {
