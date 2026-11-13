@@ -259,11 +259,51 @@
             <input id="loginEmail" type="email" required placeholder="voce@sualocadora.com.br" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-xs focus:outline-none focus:ring-2 focus:ring-[#0038A8]" />
           </div>
           <div>
-            <label class="block text-[11px] font-bold text-slate-700 mb-1">Senha</label>
+            <div class="flex items-center justify-between mb-1">
+              <label class="block text-[11px] font-bold text-slate-700">Senha</label>
+              <button type="button" onclick="switchAuthTab('forgot')" class="text-[11px] font-bold text-[#0038A8] hover:underline">
+                Esqueci minha senha
+              </button>
+            </div>
             <input id="loginPassword" type="password" required minlength="6" placeholder="••••••••" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-xs focus:outline-none focus:ring-2 focus:ring-[#0038A8]" />
           </div>
           <button id="btnSubmitLogin" type="submit" class="w-full py-3 rounded-2xl bg-[#0038A8] hover:bg-blue-800 text-white font-black text-xs shadow-md transition">
             Entrar no Painel
+          </button>
+        </form>
+
+        <!-- FORMULÁRIO DE RECUPERAÇÃO DE SENHA -->
+        <form id="formForgotPassword" onsubmit="handlePasswordResetRequest(event)" class="hidden space-y-3">
+          <p class="text-[11px] text-slate-600 leading-relaxed">
+            Informe seu e-mail cadastrado. Enviaremos um link seguro do Supabase para você criar ou redefinir sua senha.
+          </p>
+          <div>
+            <label class="block text-[11px] font-bold text-slate-700 mb-1">E-mail de Acesso</label>
+            <input id="forgotEmail" type="email" required placeholder="voce@sualocadora.com.br" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-xs focus:outline-none focus:ring-2 focus:ring-[#0038A8]" />
+          </div>
+          <button id="btnSubmitForgot" type="submit" class="w-full py-3 rounded-2xl bg-[#0038A8] hover:bg-blue-800 text-white font-black text-xs shadow-md transition">
+            Enviar Link de Redefinição
+          </button>
+          <button type="button" onclick="switchAuthTab('login')" class="w-full py-2 text-xs font-bold text-slate-500 hover:text-slate-800 transition">
+            ← Voltar para o Login
+          </button>
+        </form>
+
+        <!-- FORMULÁRIO DE NOVA SENHA (APÓS CLICAR NO LINK DE RECUPERAÇÃO) -->
+        <form id="formResetPassword" onsubmit="handleUpdateRecoveredPassword(event)" class="hidden space-y-3">
+          <p class="text-[11px] text-slate-600 leading-relaxed">
+            Link validado! Defina abaixo sua nova senha de acesso ao PrintMind Cloud.
+          </p>
+          <div>
+            <label class="block text-[11px] font-bold text-slate-700 mb-1">Nova Senha (mín. 6 caracteres)</label>
+            <input id="resetNewPassword" type="password" required minlength="6" placeholder="••••••••" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-xs focus:outline-none focus:ring-2 focus:ring-[#0038A8]" />
+          </div>
+          <div>
+            <label class="block text-[11px] font-bold text-slate-700 mb-1">Confirmar Nova Senha</label>
+            <input id="resetConfirmPassword" type="password" required minlength="6" placeholder="••••••••" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-xs focus:outline-none focus:ring-2 focus:ring-[#0038A8]" />
+          </div>
+          <button id="btnSubmitResetPassword" type="submit" class="w-full py-3 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs shadow-md transition">
+            Salvar Nova Senha e Entrar
           </button>
         </form>
 
@@ -1938,11 +1978,74 @@
 
     function switchAuthTab(tab) {
       const isLogin = tab === 'login';
+      const isSignup = tab === 'signup';
+      const isForgot = tab === 'forgot';
+      const isReset = tab === 'reset';
+
       document.getElementById('formLogin').classList.toggle('hidden', !isLogin);
-      document.getElementById('formSignup').classList.toggle('hidden', isLogin);
-      document.getElementById('tabBtnLogin').className = isLogin ? 'py-2 rounded-xl bg-white text-slate-900 shadow-sm transition' : 'py-2 rounded-xl text-slate-600 hover:text-slate-900 transition';
-      document.getElementById('tabBtnSignup').className = !isLogin ? 'py-2 rounded-xl bg-white text-slate-900 shadow-sm transition' : 'py-2 rounded-xl text-slate-600 hover:text-slate-900 transition';
+      document.getElementById('formSignup').classList.toggle('hidden', !isSignup);
+      document.getElementById('formForgotPassword').classList.toggle('hidden', !isForgot);
+      document.getElementById('formResetPassword').classList.toggle('hidden', !isReset);
+
+      document.getElementById('tabBtnLogin').className = (isLogin || isForgot || isReset) ? 'py-2 rounded-xl bg-white text-slate-900 shadow-sm transition' : 'py-2 rounded-xl text-slate-600 hover:text-slate-900 transition';
+      document.getElementById('tabBtnSignup').className = isSignup ? 'py-2 rounded-xl bg-white text-slate-900 shadow-sm transition' : 'py-2 rounded-xl text-slate-600 hover:text-slate-900 transition';
+
+      if (isForgot) {
+        const loginEmail = (document.getElementById('loginEmail').value || '').trim();
+        if (loginEmail) document.getElementById('forgotEmail').value = loginEmail;
+      }
       document.getElementById('authAlertBox').classList.add('hidden');
+    }
+
+    async function handlePasswordResetRequest(e) {
+      e.preventDefault();
+      const email = document.getElementById('forgotEmail').value.trim();
+      const btn = document.getElementById('btnSubmitForgot');
+      btn.disabled = true;
+      btn.innerText = 'Enviando link...';
+
+      const redirectUrl = window.location.origin + window.location.pathname;
+      const { error } = await sb.auth.resetPasswordForEmail(email, { redirectTo: redirectUrl });
+      btn.disabled = false;
+      btn.innerText = 'Enviar Link de Redefinição';
+
+      if (error) {
+        showAuthAlert('Não foi possível enviar o link: ' + error.message, true);
+        return;
+      }
+      showAuthAlert('Link enviado para ' + email + '! Abra o e-mail recebido (confira também o Spam) e clique no link para definir sua nova senha.', false);
+    }
+
+    async function handleUpdateRecoveredPassword(e) {
+      e.preventDefault();
+      const newPassword = document.getElementById('resetNewPassword').value;
+      const confirmPassword = document.getElementById('resetConfirmPassword').value;
+      if (newPassword !== confirmPassword) {
+        showAuthAlert('As senhas digitadas não coincidem. Verifique e tente novamente.', true);
+        return;
+      }
+
+      const btn = document.getElementById('btnSubmitResetPassword');
+      btn.disabled = true;
+      btn.innerText = 'Salvando nova senha...';
+
+      const { data, error } = await sb.auth.updateUser({ password: newPassword });
+      btn.disabled = false;
+      btn.innerText = 'Salvar Nova Senha e Entrar';
+
+      if (error) {
+        showAuthAlert('Erro ao atualizar senha: ' + error.message, true);
+        return;
+      }
+
+      isPasswordRecoveryFlow = false;
+      const { data: sessData } = await sb.auth.getSession();
+      if (sessData && sessData.session) {
+        onSessionAuthenticated(sessData.session);
+      } else if (data && data.user) {
+        switchAuthTab('login');
+        showAuthAlert('Senha atualizada com sucesso! Agora você já pode entrar com seu e-mail e a nova senha.', false);
+      }
     }
 
     async function handleGoogleLogin() {
@@ -1973,7 +2076,11 @@
       btn.innerText = 'Entrar no Painel';
 
       if (error) {
-        showAuthAlert('Falha no login: ' + error.message, true);
+        if (error.message && error.message.toLowerCase().includes('invalid login credentials')) {
+          showAuthAlert('E-mail ou senha incorretos. Se você costuma entrar com o Google ou esqueceu sua senha, clique em "Continuar com o Google" acima ou em "Esqueci minha senha".', true);
+        } else {
+          showAuthAlert('Falha no login: ' + error.message, true);
+        }
         return;
       }
       if (data.session) onSessionAuthenticated(data.session);
@@ -2028,6 +2135,10 @@
     }
 
     async function onSessionAuthenticated(session) {
+      if (!session || !session.user) return;
+      if (currentSession && currentSession.user && currentSession.user.id === session.user.id && !document.getElementById('appScreen').classList.contains('hidden')) {
+        return;
+      }
       currentSession = session;
       document.getElementById('authScreen').classList.add('hidden');
       document.getElementById('appScreen').classList.remove('hidden');
@@ -3079,9 +3190,30 @@ Para cadastrar a 3ª máquina e monitorar todo o seu parque, ative o Módulo 1 (
       alert('Comando de emissão enviado para a Edge Function do Asaas!');
     }
 
-    // Inicialização da Sessão
+    // Inicialização da Sessão e Fluxo de Recuperação de Senha
+    let isPasswordRecoveryFlow = window.location.hash.includes('type=recovery') || window.location.search.includes('type=recovery');
+
+    function openPasswordRecoveryForm() {
+      isPasswordRecoveryFlow = true;
+      document.getElementById('appScreen').classList.add('hidden');
+      document.getElementById('authScreen').classList.remove('hidden');
+      switchAuthTab('reset');
+      showAuthAlert('Defina sua nova senha abaixo para concluir a recuperação da conta.', false);
+      lucide.createIcons();
+    }
+
+    sb.auth.onAuthStateChange((event, session) => {
+      if (event === 'PASSWORD_RECOVERY') {
+        openPasswordRecoveryForm();
+      } else if (event === 'SIGNED_IN' && session && !isPasswordRecoveryFlow) {
+        onSessionAuthenticated(session);
+      }
+    });
+
     sb.auth.getSession().then(({ data: { session } }) => {
-      if (session) {
+      if (isPasswordRecoveryFlow) {
+        openPasswordRecoveryForm();
+      } else if (session) {
         onSessionAuthenticated(session);
       } else {
         lucide.createIcons();
