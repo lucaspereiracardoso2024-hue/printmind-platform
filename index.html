@@ -1643,12 +1643,12 @@
       const secMaster = document.getElementById('sectionMaster');
       const btnClients = document.getElementById('navTabClients');
       const btnReports = document.getElementById('navTabReports');
-      const btnGrafica = document.getElementById('navTabGrafica'); if (btnGrafica)
+      const btnGrafica = document.getElementById('navTabGrafica');
       const btnMaster = document.getElementById('navTabMaster');
 
       secClients.classList.toggle('hidden', tabId !== 'clients');
       secReports.classList.toggle('hidden', tabId !== 'reports');
-      secGrafica.classList.toggle('hidden', tabId !== 'grafica');
+      if (secGrafica) secGrafica.classList.toggle('hidden', tabId !== 'grafica');
       if (secMaster) secMaster.classList.toggle('hidden', tabId !== 'master');
 
       const activeClasses = 'px-3.5 py-1.5 rounded-xl bg-white text-[#0038A8] shadow-sm transition flex items-center space-x-1.5';
@@ -1658,7 +1658,7 @@
 
       btnClients.className = tabId === 'clients' ? activeClasses : inactiveClasses;
       btnReports.className = tabId === 'reports' ? activeClasses : inactiveClasses;
-      btnGrafica.className = tabId === 'grafica' ? activeClasses : inactiveClasses;
+      if (btnGrafica) btnGrafica.className = tabId === 'grafica' ? activeClasses : inactiveClasses;
       if (btnMaster) btnMaster.className = tabId === 'master' ? masterActive : masterInactive;
 
       if (tabId === 'reports') renderReportsView();
