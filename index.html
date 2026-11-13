@@ -725,7 +725,7 @@
               <p class="text-xs text-slate-500">Leitura automática via rede local ou cabo USB, níveis de insumos e vínculo por cliente</p>
             </div>
             <div class="flex flex-wrap items-center gap-2">
-              <input id="printerSearchInput" type="search" oninput="renderPrintersGrid()" placeholder="Buscar modelo, serial, IP ou cliente..." class="px-3 py-1.5 rounded-xl border border-slate-300 bg-white text-xs w-56 focus:outline-none focus:ring-2 focus:ring-blue-200" />
+              <input id="printerSearchInput" name="pm_park_filter_q" type="search" autocomplete="off" data-lpignore="true" readonly onfocus="this.removeAttribute('readonly')" oninput="renderPrintersGrid()" placeholder="Buscar modelo, serial, IP ou cliente..." class="px-3 py-1.5 rounded-xl border border-slate-300 bg-white text-xs w-56 focus:outline-none focus:ring-2 focus:ring-blue-200" />
               <select id="printerOwnershipFilter" onchange="renderPrintersGrid()" class="px-3 py-1.5 rounded-xl border border-slate-300 bg-white text-xs font-semibold text-slate-700">
                 <option value="all">Todas (Propriedade)</option>
                 <option value="locada">Locadas</option>
@@ -1353,7 +1353,7 @@
     <!-- FOOTER SERENO -->
     <footer class="bg-white border-t border-slate-200 py-4 px-6 text-xs text-slate-500 flex flex-wrap items-center justify-between gap-3 no-print">
       <div>
-        <strong>PrintMind V4.0</strong> • Telemetria SNMP/USB, Auditoria de Insumos & Consultor IA Gemini
+        <strong>PrintMind v4.1</strong> • Telemetria em Rede/USB, Faturamento Auditável & Consultor IA Gemini
       </div>
       <div data-client-only="true" class="flex items-center space-x-4">
         <button onclick="openModal('pricingModal')" class="hover:text-[#0038A8] font-bold transition flex items-center space-x-1">
@@ -1760,45 +1760,48 @@
             <input id="cliContract" type="text" placeholder="CT-2026/01" class="w-full px-3 py-2 rounded-xl border border-slate-300 mono" />
           </div>
         </div>
-        <div class="grid grid-cols-2 md:grid-cols-5 gap-2.5 pt-1">
+        <div class="grid grid-cols-2 md:grid-cols-5 gap-2.5 pt-1 items-end">
           <div>
-            <label class="block font-bold text-slate-700 mb-1">Fixo Mensal (R$)</label>
+            <label class="block text-[11px] font-bold text-slate-700 mb-1 whitespace-nowrap">Fixo Mensal (R$)</label>
             <input id="cliBaseRate" type="number" step="0.01" value="1200.00" required class="w-full px-2.5 py-2 rounded-xl border border-slate-300 mono" />
           </div>
           <div>
-            <label class="block font-bold text-slate-700 mb-1">Franq. P&B</label>
+            <label class="block text-[11px] font-bold text-slate-700 mb-1 whitespace-nowrap">Franq. P&amp;B</label>
             <input id="cliFranMono" type="number" value="5000" required class="w-full px-2.5 py-2 rounded-xl border border-slate-300 mono" />
           </div>
           <div>
-            <label class="block font-bold text-slate-700 mb-1">Exced. P&B (R$)</label>
+            <label class="block text-[11px] font-bold text-slate-700 mb-1 whitespace-nowrap">Exced. P&amp;B (R$)</label>
             <input id="cliExtraMono" type="number" step="0.001" value="0.06" required class="w-full px-2.5 py-2 rounded-xl border border-slate-300 mono" />
           </div>
           <div>
-            <label class="block font-bold text-slate-700 mb-1">Franq. Cor</label>
+            <label class="block text-[11px] font-bold text-slate-700 mb-1 whitespace-nowrap">Franq. Cor</label>
             <input id="cliFranColor" type="number" value="1000" required class="w-full px-2.5 py-2 rounded-xl border border-slate-300 mono" />
           </div>
           <div>
-            <label class="block font-bold text-slate-700 mb-1">Exced. Cor (R$)</label>
+            <label class="block text-[11px] font-bold text-slate-700 mb-1 whitespace-nowrap">Exced. Cor (R$)</label>
             <input id="cliExtraColor" type="number" step="0.001" value="0.45" required class="w-full px-2.5 py-2 rounded-xl border border-slate-300 mono" />
           </div>
         </div>
-        <div class="p-3.5 rounded-2xl bg-indigo-50/60 border border-indigo-200 space-y-2.5">
-          <label class="flex items-center space-x-2 font-bold text-indigo-950 cursor-pointer">
-            <input id="cliIsCorp" type="checkbox" checked class="rounded text-indigo-600" />
-            <span>🏥 Cliente Multi-Unidade / Hospital (Habilitar Rateio por Centro de Custo)</span>
-          </label>
-          <div>
-            <label class="block text-[11px] font-bold text-indigo-900 mb-1">Unidades Físicas / Filiais (separadas por vírgula)</label>
-            <input id="cliUnits" type="text" placeholder="Ex: Hospital Central, Clínica Sul" class="w-full px-3 py-2 rounded-xl border border-indigo-200 bg-white" />
+        <details class="p-3 rounded-2xl bg-indigo-50/60 border border-indigo-200">
+          <summary class="text-xs font-bold text-indigo-950 cursor-pointer select-none">Unidades, Filiais e Setores / Rateio (Opcional)</summary>
+          <div class="mt-2.5 space-y-2.5">
+            <label class="flex items-center space-x-2 font-bold text-indigo-950 cursor-pointer">
+              <input id="cliIsCorp" type="checkbox" checked class="rounded text-indigo-600" />
+              <span>Habilitar Rateio por Unidade / Centro de Custo no Espelho A4</span>
+            </label>
+            <div>
+              <label class="block text-[11px] font-bold text-indigo-900 mb-1">Unidades Físicas / Filiais (separadas por vírgula)</label>
+              <input id="cliUnits" type="text" placeholder="Ex: Matriz, Filial Centro" class="w-full px-3 py-2 rounded-xl border border-indigo-200 bg-white" />
+            </div>
+            <div>
+              <label class="block text-[11px] font-bold text-indigo-900 mb-1">Setores / Centros de Custo (separados por vírgula)</label>
+              <input id="cliDepts" type="text" placeholder="Ex: Recepção, Financeiro, Diretoria" class="w-full px-3 py-2 rounded-xl border border-indigo-200 bg-white" />
+            </div>
           </div>
-          <div>
-            <label class="block text-[11px] font-bold text-indigo-900 mb-1">Setores / Centros de Custo (separados por vírgula)</label>
-            <input id="cliDepts" type="text" placeholder="Ex: UTI Adulto, Farmácia, Recepção" class="w-full px-3 py-2 rounded-xl border border-indigo-200 bg-white" />
-          </div>
-        </div>
-        <div class="p-3.5 rounded-2xl bg-slate-50 border border-slate-200 space-y-2.5">
-          <strong class="block text-[11px] font-black uppercase tracking-wider text-slate-700">Pool Compartilhado, Abatimento Técnico &amp; Troca no Mês (Opcional)</strong>
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-2.5">
+        </details>
+        <details class="p-3 rounded-2xl bg-slate-50 border border-slate-200">
+          <summary class="text-[11px] font-black uppercase tracking-wider text-slate-700 cursor-pointer select-none">Pool Compartilhado, Abatimento Técnico &amp; Troca no Mês (Opcional)</summary>
+          <div class="mt-2.5 grid grid-cols-1 md:grid-cols-2 gap-2.5">
             <div class="md:col-span-2">
               <label class="block text-[11px] font-bold text-slate-700 mb-1">Grupo / Pool de Franquia Compartilhada</label>
               <input id="cliBillingPoolGroup" type="text" placeholder="Ex: Rede Alpha" class="w-full px-3 py-2 rounded-xl border border-slate-300 bg-white" />
@@ -1824,7 +1827,7 @@
               <input id="cliAdjustmentNote" type="text" placeholder="Ex: Troca Brother -> Ricoh dia 12 + calibração técnica" class="w-full px-3 py-2 rounded-xl border border-slate-300 bg-white" />
             </div>
           </div>
-        </div>
+        </details>
         <button id="cliSubmitBtn" type="submit" class="w-full py-3 rounded-2xl bg-[#0038A8] hover:bg-blue-800 text-white font-black transition">
           Salvar Cliente e Gerar Token do Scanner
         </button>
@@ -2723,6 +2726,8 @@
       const isMaster = isMasterAdminUser();
       syncMasterAccess(session.user.email);
       tourCheckedThisSession = false;
+      const psEl = document.getElementById('printerSearchInput');
+      if (psEl) psEl.value = '';
       if (autoRefreshTimer) {
         clearInterval(autoRefreshTimer);
         autoRefreshTimer = null;
@@ -3406,11 +3411,12 @@
       if (!c) return '';
       const sp = normalizeSpareToners(c.spare_toners);
       const total = sp.K + sp.C + sp.M + sp.Y;
+      if (total === 0) return '';
       return SPARE_TONER_COLORS.map(col => {
         const qty = sp[col.key] || 0;
         const cls = qty > 0 ? 'bg-emerald-100 text-emerald-900 border-emerald-300 font-black' : 'bg-slate-100 text-slate-500 border-slate-200';
         return `<span class="px-1.5 py-0.5 rounded-md border text-[10px] mono ${cls}" title="${col.label}: ${qty}">${col.key}:${qty}</span>`;
-      }).join(' ') + (total > 0 ? ` <span class="text-[10px] font-bold text-emerald-700">(${total} reserva)</span>` : '');
+      }).join(' ') + ` <span class="text-[10px] font-bold text-emerald-700">(${total} reserva)</span>`;
     }
 
     function renderSpareTonersInlineWidget(c, focusColorKey = 'K') {
@@ -3736,12 +3742,12 @@
             <span class="text-[10px] text-slate-400 block">Cont. Final</span>
             <strong class="text-slate-900">${pm.finalTotal.toLocaleString('pt-BR')}</strong>
           </div>
-          <div class="p-2.5 rounded-xl bg-slate-50 border border-slate-200">
-            <span class="text-[10px] text-slate-400 block">Delta P&amp;B (Mês)</span>
+          <div class="p-2.5 rounded-xl bg-slate-50 border border-slate-200 flex flex-col justify-between">
+            <span class="text-[10px] text-slate-400 block whitespace-nowrap">Delta P&amp;B (Mês)</span>
             <strong class="text-slate-900">${pm.deltaMono.toLocaleString('pt-BR')}</strong>
           </div>
-          <div class="p-2.5 rounded-xl bg-indigo-50/70 border border-indigo-200">
-            <span class="text-[10px] text-indigo-600 block">Delta Color (Mês)</span>
+          <div class="p-2.5 rounded-xl bg-indigo-50/70 border border-indigo-200 flex flex-col justify-between">
+            <span class="text-[10px] text-indigo-600 block whitespace-nowrap">Delta Color (Mês)</span>
             <strong class="text-indigo-800">${pm.deltaColor.toLocaleString('pt-BR')}</strong>
           </div>
         </div>
@@ -3856,6 +3862,24 @@
       }
 
       if (currentTenant && currentTenant.id) {
+        const monthPrefix = getCurrentMonthPrefix();
+        const hasMonthReading = telemetryReadings.some(r => r.printer_id === printerId && String(r.recorded_at || '').startsWith(monthPrefix));
+        if (!hasMonthReading) {
+          const baseMono = Number(p.mono_pages != null ? p.mono_pages : (p.initial_mono_pages || 0));
+          const baseColor = Number(p.color_pages != null ? p.color_pages : (p.initial_color_pages || 0));
+          const baseTotal = baseMono + baseColor;
+          const baseIso = new Date(Date.now() - 60000).toISOString();
+          await sb.from('telemetry_readings').insert({
+            tenant_id: currentTenant.id,
+            printer_id: printerId,
+            client_id: p.client_id || null,
+            idempotency_key: `${printerId}-base-${baseIso.slice(0, 16).replace(/[:T]/g, '-')}`,
+            total_pages: baseTotal,
+            mono_pages: baseMono,
+            color_pages: baseColor,
+            recorded_at: baseIso
+          });
+        }
         const nowIso = new Date().toISOString();
         const idemKey = `${printerId}-${nowIso.slice(0, 16).replace(/[:T]/g, '-')}`;
         await sb.from('telemetry_readings').insert({
@@ -4003,7 +4027,7 @@
           <div class="bg-white p-5 rounded-3xl border ${isExempt ? 'border-amber-300 bg-amber-50/15' : (st.isOffline ? 'border-rose-200' : 'border-slate-200')} shadow-sm space-y-3 hover:shadow-md transition">
             <div class="flex justify-between items-start gap-2">
               <div class="min-w-0">
-                <h4 class="font-black text-slate-900 text-sm truncate">${escapeHtml(p.model)}</h4>
+                <h4 onclick="openPrinterDetailModal('${p.id}')" class="font-black text-slate-900 text-sm truncate cursor-pointer hover:text-[#0038A8] transition" title="Abrir ficha da impressora">${escapeHtml(p.model)}</h4>
                 <span class="text-xs text-slate-400 mono block truncate">Série: ${escapeHtml(p.serial)} • ${escapeHtml(p.ip || p.usb_port || 'Local')}</span>
                 <div class="text-[11px] font-bold text-indigo-700 mt-1 flex flex-wrap items-center gap-1">
                   <i data-lucide="map-pin" class="w-3 h-3"></i>
@@ -4133,12 +4157,12 @@
                 <div class="text-[10px] text-slate-400">${m.dMono.toLocaleString('pt-BR')} P&B • ${m.dColor.toLocaleString('pt-BR')} Cor</div>
                 ${adjHint}
               </td>
-              <td class="py-3.5 px-4 text-right mono font-black text-slate-900 text-sm">
-                R$ ${m.total.toFixed(2)}
+              <td class="py-3.5 px-4 text-right mono font-black text-slate-900 text-sm whitespace-nowrap">
+                R$ ${m.total.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
               </td>
-              <td class="py-3.5 px-4 text-center">${badge}</td>
-              <td class="py-3.5 px-4 text-right">
-                <div class="inline-flex flex-wrap justify-end items-center gap-1">
+              <td class="py-3.5 px-4 text-center whitespace-nowrap">${badge}</td>
+              <td class="py-3.5 px-4 text-right whitespace-nowrap">
+                <div class="inline-flex items-center gap-1">
                   <button onclick="openClientModalForEdit('${c.id}')" class="px-2 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-[11px] transition" title="Editar Cliente">
                     Editar
                   </button>
@@ -4146,9 +4170,9 @@
                     Reserva
                   </button>
                   <button onclick="openClientAdjustmentModal('${c.id}')" class="px-2 py-1.5 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-200 font-bold text-[11px] transition" title="Abatimento Técnico, Troca ou Pool">
-                    Ajuste / Troca
+                    Ajuste
                   </button>
-                  <button onclick="openClientInvoice('${c.id}')" class="px-3 py-1.5 rounded-xl bg-[#0038A8] text-white font-bold hover:bg-blue-800 transition shadow-sm">
+                  <button onclick="openClientInvoice('${c.id}')" class="px-2.5 py-1.5 rounded-xl bg-[#0038A8] text-white font-bold text-[11px] hover:bg-blue-800 transition shadow-sm">
                     Espelho A4
                   </button>
                   <button onclick="sendQuickWhatsAppClient('${c.id}')" class="p-1.5 rounded-xl bg-emerald-50 text-emerald-700 hover:bg-emerald-100 transition" title="Enviar WhatsApp">
@@ -5169,10 +5193,11 @@ ${JSON.stringify(contextPayload)}`;
           </div>
           ${total === 0
             ? `<div class="h-20 flex items-center justify-center text-[10px] text-slate-400">Sem leituras diárias registradas nos últimos 14 dias.</div>`
-            : `<div class="h-20 flex items-end gap-1 pt-2 border-b border-slate-200">${series.map(d => {
+            : `<div class="h-24 flex items-end gap-1 pt-2 border-b border-slate-200">${series.map(d => {
                 const val = Number(d[field] || 0);
-                const hPct = val > 0 ? Math.max(8, Math.round((val / maxVal) * 100)) : 2;
-                return `<div class="flex-1 flex flex-col items-center gap-0.5" title="${d.label}: ${val.toLocaleString('pt-BR')} págs"><div class="w-full ${barColorClass} rounded-t" style="height:${hPct}%; min-height:2px"></div><span class="text-[8px] text-slate-500 mono">${d.label.slice(0, 2)}</span></div>`;
+                const hPct = val > 0 ? Math.max(10, Math.round((val / maxVal) * 100)) : 0;
+                const barStyle = val > 0 ? `height:${hPct}%; min-height:4px` : 'height:1px; opacity:0.25';
+                return `<div class="flex-1 h-full flex flex-col justify-end items-center gap-0.5" title="${d.label}: ${val.toLocaleString('pt-BR')} págs"><div class="w-full flex-1 flex items-end"><div class="w-full ${barColorClass} rounded-t" style="${barStyle}"></div></div><span class="text-[8px] text-slate-500 mono leading-none">${d.label.slice(0, 2)}</span></div>`;
               }).join('')}</div>`}
         </div>
       `;
@@ -5310,8 +5335,8 @@ ${JSON.stringify(contextPayload)}`;
       document.getElementById('formalExcedColor').innerText = `R$ ${m.exColor.toFixed(2)}`;
       document.getElementById('formalGrandTotal').innerText = `R$ ${m.total.toFixed(2)}`;
 
-      // PIX Copia e Cola
-      const pixKey = (currentTenant && currentTenant.pix_key) || c.cnpj || '00.000.000/0001-00';
+      // PIX Copia e Cola (sempre chave da locadora, nunca CNPJ do cliente)
+      const pixKey = getTenantPixKey();
       document.getElementById('invPixInput').value = buildPixPayload(pixKey, m.total);
 
       // Trava contábil
@@ -5375,7 +5400,7 @@ ${JSON.stringify(contextPayload)}`;
       const c = activeClientForInvoice;
       const m = computeMetrics(c);
       const phone = (c.phone || '').replace(/\D/g, '');
-      const pixKey = (currentTenant && currentTenant.pix_key) || c.cnpj || '';
+      const pixKey = getTenantPixKey();
       const extraLines = [];
       if (m.poolGroup) extraLines.push(`- Grupo / Pool Compartilhado: ${m.poolGroup}`);
       if (m.replacedMono > 0 || m.replacedColor > 0) extraLines.push(`- Delta Máquina Trocada no Mês: +${m.replacedMono.toLocaleString('pt-BR')} P&B / +${m.replacedColor.toLocaleString('pt-BR')} Cor`);
@@ -5604,7 +5629,7 @@ Para cadastrar a 3ª máquina e monitorar todo o seu parque, ative o Plano Essen
       const initial_color_pages = Number(document.getElementById('prtInitColor').value || 0);
       const color_pages = Number((document.getElementById('prtCurColor') && document.getElementById('prtCurColor').value) || initial_color_pages);
 
-      const { error } = await sb.from('printers').insert({
+      const { data: insertedPrinter, error } = await sb.from('printers').insert({
         tenant_id: currentProfile.tenant_id,
         client_id: client_id || null,
         unit, department, model, serial, ip,
@@ -5614,11 +5639,38 @@ Para cadastrar a 3ª máquina e monitorar todo o seu parque, ative o Plano Essen
         total_pages: mono_pages + color_pages,
         is_color_capable: color_pages > 0,
         status: 'online'
-      });
+      }).select().single();
 
       if (error) {
         alert('Erro ao cadastrar impressora: ' + error.message);
         return;
+      }
+
+      if (insertedPrinter && insertedPrinter.id && currentTenant && currentTenant.id) {
+        const baseIso = new Date(Date.now() - 60000).toISOString();
+        await sb.from('telemetry_readings').insert({
+          tenant_id: currentTenant.id,
+          printer_id: insertedPrinter.id,
+          client_id: insertedPrinter.client_id || null,
+          idempotency_key: `${insertedPrinter.id}-base-${baseIso.slice(0, 16).replace(/[:T]/g, '-')}`,
+          total_pages: initial_mono_pages + initial_color_pages,
+          mono_pages: initial_mono_pages,
+          color_pages: initial_color_pages,
+          recorded_at: baseIso
+        });
+        if (mono_pages > initial_mono_pages || color_pages > initial_color_pages) {
+          const curIso = new Date().toISOString();
+          await sb.from('telemetry_readings').insert({
+            tenant_id: currentTenant.id,
+            printer_id: insertedPrinter.id,
+            client_id: insertedPrinter.client_id || null,
+            idempotency_key: `${insertedPrinter.id}-cur-${curIso.slice(0, 16).replace(/[:T]/g, '-')}`,
+            total_pages: mono_pages + color_pages,
+            mono_pages,
+            color_pages,
+            recorded_at: curIso
+          });
+        }
       }
       e.target.reset();
       closeModal('newPrinterModal');
@@ -5789,9 +5841,20 @@ Para cadastrar a 3ª máquina e monitorar todo o seu parque, ative o Plano Essen
       return crc.toString(16).toUpperCase().padStart(4, '0');
     }
 
+    function getTenantPixKey() {
+      const raw = (currentTenant && (currentTenant.pix_key || currentTenant.cnpj_cpf)) || (currentSession && currentSession.user && currentSession.user.email) || '';
+      const trimmed = String(raw).trim();
+      if (!trimmed) return '';
+      if (/^[\d.\-\/]+$/.test(trimmed)) {
+        return trimmed.replace(/\D/g, '');
+      }
+      return trimmed;
+    }
+
     function buildPixPayload(key, amount) {
       const f = (id, v) => id + String(v.length).padStart(2, '0') + v;
-      const gui = f('00', 'br.gov.bcb.pix') + f('01', key || '00.000.000/0001-00');
+      const resolvedKey = String(key || getTenantPixKey() || '').trim();
+      const gui = f('00', 'br.gov.bcb.pix') + f('01', resolvedKey || '00000000000100');
       const mName = ((currentTenant && currentTenant.trade_name) || 'PRINTMIND LOCADORA').slice(0, 25).toUpperCase();
       const base = '000201010212' + f('26', gui) + '520400005303986' + f('54', amount.toFixed(2)) + '5802BR' + f('59', mName) + f('60', 'SAO PAULO') + f('62', f('05', 'PRINTMIND')) + '6304';
       return base + calcCRC16(base);
@@ -5824,7 +5887,7 @@ Para cadastrar a 3ª máquina e monitorar todo o seu parque, ative o Plano Essen
             extra_mono: m.exMono,
             extra_color: m.exColor,
             total_amount: m.total,
-            pix_key: (currentTenant && currentTenant.pix_key) || c.cnpj || '',
+            pix_key: getTenantPixKey(),
             split_percent: 1.5
           })
         });
