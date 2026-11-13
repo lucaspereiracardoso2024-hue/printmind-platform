@@ -878,17 +878,17 @@
             <i data-lucide="shield-check" class="w-3.5 h-3.5 text-amber-600"></i>
             <span>Área Exclusiva da Proprietária SaaS • PrintMind Cloud</span>
           </span>
-          <h2 class="text-2xl font-black text-slate-900 tracking-tight">👑 Console Master da Plataforma</h2>
-          <p class="text-xs text-slate-500 mt-0.5">Controle global de locadoras assinantes, faturamento de mensalidades SaaS e integração Asaas Master.</p>
+          <h2 class="text-2xl font-black text-slate-900 tracking-tight">👑 Console Master & Antifraude</h2>
+          <p class="text-xs text-slate-500 mt-0.5">Controle de assinantes, faturamento SaaS, bloqueio de inadimplentes e detecção automática contra golpes.</p>
         </div>
 
         <!-- 4 KPIS GLOBAIS DA PLATAFORMA -->
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           <div class="bg-white p-5 rounded-3xl border border-slate-200 shadow-sm flex items-center justify-between">
             <div>
-              <span class="text-[11px] font-bold uppercase text-slate-400">Locadoras na Plataforma</span>
-              <div id="kpiMasterTenants" class="text-3xl font-black text-slate-900 mt-1 mono">1</div>
-              <span class="text-xs text-slate-500">Empresas assinantes</span>
+              <span class="text-[11px] font-bold uppercase text-slate-400">Assinantes na Plataforma</span>
+              <div id="kpiMasterTenants" class="text-3xl font-black text-slate-900 mt-1 mono">0</div>
+              <span id="kpiMasterTenantsSub" class="text-xs text-slate-500">0 ativos • 0 bloqueados</span>
             </div>
             <div class="w-10 h-10 rounded-2xl bg-indigo-50 text-indigo-700 flex items-center justify-center">
               <i data-lucide="building-2" class="w-5 h-5"></i>
@@ -908,40 +908,180 @@
 
           <div class="bg-white p-5 rounded-3xl border border-slate-200 shadow-sm flex items-center justify-between">
             <div>
-              <span class="text-[11px] font-bold uppercase text-slate-400">Seu Faturamento SaaS (MRR)</span>
+              <span class="text-[11px] font-bold uppercase text-slate-400">Faturamento SaaS (MRR)</span>
               <div id="kpiMasterMRR" class="text-3xl font-black text-[#0038A8] mt-1 mono">R$ 0,00</div>
-              <span class="text-xs text-[#0038A8] font-semibold">Mensalidades a receber</span>
+              <span id="kpiMasterMRRSub" class="text-xs text-[#0038A8] font-semibold">Mensalidades ativas a receber</span>
             </div>
             <div class="w-10 h-10 rounded-2xl bg-blue-50 text-[#0038A8] flex items-center justify-center">
               <i data-lucide="wallet" class="w-5 h-5"></i>
             </div>
           </div>
 
-          <div class="bg-white p-5 rounded-3xl border border-slate-200 shadow-sm flex items-center justify-between">
+          <button type="button" onclick="switchMasterSubTab('fraud')" class="bg-white p-5 rounded-3xl border border-slate-200 hover:border-rose-300 shadow-sm flex items-center justify-between text-left transition">
             <div>
-              <span class="text-[11px] font-bold uppercase text-slate-400">Gateway Asaas</span>
-              <div id="kpiMasterAsaasStatus" class="text-sm font-black text-emerald-700 mt-1 flex items-center space-x-1">
-                <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
-                <span>Configuração Ativa</span>
-              </div>
-              <span class="text-xs text-slate-500" id="kpiMasterAsaasSub">Chave conectada</span>
+              <span class="text-[11px] font-bold uppercase text-slate-400">Alertas Antifraude</span>
+              <div id="kpiMasterRiskCount" class="text-3xl font-black text-rose-600 mt-1 mono">0</div>
+              <span id="kpiMasterRiskSub" class="text-xs text-slate-500">Clique para auditar riscos</span>
             </div>
-            <div class="w-10 h-10 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center">
-              <i data-lucide="key" class="w-5 h-5"></i>
+            <div class="w-10 h-10 rounded-2xl bg-rose-50 text-rose-600 flex items-center justify-center">
+              <i data-lucide="shield-alert" class="w-5 h-5"></i>
+            </div>
+          </button>
+        </div>
+
+        <!-- SUB-NAVEGAÇÃO DO CONSOLE MASTER -->
+        <div class="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200 pb-3">
+          <div class="flex flex-wrap items-center gap-2 text-xs font-bold">
+            <button id="masterSubBtnTenants" onclick="switchMasterSubTab('tenants')" class="px-4 py-2 rounded-xl bg-[#0038A8] text-white shadow-sm transition flex items-center space-x-1.5">
+              <i data-lucide="users" class="w-3.5 h-3.5"></i>
+              <span>Assinantes & Controle</span>
+            </button>
+            <button id="masterSubBtnBilling" onclick="switchMasterSubTab('billing')" class="px-4 py-2 rounded-xl bg-slate-100 text-slate-700 hover:bg-slate-200 transition flex items-center space-x-1.5">
+              <i data-lucide="receipt" class="w-3.5 h-3.5"></i>
+              <span>Relatório & Faturamento SaaS</span>
+            </button>
+            <button id="masterSubBtnFraud" onclick="switchMasterSubTab('fraud')" class="px-4 py-2 rounded-xl bg-slate-100 text-slate-700 hover:bg-slate-200 transition flex items-center space-x-1.5">
+              <i data-lucide="shield-alert" class="w-3.5 h-3.5"></i>
+              <span>Antifraude & Golpes</span>
+              <span id="masterFraudTabBadge" class="hidden px-1.5 py-0.5 rounded-full text-[10px] bg-rose-600 text-white mono">0</span>
+            </button>
+            <button id="masterSubBtnConfig" onclick="switchMasterSubTab('config')" class="px-4 py-2 rounded-xl bg-slate-100 text-slate-700 hover:bg-slate-200 transition flex items-center space-x-1.5">
+              <i data-lucide="settings" class="w-3.5 h-3.5"></i>
+              <span>Gateway Asaas & Convites</span>
+            </button>
+          </div>
+          <button onclick="loadMasterTenants()" class="px-3.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition flex items-center space-x-1">
+            <i data-lucide="rotate-cw" class="w-3.5 h-3.5"></i>
+            <span>Sincronizar Agora</span>
+          </button>
+        </div>
+
+        <!-- SUB-ABA 1: ASSINANTES & CONTROLE -->
+        <div id="masterSubTabTenants" class="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden">
+          <div class="p-5 border-b border-slate-100 flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <h3 class="text-base font-black text-slate-900">Locadoras & Empresas Assinantes do seu SaaS</h3>
+              <p class="text-xs text-slate-500">Pesquise, inspecione máquinas, cobre no WhatsApp ou suspenda contas inadimplentes/suspeitas.</p>
+            </div>
+            <div class="flex flex-wrap items-center gap-2 text-xs">
+              <input id="masterSearchInput" oninput="renderMasterSubscribersTable()" type="text" placeholder="Buscar empresa, e-mail ou CNPJ..." class="px-3 py-2 rounded-xl border border-slate-300 text-xs w-56 focus:outline-none focus:ring-2 focus:ring-[#0038A8]" />
+              <select id="masterStatusFilter" onchange="renderMasterSubscribersTable()" class="px-3 py-2 rounded-xl border border-slate-300 bg-white text-xs font-semibold">
+                <option value="all">Todos os Status</option>
+                <option value="active">● Ativos</option>
+                <option value="trial">● Em Teste (Trial)</option>
+                <option value="past_due">⛔ Inadimplentes / Bloqueados</option>
+                <option value="canceled">✕ Cancelados</option>
+                <option value="risk">⚠️ Apenas com Alerta de Risco</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs">
+              <thead class="bg-slate-50 text-slate-500 uppercase text-[10px] font-bold border-b border-slate-200">
+                <tr>
+                  <th class="py-3 px-4">Locadora / Empresa</th>
+                  <th class="py-3 px-4">CNPJ / CPF & Contato</th>
+                  <th class="py-3 px-4 text-center">Plano / Módulo</th>
+                  <th class="py-3 px-4 text-center">Máquinas</th>
+                  <th class="py-3 px-4 text-right">Mensalidade SaaS</th>
+                  <th class="py-3 px-4 text-center">Status & Risco</th>
+                  <th class="py-3 px-4 text-right">Ações de Controle</th>
+                </tr>
+              </thead>
+              <tbody id="masterTenantsTableBody" class="divide-y divide-slate-100"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- SUB-ABA 2: RELATÓRIO & FATURAMENTO SAAS -->
+        <div id="masterSubTabBilling" class="hidden space-y-4">
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div class="bg-white p-5 rounded-3xl border border-slate-200 shadow-sm">
+              <span class="text-[11px] font-bold uppercase text-slate-400">Receita Recorrente Confirmada (Ativos)</span>
+              <div id="masterBilActiveMRR" class="text-3xl font-black text-emerald-600 mt-1 mono">R$ 0,00</div>
+              <span id="masterBilActiveCount" class="text-xs text-slate-500">0 assinantes adimplentes</span>
+            </div>
+            <div class="bg-white p-5 rounded-3xl border border-slate-200 shadow-sm">
+              <span class="text-[11px] font-bold uppercase text-slate-400">Receita em Risco / Inadimplência</span>
+              <div id="masterBilRiskMRR" class="text-3xl font-black text-rose-600 mt-1 mono">R$ 0,00</div>
+              <span id="masterBilRiskCount" class="text-xs text-rose-700 font-semibold">Bloqueados, cancelados ou trial excedido</span>
+            </div>
+            <div class="bg-white p-5 rounded-3xl border border-slate-200 shadow-sm">
+              <span class="text-[11px] font-bold uppercase text-slate-400">Potencial em Teste Gratuito (Trial)</span>
+              <div id="masterBilTrialMRR" class="text-3xl font-black text-amber-600 mt-1 mono">R$ 0,00</div>
+              <span id="masterBilTrialCount" class="text-xs text-slate-500">0 contas em período gratuito</span>
+            </div>
+          </div>
+
+          <div class="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden">
+            <div class="p-5 border-b border-slate-100 flex flex-wrap items-center justify-between gap-3">
+              <div>
+                <h3 class="text-base font-black text-slate-900">Extrato Financeiro por Assinante (Receita do SaaS)</h3>
+                <p class="text-xs text-slate-500">Consolidado das mensalidades por parque de impressoras monitorado e status de pagamento.</p>
+              </div>
+              <button onclick="exportMasterBillingCSV()" class="px-4 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold transition flex items-center space-x-1.5">
+                <i data-lucide="download" class="w-3.5 h-3.5"></i>
+                <span>Exportar CSV</span>
+              </button>
+            </div>
+            <div class="overflow-x-auto">
+              <table class="w-full text-left text-xs">
+                <thead class="bg-slate-50 text-slate-500 uppercase text-[10px] font-bold border-b border-slate-200">
+                  <tr>
+                    <th class="py-3 px-4">Assinante</th>
+                    <th class="py-3 px-4">Cadastro</th>
+                    <th class="py-3 px-4 text-center">Plano</th>
+                    <th class="py-3 px-4 text-center">Máquinas</th>
+                    <th class="py-3 px-4 text-right">Valor Mensal</th>
+                    <th class="py-3 px-4 text-center">Situação</th>
+                    <th class="py-3 px-4 text-right">Cobrança</th>
+                  </tr>
+                </thead>
+                <tbody id="masterBillingTableBody" class="divide-y divide-slate-100"></tbody>
+              </table>
             </div>
           </div>
         </div>
 
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <!-- CARD 1: CONFIGURAÇÃO DA CHAVE ASAAS MASTER -->
-          <div class="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm space-y-4">
+        <!-- SUB-ABA 3: CENTRAL ANTIFRAUDE (CONTRA GOLPES) -->
+        <div id="masterSubTabFraud" class="hidden space-y-4">
+          <div class="bg-gradient-to-r from-slate-900 to-rose-950 text-white p-5 rounded-3xl shadow-md flex flex-wrap items-center justify-between gap-3">
             <div class="flex items-center space-x-3">
-              <div class="w-10 h-10 rounded-2xl bg-blue-50 text-[#0038A8] flex items-center justify-center">
-                <i data-lucide="key-round" class="w-5 h-5"></i>
+              <div class="w-10 h-10 rounded-2xl bg-rose-500/20 border border-rose-400/30 flex items-center justify-center">
+                <i data-lucide="shield-alert" class="w-5 h-5 text-rose-300"></i>
               </div>
               <div>
-                <h3 class="font-black text-base text-slate-900">Sua Chave de API Asaas (Master)</h3>
-                <p class="text-xs text-slate-500">Usada para faturar as mensalidades das locadoras no cartão de crédito ou PIX.</p>
+                <h3 class="text-sm font-black">Monitoramento Automático Anti-Golpe & Multi-Conta</h3>
+                <p class="text-[11px] text-rose-100">Detecta CNPJs/WhatsApps repetidos para burlar o limite grátis, uso acima de 2 máquinas em Trial e contas bloqueadas ainda ativas.</p>
+              </div>
+            </div>
+            <span id="masterFraudSummaryPill" class="px-3 py-1 rounded-full bg-white/10 text-xs font-bold mono">0 ocorrências</span>
+          </div>
+
+          <div id="masterFraudAlertsList" class="space-y-3"></div>
+        </div>
+
+        <!-- SUB-ABA 4: GATEWAY ASAAS & CONVITES -->
+        <div id="masterSubTabConfig" class="hidden grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <!-- CARD 1: CONFIGURAÇÃO DA CHAVE ASAAS MASTER -->
+          <div class="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm space-y-4">
+            <div class="flex items-center justify-between gap-2">
+              <div class="flex items-center space-x-3">
+                <div class="w-10 h-10 rounded-2xl bg-blue-50 text-[#0038A8] flex items-center justify-center">
+                  <i data-lucide="key-round" class="w-5 h-5"></i>
+                </div>
+                <div>
+                  <h3 class="font-black text-base text-slate-900">Sua Chave de API Asaas (Master)</h3>
+                  <p class="text-xs text-slate-500">Usada para faturar as mensalidades das locadoras no cartão de crédito ou PIX.</p>
+                </div>
+              </div>
+              <div class="text-right">
+                <div id="kpiMasterAsaasStatus" class="text-xs font-black text-emerald-700 flex items-center justify-end space-x-1">
+                  <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                  <span>Configuração Ativa</span>
+                </div>
+                <span class="text-[10px] text-slate-500" id="kpiMasterAsaasSub">Chave conectada</span>
               </div>
             </div>
 
@@ -1016,38 +1156,44 @@
             </button>
           </div>
         </div>
+      </section>
 
-        <!-- TABELA DE GESTÃO DAS LOCADORAS CADASTRADAS -->
-        <div class="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden space-y-2">
-          <div class="p-5 border-b border-slate-100 flex flex-wrap items-center justify-between gap-3">
-            <div>
-              <h3 class="text-base font-black text-slate-900">Locadoras & Empresas Assinantes do seu SaaS</h3>
-              <p class="text-xs text-slate-500">Acompanhamento do número de impressoras de cada locadora e valor mensal devido a você</p>
-            </div>
-            <button onclick="loadMasterTenants()" class="px-3.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition flex items-center space-x-1">
-              <i data-lucide="rotate-cw" class="w-3.5 h-3.5"></i>
-              <span>Atualizar Lista</span>
+      <!-- OVERLAY DE BLOQUEIO PARA CONTA SUSPENSA / INADIMPLENTE -->
+      <div id="suspendedTenantOverlay" class="hidden fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-md flex items-center justify-center p-4">
+        <div class="bg-white rounded-3xl max-w-md w-full p-7 text-center space-y-4 shadow-2xl border-2 border-rose-300">
+          <div class="w-14 h-14 rounded-2xl bg-rose-100 text-rose-600 flex items-center justify-center mx-auto">
+            <i data-lucide="shield-ban" class="w-7 h-7"></i>
+          </div>
+          <h3 class="text-xl font-black text-slate-900">Acesso Temporariamente Suspenso</h3>
+          <p id="suspendedTenantReason" class="text-xs text-slate-600 leading-relaxed">
+            Esta assinatura encontra-se bloqueada por pendência financeira ou auditoria cadastral. Entre em contato com o suporte PrintMind para regularização.
+          </p>
+          <div class="flex flex-col gap-2 pt-2">
+            <a href="https://api.whatsapp.com/send?text=Ol%C3%A1%2C%20preciso%20regularizar%20minha%20assinatura%20no%20PrintMind%20Cloud." target="_blank" class="w-full py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs transition">
+              Falar com Financeiro no WhatsApp
+            </a>
+            <button onclick="handleLogout()" class="w-full py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs transition">
+              Sair da Conta
             </button>
           </div>
-
-          <div class="overflow-x-auto">
-            <table class="w-full text-left text-xs">
-              <thead class="bg-slate-50 text-slate-500 uppercase text-[10px] font-bold border-b border-slate-200">
-                <tr>
-                  <th class="py-3 px-4">Locadora / Empresa</th>
-                  <th class="py-3 px-4">CNPJ / CPF</th>
-                  <th class="py-3 px-4 text-center">Módulo Contratado</th>
-                  <th class="py-3 px-4 text-center">Máquinas Ativas</th>
-                  <th class="py-3 px-4 text-right">Mensalidade a te Pagar</th>
-                  <th class="py-3 px-4 text-center">Status</th>
-                  <th class="py-3 px-4 text-right">Ações</th>
-                </tr>
-              </thead>
-              <tbody id="masterTenantsTableBody" class="divide-y divide-slate-100"></tbody>
-            </table>
-          </div>
         </div>
-      </section>
+      </div>
+
+      <!-- MODAL DE INSPEÇÃO DE ASSINANTE (MASTER) -->
+      <div id="masterTenantDetailModal" class="hidden fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-white rounded-3xl max-w-3xl w-full p-6 space-y-4 shadow-2xl max-h-[90vh] overflow-y-auto">
+          <div class="flex justify-between items-start border-b border-slate-100 pb-3">
+            <div>
+              <span class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase bg-indigo-50 text-indigo-700">Auditoria de Assinante</span>
+              <h3 id="mtdTitle" class="font-black text-lg text-slate-900 mt-1">Empresa</h3>
+              <p id="mtdSubtitle" class="text-xs text-slate-500 mono"></p>
+            </div>
+            <button onclick="closeModal('masterTenantDetailModal')" class="text-slate-400 hover:text-slate-600 text-lg">✕</button>
+          </div>
+          <div id="mtdRiskBox" class="hidden p-3.5 rounded-2xl bg-rose-50 border border-rose-200 text-rose-900 text-xs space-y-1"></div>
+          <div id="mtdPrintersList" class="space-y-2 text-xs"></div>
+        </div>
+      </div>
 
     </main>
 
@@ -2209,12 +2355,26 @@
       const lockBanner = document.getElementById('trialLockBanner');
       const lockMsg = document.getElementById('trialLockCountMsg');
       const topBadge = document.getElementById('topPlanBadge');
+      const suspOverlay = document.getElementById('suspendedTenantOverlay');
+      const suspReason = document.getElementById('suspendedTenantReason');
       const count = printers.length;
 
-      // Se for o super admin Lucas, não aplica trava
+      // Se for o super admin Lucas, não aplica trava nem bloqueio
       if (typeof isMasterAdminUser === 'function' && isMasterAdminUser()) {
         if (lockBanner) lockBanner.classList.add('hidden');
+        if (suspOverlay) suspOverlay.classList.add('hidden');
         return;
+      }
+
+      // Bloqueio imediato para contas marcadas como inadimplentes/bloqueadas pelo Master
+      if (currentTenant && currentTenant.subscription_status === 'past_due') {
+        if (suspOverlay) suspOverlay.classList.remove('hidden');
+        if (suspReason) {
+          suspReason.innerText = `A assinatura da empresa "${currentTenant.trade_name || 'sua locadora'}" está temporariamente suspensa por pendência financeira ou auditoria antifraude.`;
+        }
+        return;
+      } else if (suspOverlay) {
+        suspOverlay.classList.add('hidden');
       }
 
       const hasPaidPlan = currentTenant && currentTenant.subscription_status === 'active' && currentTenant.plan_tier && currentTenant.plan_tier !== 'trial';
@@ -3245,75 +3405,161 @@ Para cadastrar a 3ª máquina e monitorar todo o seu parque, ative o Módulo 1 (
     });
 
     // =========================================================================
-    // JAVASCRIPT: PAINEL MASTER (SUPER ADMIN / DONA DO SAAS)
+    // JAVASCRIPT: PAINEL MASTER (SUPER ADMIN + ANTIFRAUDE + FATURAMENTO SAAS)
     // =========================================================================
     let allPlatformTenants = [];
+    let allPlatformPrinters = [];
+    let tenantRiskMap = {};
+    let currentMasterSubTab = 'tenants';
+
+    function switchMasterSubTab(subTab) {
+      currentMasterSubTab = subTab;
+      const tabs = {
+        tenants: { panel: 'masterSubTabTenants', btn: 'masterSubBtnTenants' },
+        billing: { panel: 'masterSubTabBilling', btn: 'masterSubBtnBilling' },
+        fraud:   { panel: 'masterSubTabFraud',   btn: 'masterSubBtnFraud' },
+        config:  { panel: 'masterSubTabConfig',  btn: 'masterSubBtnConfig' }
+      };
+      Object.entries(tabs).forEach(([key, ids]) => {
+        const active = key === subTab;
+        const p = document.getElementById(ids.panel);
+        const b = document.getElementById(ids.btn);
+        if (p) p.classList.toggle('hidden', !active);
+        if (b) {
+          b.className = active
+            ? 'px-4 py-2 rounded-xl bg-[#0038A8] text-white shadow-sm transition flex items-center space-x-1.5'
+            : 'px-4 py-2 rounded-xl bg-slate-100 text-slate-700 hover:bg-slate-200 transition flex items-center space-x-1.5';
+        }
+      });
+      lucide.createIcons();
+    }
+
+    function getTenantPlanRate(planTier) {
+      const pTier = (planTier || 'modulo_1').toLowerCase();
+      if (pTier.includes('5') || pTier.includes('enterprise')) return 6;
+      if (pTier.includes('4') || pTier.includes('pro')) return 4;
+      if (pTier.includes('3')) return 3;
+      if (pTier.includes('2') || pTier.includes('starter')) return 2;
+      return 1;
+    }
+
+    function normalizeDocOrPhone(val) {
+      return (val || '').replace(/\D/g, '');
+    }
+
+    function analyzeTenantRisks(tenantsList, printersList) {
+      const cnpjCounts = {};
+      const phoneCounts = {};
+      tenantsList.forEach(t => {
+        const doc = normalizeDocOrPhone(t.cnpj_cpf);
+        const tel = normalizeDocOrPhone(t.phone);
+        if (doc.length >= 11) cnpjCounts[doc] = (cnpjCounts[doc] || 0) + 1;
+        if (tel.length >= 8) phoneCounts[tel] = (phoneCounts[tel] || 0) + 1;
+      });
+
+      const risks = {};
+      tenantsList.forEach(t => {
+        const alerts = [];
+        const tPrinters = printersList.filter(p => p.tenant_id === t.id);
+        const doc = normalizeDocOrPhone(t.cnpj_cpf);
+        const tel = normalizeDocOrPhone(t.phone);
+        const pTier = (t.plan_tier || 'trial').toLowerCase();
+        const status = (t.subscription_status || 'active').toLowerCase();
+
+        if (doc.length >= 11 && cnpjCounts[doc] > 1) {
+          alerts.push({ severity: 'high', code: 'DUP_DOC', label: 'CNPJ/CPF duplicado', detail: `Mesmo documento cadastrado em ${cnpjCounts[doc]} contas diferentes (possível multi-conta para burlar limite grátis).` });
+        }
+        if (tel.length >= 8 && phoneCounts[tel] > 1) {
+          alerts.push({ severity: 'high', code: 'DUP_PHONE', label: 'WhatsApp duplicado', detail: `Mesmo telefone usado em ${phoneCounts[tel]} contas diferentes.` });
+        }
+        if ((pTier === 'trial' || status === 'trialing') && tPrinters.length > 2) {
+          alerts.push({ severity: 'high', code: 'TRIAL_ABUSE', label: `Trial excedido (${tPrinters.length} máq)`, detail: `Conta em plano gratuito usando ${tPrinters.length} impressoras (limite é 2).` });
+        }
+        if ((status === 'past_due' || status === 'canceled') && tPrinters.length > 0) {
+          alerts.push({ severity: 'medium', code: 'BLOCKED_WITH_MACHINES', label: `${status === 'past_due' ? 'Inadimplente' : 'Cancelado'} c/ máquinas`, detail: `Possui ${tPrinters.length} impressora(s) vinculada(s) mesmo com assinatura ${status}.` });
+        }
+        if (doc.length < 11) {
+          alerts.push({ severity: 'low', code: 'NO_DOC', label: 'Sem CNPJ/CPF válido', detail: 'Cadastro sem documento fiscal preenchido para emissão de cobrança.' });
+        }
+        risks[t.id] = alerts;
+      });
+      return risks;
+    }
+
+    function getStatusBadgeHTML(t) {
+      const st = (t.subscription_status || 'active').toLowerCase();
+      const pt = (t.plan_tier || 'trial').toLowerCase();
+      if (st === 'past_due') {
+        return '<span class="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-rose-100 text-rose-800 border border-rose-200">⛔ INADIMPLENTE / BLOQUEADO</span>';
+      }
+      if (st === 'canceled') {
+        return '<span class="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-slate-200 text-slate-700">✕ CANCELADO</span>';
+      }
+      if (st === 'trialing' || pt === 'trial') {
+        return '<span class="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-amber-100 text-amber-800 border border-amber-200">● TESTE GRÁTIS</span>';
+      }
+      return '<span class="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-emerald-100 text-emerald-800">● ATIVO</span>';
+    }
 
     async function loadMasterTenants() {
       if (!isMasterAdminUser()) {
         console.warn('Tentativa não autorizada de acessar dados administrativos da plataforma.');
         return;
       }
-      // Carrega todas as locadoras (exclui o próprio tenant administrativo do Super Admin)
-      const { data: tenList, error } = await sb.from('tenants').select('*').order('created_at', { ascending: false });
+      const { data: tenList } = await sb.from('tenants').select('*').order('created_at', { ascending: false });
       allPlatformTenants = (tenList || []).filter(t => {
         const em = (t.email || '').toLowerCase().trim();
         const isOwnMasterTenant = currentTenant && t.id === currentTenant.id;
         return em !== MASTER_ADMIN_EMAIL && !isOwnMasterTenant;
       });
 
-      // Carrega todas as impressoras para somatório global
-      const { data: allPrinters } = await sb.from('printers').select('id, tenant_id');
-      const prtList = allPrinters || [];
+      const { data: allPrinters } = await sb.from('printers').select('id, tenant_id, model, serial, ip, usb_port, status, total_pages, last_seen');
+      const masterTenantIds = new Set(allPlatformTenants.map(t => t.id));
+      allPlatformPrinters = (allPrinters || []).filter(p => masterTenantIds.has(p.tenant_id));
+
+      tenantRiskMap = analyzeTenantRisks(allPlatformTenants, allPlatformPrinters);
+
+      let activeMRR = 0;
+      let activeCount = 0;
+      let blockedCount = 0;
+      let totalAlerts = 0;
+
+      allPlatformTenants.forEach(t => {
+        const tPrinters = allPlatformPrinters.filter(p => p.tenant_id === t.id);
+        const rate = getTenantPlanRate(t.plan_tier);
+        const monthly = tPrinters.length * rate;
+        const st = (t.subscription_status || 'active').toLowerCase();
+        const pt = (t.plan_tier || 'trial').toLowerCase();
+
+        if (st === 'past_due' || st === 'canceled') {
+          blockedCount++;
+        } else if (st === 'active' && pt !== 'trial') {
+          activeCount++;
+          activeMRR += monthly;
+        }
+        totalAlerts += (tenantRiskMap[t.id] || []).filter(a => a.severity !== 'low').length;
+      });
 
       document.getElementById('kpiMasterTenants').innerText = allPlatformTenants.length;
-      document.getElementById('kpiMasterPrinters').innerText = prtList.length;
+      const subTen = document.getElementById('kpiMasterTenantsSub');
+      if (subTen) subTen.innerText = `${activeCount} ativos • ${blockedCount} bloqueados/cancelados`;
+      document.getElementById('kpiMasterPrinters').innerText = allPlatformPrinters.length;
+      document.getElementById('kpiMasterMRR').innerText = activeMRR.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 
-      let totalMRR = 0;
-      const tbody = document.getElementById('masterTenantsTableBody');
-
-      if (allPlatformTenants.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="7" class="py-8 text-center text-slate-400">Nenhuma locadora registrada ainda.</td></tr>`;
-      } else {
-        tbody.innerHTML = allPlatformTenants.map(t => {
-          const tenantPrinters = prtList.filter(p => p.tenant_id === t.id);
-          const pTier = t.plan_tier || 'modulo_1';
-          const rate = pTier.includes('5') ? 6 : pTier.includes('4') ? 4 : pTier.includes('3') ? 3 : pTier.includes('2') ? 2 : 1;
-          const monthlyMRR = tenantPrinters.length * rate;
-          totalMRR += monthlyMRR;
-
-          return `
-            <tr class="hover:bg-slate-50 transition">
-              <td class="py-3.5 px-4">
-                <strong class="text-slate-900 block text-xs">${t.trade_name || 'Locadora'}</strong>
-                <span class="text-[11px] text-slate-400 mono">${t.email || ''}</span>
-              </td>
-              <td class="py-3.5 px-4 mono text-slate-600">${t.cnpj_cpf || 'Não informado'}</td>
-              <td class="py-3.5 px-4 text-center">
-                <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-blue-50 text-[#0038A8] border border-blue-200 uppercase">
-                  ${pTier.replace('_', ' ')} (R$ ${rate},00/máq)
-                </span>
-              </td>
-              <td class="py-3.5 px-4 text-center font-black mono text-emerald-700">${tenantPrinters.length} máq</td>
-              <td class="py-3.5 px-4 text-right font-black mono text-slate-900 text-sm">
-                R$ ${monthlyMRR.toFixed(2)}/mês
-              </td>
-              <td class="py-3.5 px-4 text-center">
-                <span class="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-emerald-100 text-emerald-800">● ATIVO</span>
-              </td>
-              <td class="py-3.5 px-4 text-right space-x-1">
-                <button onclick="sendLocadoraWhatsApp('${t.id}')" class="px-2.5 py-1.5 rounded-xl bg-emerald-50 text-emerald-700 hover:bg-emerald-100 font-bold transition text-xs" title="Cobrar mensalidade">
-                  WhatsApp
-                </button>
-              </td>
-            </tr>
-          `;
-        }).join('');
+      const riskCountEl = document.getElementById('kpiMasterRiskCount');
+      const riskSubEl = document.getElementById('kpiMasterRiskSub');
+      const fraudBadge = document.getElementById('masterFraudTabBadge');
+      if (riskCountEl) riskCountEl.innerText = totalAlerts;
+      if (riskSubEl) riskSubEl.innerText = totalAlerts > 0 ? 'Clique para revisar indícios' : 'Nenhum indício crítico';
+      if (fraudBadge) {
+        fraudBadge.innerText = totalAlerts;
+        fraudBadge.classList.toggle('hidden', totalAlerts === 0);
       }
 
-      document.getElementById('kpiMasterMRR').innerText = totalMRR.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+      renderMasterSubscribersTable();
+      renderMasterBillingView();
+      renderMasterFraudAlerts();
 
-      // Preenche chave se já estiver salva localmente ou no tenant master
       const savedKey = localStorage.getItem('printmind_master_asaas_key') || (currentTenant && currentTenant.baas_api_key_encrypted) || '';
       if (savedKey) {
         document.getElementById('masterAsaasKeyInput').value = savedKey;
@@ -3321,6 +3567,251 @@ Para cadastrar a 3ª máquina e monitorar todo o seu parque, ative o Módulo 1 (
       }
       checkTrialPrinterLock();
       lucide.createIcons();
+    }
+
+    function renderMasterSubscribersTable() {
+      const tbody = document.getElementById('masterTenantsTableBody');
+      if (!tbody) return;
+      const search = ((document.getElementById('masterSearchInput') || {}).value || '').toLowerCase().trim();
+      const filter = ((document.getElementById('masterStatusFilter') || {}).value || 'all');
+
+      const filtered = allPlatformTenants.filter(t => {
+        const hay = `${t.trade_name || ''} ${t.email || ''} ${t.cnpj_cpf || ''} ${t.phone || ''}`.toLowerCase();
+        if (search && !hay.includes(search)) return false;
+
+        const st = (t.subscription_status || 'active').toLowerCase();
+        const pt = (t.plan_tier || 'trial').toLowerCase();
+        const alerts = tenantRiskMap[t.id] || [];
+
+        if (filter === 'active') return st === 'active' && pt !== 'trial';
+        if (filter === 'trial') return st === 'trialing' || pt === 'trial';
+        if (filter === 'past_due') return st === 'past_due';
+        if (filter === 'canceled') return st === 'canceled';
+        if (filter === 'risk') return alerts.length > 0;
+        return true;
+      });
+
+      if (filtered.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="7" class="py-8 text-center text-slate-400">Nenhum assinante encontrado com este filtro.</td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = filtered.map(t => {
+        const tenantPrinters = allPlatformPrinters.filter(p => p.tenant_id === t.id);
+        const rate = getTenantPlanRate(t.plan_tier);
+        const monthlyMRR = tenantPrinters.length * rate;
+        const st = (t.subscription_status || 'active').toLowerCase();
+        const alerts = tenantRiskMap[t.id] || [];
+        const riskPills = alerts.map(a => {
+          const cls = a.severity === 'high' ? 'bg-rose-100 text-rose-800 border-rose-200' : a.severity === 'medium' ? 'bg-amber-100 text-amber-800 border-amber-200' : 'bg-slate-100 text-slate-600 border-slate-200';
+          return `<span class="inline-block px-2 py-0.5 rounded-full text-[10px] font-bold border ${cls}" title="${a.detail}">${a.label}</span>`;
+        }).join(' ');
+
+        const toggleBtn = st === 'past_due'
+          ? `<button onclick="toggleTenantSuspension('${t.id}', 'active')" class="px-2.5 py-1.5 rounded-xl bg-emerald-600 text-white hover:bg-emerald-700 font-bold transition text-[11px]" title="Liberar acesso do assinante">Liberar</button>`
+          : `<button onclick="toggleTenantSuspension('${t.id}', 'past_due')" class="px-2.5 py-1.5 rounded-xl bg-rose-50 text-rose-700 hover:bg-rose-100 border border-rose-200 font-bold transition text-[11px]" title="Bloquear por inadimplência ou fraude">Bloquear</button>`;
+
+        return `
+          <tr class="hover:bg-slate-50 transition">
+            <td class="py-3.5 px-4">
+              <strong class="text-slate-900 block text-xs">${t.trade_name || 'Locadora'}</strong>
+              <span class="text-[11px] text-slate-400 mono">${t.email || ''}</span>
+            </td>
+            <td class="py-3.5 px-4">
+              <span class="mono text-slate-700 block">${t.cnpj_cpf || 'Sem documento'}</span>
+              <span class="text-[11px] text-slate-400 mono">${t.phone || 'Sem WhatsApp'}</span>
+            </td>
+            <td class="py-3.5 px-4 text-center">
+              <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-blue-50 text-[#0038A8] border border-blue-200 uppercase">
+                ${(t.plan_tier || 'trial').replace('_', ' ')} (R$ ${rate},00/máq)
+              </span>
+            </td>
+            <td class="py-3.5 px-4 text-center font-black mono text-emerald-700">${tenantPrinters.length} máq</td>
+            <td class="py-3.5 px-4 text-right font-black mono text-slate-900 text-sm">
+              R$ ${monthlyMRR.toFixed(2)}/mês
+            </td>
+            <td class="py-3.5 px-4 text-center space-y-1">
+              <div>${getStatusBadgeHTML(t)}</div>
+              ${riskPills ? `<div class="flex flex-wrap gap-1 justify-center">${riskPills}</div>` : ''}
+            </td>
+            <td class="py-3.5 px-4 text-right space-x-1 whitespace-nowrap">
+              <button onclick="inspectMasterTenant('${t.id}')" class="px-2.5 py-1.5 rounded-xl bg-slate-100 text-slate-700 hover:bg-slate-200 font-bold transition text-[11px]" title="Inspecionar máquinas e riscos">
+                Inspecionar
+              </button>
+              ${toggleBtn}
+              <button onclick="sendLocadoraWhatsApp('${t.id}')" class="px-2.5 py-1.5 rounded-xl bg-emerald-50 text-emerald-700 hover:bg-emerald-100 font-bold transition text-[11px]" title="Cobrar mensalidade no WhatsApp">
+                WhatsApp
+              </button>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    function renderMasterBillingView() {
+      let activeMRR = 0, activeCount = 0;
+      let riskMRR = 0, riskCount = 0;
+      let trialMRR = 0, trialCount = 0;
+
+      const rows = allPlatformTenants.map(t => {
+        const tPrinters = allPlatformPrinters.filter(p => p.tenant_id === t.id);
+        const rate = getTenantPlanRate(t.plan_tier);
+        const val = tPrinters.length * rate;
+        const st = (t.subscription_status || 'active').toLowerCase();
+        const pt = (t.plan_tier || 'trial').toLowerCase();
+
+        if (st === 'past_due' || st === 'canceled' || (pt === 'trial' && tPrinters.length > 2)) {
+          riskCount++;
+          riskMRR += val;
+        } else if (pt === 'trial' || st === 'trialing') {
+          trialCount++;
+          trialMRR += val;
+        } else {
+          activeCount++;
+          activeMRR += val;
+        }
+
+        const dt = t.created_at ? new Date(t.created_at).toLocaleDateString('pt-BR') : '-';
+        return `
+          <tr class="hover:bg-slate-50">
+            <td class="py-3 px-4">
+              <strong class="text-slate-900 block text-xs">${t.trade_name || 'Locadora'}</strong>
+              <span class="text-[11px] text-slate-400 mono">${t.cnpj_cpf || t.email || ''}</span>
+            </td>
+            <td class="py-3 px-4 text-slate-500 mono">${dt}</td>
+            <td class="py-3 px-4 text-center uppercase text-[11px] font-bold text-slate-700">${(t.plan_tier || 'trial').replace('_', ' ')}</td>
+            <td class="py-3 px-4 text-center font-bold mono">${tPrinters.length}</td>
+            <td class="py-3 px-4 text-right font-black mono text-slate-900">R$ ${val.toFixed(2)}</td>
+            <td class="py-3 px-4 text-center">${getStatusBadgeHTML(t)}</td>
+            <td class="py-3 px-4 text-right">
+              <button onclick="sendLocadoraWhatsApp('${t.id}')" class="px-2.5 py-1 rounded-xl bg-emerald-50 text-emerald-700 hover:bg-emerald-100 font-bold text-[11px]">Cobrar</button>
+            </td>
+          </tr>
+        `;
+      }).join('');
+
+      const el = id => document.getElementById(id);
+      if (el('masterBilActiveMRR')) el('masterBilActiveMRR').innerText = activeMRR.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+      if (el('masterBilActiveCount')) el('masterBilActiveCount').innerText = `${activeCount} assinante(s) adimplente(s)`;
+      if (el('masterBilRiskMRR')) el('masterBilRiskMRR').innerText = riskMRR.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+      if (el('masterBilRiskCount')) el('masterBilRiskCount').innerText = `${riskCount} conta(s) em risco / inadimplente(s)`;
+      if (el('masterBilTrialMRR')) el('masterBilTrialMRR').innerText = trialMRR.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+      if (el('masterBilTrialCount')) el('masterBilTrialCount').innerText = `${trialCount} conta(s) em período gratuito`;
+      if (el('masterBillingTableBody')) {
+        el('masterBillingTableBody').innerHTML = rows || `<tr><td colspan="7" class="py-8 text-center text-slate-400">Sem assinantes para faturamento.</td></tr>`;
+      }
+    }
+
+    function renderMasterFraudAlerts() {
+      const container = document.getElementById('masterFraudAlertsList');
+      const pill = document.getElementById('masterFraudSummaryPill');
+      if (!container) return;
+
+      const items = [];
+      allPlatformTenants.forEach(t => {
+        (tenantRiskMap[t.id] || []).forEach(a => items.push({ tenant: t, alert: a }));
+      });
+      if (pill) pill.innerText = `${items.length} ocorrência(s)`;
+
+      if (items.length === 0) {
+        container.innerHTML = `
+          <div class="bg-white p-8 rounded-3xl border border-emerald-200 text-center space-y-2">
+            <div class="text-emerald-600 font-black text-sm">✓ Nenhum indício de fraude ou multi-conta detectado</div>
+            <p class="text-xs text-slate-500">Todos os assinantes cadastrados estão dentro dos parâmetros normais de CNPJ, WhatsApp e limite de máquinas.</p>
+          </div>`;
+        return;
+      }
+
+      container.innerHTML = items.map(({ tenant: t, alert: a }) => {
+        const badgeCls = a.severity === 'high' ? 'bg-rose-100 text-rose-800' : a.severity === 'medium' ? 'bg-amber-100 text-amber-800' : 'bg-slate-100 text-slate-700';
+        const borderCls = a.severity === 'high' ? 'border-rose-200' : a.severity === 'medium' ? 'border-amber-200' : 'border-slate-200';
+        const isBlocked = (t.subscription_status || '').toLowerCase() === 'past_due';
+        return `
+          <div class="bg-white p-4 rounded-2xl border ${borderCls} shadow-sm flex flex-wrap items-center justify-between gap-3">
+            <div class="space-y-1">
+              <div class="flex items-center space-x-2">
+                <span class="px-2 py-0.5 rounded-full text-[10px] font-black uppercase ${badgeCls}">${a.label}</span>
+                <strong class="text-xs text-slate-900">${t.trade_name || 'Locadora'}</strong>
+                <span class="text-[11px] text-slate-400 mono">${t.email || ''}</span>
+              </div>
+              <p class="text-xs text-slate-600">${a.detail}</p>
+            </div>
+            <div class="flex items-center gap-2">
+              <button onclick="inspectMasterTenant('${t.id}')" class="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs">Inspecionar</button>
+              ${!isBlocked ? `<button onclick="toggleTenantSuspension('${t.id}', 'past_due')" class="px-3 py-1.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs">Bloquear Conta</button>` : `<span class="text-[11px] font-bold text-rose-700">Já Bloqueada</span>`}
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    async function toggleTenantSuspension(tenantId, newStatus) {
+      if (!isMasterAdminUser()) return;
+      const t = allPlatformTenants.find(x => x.id === tenantId);
+      if (!t) return;
+      const actionLabel = newStatus === 'past_due' ? 'BLOQUEAR (Inadimplente / Suspeito)' : 'REATIVAR (Adimplente)';
+      if (!confirm(`Deseja ${actionLabel} o assinante "${t.trade_name || t.email}"?`)) return;
+
+      const { error } = await sb.from('tenants').update({ subscription_status: newStatus }).eq('id', tenantId);
+      if (error) {
+        alert('Erro ao atualizar status do assinante: ' + error.message);
+        return;
+      }
+      await loadMasterTenants();
+    }
+
+    function inspectMasterTenant(tenantId) {
+      const t = allPlatformTenants.find(x => x.id === tenantId);
+      if (!t) return;
+      const tPrinters = allPlatformPrinters.filter(p => p.tenant_id === tenantId);
+      const alerts = tenantRiskMap[tenantId] || [];
+
+      document.getElementById('mtdTitle').innerText = t.trade_name || 'Locadora';
+      document.getElementById('mtdSubtitle').innerText = `${t.email || ''} • Doc: ${t.cnpj_cpf || 'N/A'} • Tel: ${t.phone || 'N/A'} • Status: ${t.subscription_status || 'active'}`;
+
+      const riskBox = document.getElementById('mtdRiskBox');
+      if (alerts.length > 0) {
+        riskBox.classList.remove('hidden');
+        riskBox.innerHTML = `<strong>⚠️ Alertas de Auditoria:</strong><ul class="list-disc pl-4 space-y-0.5">${alerts.map(a => `<li><strong>${a.label}:</strong> ${a.detail}</li>`).join('')}</ul>`;
+      } else {
+        riskBox.classList.add('hidden');
+      }
+
+      const listEl = document.getElementById('mtdPrintersList');
+      if (tPrinters.length === 0) {
+        listEl.innerHTML = '<div class="p-4 rounded-2xl bg-slate-50 text-slate-500 text-center">Este assinante ainda não conectou nenhuma impressora.</div>';
+      } else {
+        listEl.innerHTML = tPrinters.map(p => `
+          <div class="p-3 rounded-2xl border border-slate-200 flex items-center justify-between gap-2">
+            <div>
+              <strong class="text-slate-900 block">${p.model || 'Impressora'}</strong>
+              <span class="text-[11px] text-slate-500 mono">Serial: ${p.serial || '-'} • ${p.usb_port ? 'USB ' + p.usb_port : (p.ip || '-')}</span>
+            </div>
+            <div class="text-right">
+              <span class="font-black mono text-[#0038A8] block">${Number(p.total_pages || 0).toLocaleString('pt-BR')} págs</span>
+              <span class="text-[10px] uppercase font-bold ${p.status === 'online' ? 'text-emerald-600' : 'text-slate-400'}">${p.status || 'online'}</span>
+            </div>
+          </div>
+        `).join('');
+      }
+      openModal('masterTenantDetailModal');
+    }
+
+    function exportMasterBillingCSV() {
+      const header = ['Empresa', 'Email', 'CNPJ_CPF', 'WhatsApp', 'Plano', 'Status', 'Maquinas', 'Valor_Mensal_BRL', 'Alertas_Risco'];
+      const lines = [header.join(';')];
+      allPlatformTenants.forEach(t => {
+        const count = allPlatformPrinters.filter(p => p.tenant_id === t.id).length;
+        const val = (count * getTenantPlanRate(t.plan_tier)).toFixed(2);
+        const risk = (tenantRiskMap[t.id] || []).map(a => a.label).join(' | ');
+        const cols = [t.trade_name || '', t.email || '', t.cnpj_cpf || '', t.phone || '', t.plan_tier || 'trial', t.subscription_status || 'active', count, val, risk].map(v => `"${String(v).replace(/"/g, '""')}"`);
+        lines.push(cols.join(';'));
+      });
+      const blob = new Blob([lines.join('\n')], { type: 'text/csv;charset=utf-8;' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = `printmind_assinantes_saas_${new Date().toISOString().slice(0, 10)}.csv`;
+      a.click();
     }
 
     function toggleAsaasKeyVisibility() {
@@ -3331,7 +3822,6 @@ Para cadastrar a 3ª máquina e monitorar todo o seu parque, ative o Módulo 1 (
     async function saveMasterAsaasKey(e) {
       e.preventDefault();
       const keyVal = document.getElementById('masterAsaasKeyInput').value.trim();
-      const envVal = document.getElementById('masterAsaasEnv').value;
       const feedback = document.getElementById('masterAsaasFeedback');
 
       if (!keyVal.startsWith('$aact_')) {
@@ -3340,7 +3830,6 @@ Para cadastrar a 3ª máquina e monitorar todo o seu parque, ative o Módulo 1 (
         return;
       }
 
-      // Salva no localStorage e no tenant master no Supabase
       localStorage.setItem('printmind_master_asaas_key', keyVal);
       if (currentTenant && currentTenant.id) {
         await sb.from('tenants').update({ baas_api_key_encrypted: keyVal }).eq('id', currentTenant.id);
@@ -3366,8 +3855,11 @@ Para cadastrar a 3ª máquina e monitorar todo o seu parque, ative o Módulo 1 (
     function sendLocadoraWhatsApp(tenantId) {
       const t = allPlatformTenants.find(x => x.id === tenantId);
       if (!t) return;
+      const tCount = allPlatformPrinters.filter(p => p.tenant_id === t.id).length;
+      const rate = getTenantPlanRate(t.plan_tier);
+      const totalVal = (tCount * rate).toFixed(2).replace('.', ',');
       const phone = (t.phone || '').replace(/\D/g, '');
-      const text = encodeURIComponent(`Olá ${t.trade_name}!\n\nSegue o demonstrativo de assinatura da plataforma PrintMind referente às impressoras monitoradas.\nTotal a liquidar: R$ ...\nPodemos emitir a fatura? Obrigado!`);
+      const text = encodeURIComponent(`Olá ${t.trade_name}!\n\nSegue o demonstrativo da sua assinatura PrintMind Cloud:\n• Máquinas monitoradas: ${tCount}\n• Plano: ${(t.plan_tier || 'modulo_1').replace('_', ' ')} (R$ ${rate},00/máq)\n• Total mensal: R$ ${totalVal}\n\nPodemos enviar a fatura/PIX para manter o monitoramento ativo? Obrigado!`);
       const url = phone ? `https://api.whatsapp.com/send?phone=55${phone}&text=${text}` : `https://api.whatsapp.com/send?text=${text}`;
       window.open(url, '_blank');
     }
