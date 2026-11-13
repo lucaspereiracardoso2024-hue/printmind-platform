@@ -3,7 +3,7 @@
   <Package
       Name="PrintMind Satellite Agent"
       Manufacturer="PrintMind Tecnologia"
-      Version="4.0.0.0"
+      Version="4.1.0.0"
       UpgradeCode="D9F4A1E2-8C3B-4A6D-B1E9-72C5E8F04A10"
       Scope="perMachine">
 
@@ -61,6 +61,7 @@
 
         <RegistryKey Root="HKLM" Key="SOFTWARE\PrintMind\Agent">
           <RegistryValue Name="AUTOUPDATE" Type="string" Value="[AUTOUPDATE]" />
+          <RegistryValue Name="PAIRINGTOKEN" Type="string" Value="[PAIRINGTOKEN]" />
           <RegistryValue Name="InstallDir" Type="string" Value="[INSTALLFOLDER]" />
         </RegistryKey>
       </Component>
