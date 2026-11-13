@@ -24,10 +24,34 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Setup Node.js for Frontend Smoke Check
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Validate Frontend Inline JS & Critical Elements
+        run: |
+          node -e '
+          const fs = require("fs");
+          const vm = require("vm");
+          const html = fs.readFileSync("index.html", "utf8");
+          const requiredIds = ["authScreen", "appScreen", "formLogin", "formSignup", "formForgotPassword", "formResetPassword", "agentModal", "printersGrid", "sectionMaster"];
+          for (const id of requiredIds) {
+            if (!html.includes(`id="${id}"`)) throw new Error(`Missing required element id=${id}`);
+          }
+          const scripts = [...html.matchAll(/<script(?![^>]*\bsrc=)[^>]*>([\s\S]*?)<\/script>/gi)];
+          if (scripts.length === 0) throw new Error("No inline scripts found in index.html");
+          scripts.forEach((m, i) => new vm.Script(m[1], { filename: `inline-script-${i}.js` }));
+          console.log(`Validated ${scripts.length} inline script(s) and ${requiredIds.length} critical DOM IDs.`);
+          '
+
       - name: Prepare Static Web Bundle
         run: |
           mkdir -p _site
           cp index.html _site/index.html
+          [ -f printmind-agent.exe ] && cp printmind-agent.exe _site/printmind-agent.exe || true
+          [ -f printmind-agent-linux-amd64 ] && cp printmind-agent-linux-amd64 _site/printmind-agent-linux-amd64 || true
+          [ -f printmind-config.json ] && cp printmind-config.json _site/printmind-config.json || true
 
       - name: Configure Pages
         uses: actions/configure-pages@v5

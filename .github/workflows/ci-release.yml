@@ -4,6 +4,8 @@ on:
   push:
     branches: [ "main" ]
     tags: [ "v*" ]
+  pull_request:
+    branches: [ "main" ]
   workflow_dispatch:
 
 permissions:
@@ -21,21 +23,28 @@ jobs:
         with:
           go-version: '1.23'
 
+      - name: Run Go Vet & Automated Tests
+        run: |
+          go vet ./...
+          go test -v -race ./...
+
       - name: Verify & Build PrintMind Cloud Server (Linux AMD64)
         run: |
-          CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -ldflags="-s -w" -o dist/printmind-server-linux-amd64 main.go
+          CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -ldflags="-s -w" -o dist/printmind-server-linux-amd64 .
 
       - name: Build PrintMind Server Standalone (Windows AMD64)
         run: |
-          CGO_ENABLED=0 GOOS=windows GOARCH=amd64 go build -ldflags="-s -w" -o dist/printmind-server.exe main.go
+          CGO_ENABLED=0 GOOS=windows GOARCH=amd64 go build -ldflags="-s -w" -o dist/printmind-server.exe .
 
-      - name: Build PrintMind Satellite Agent V3.0 (Windows AMD64 Pure Go)
+      - name: Build PrintMind Scanner Agent V3.2 (Windows AMD64 + PE Resources)
         run: |
-          CGO_ENABLED=0 GOOS=windows GOARCH=amd64 go build -ldflags="-s -w" -o dist/printmind-agent.exe ./cmd/agent/main.go
+          cd cmd/agent
+          CGO_ENABLED=0 GOOS=windows GOARCH=amd64 go build -ldflags="-s -w" -o ../../dist/printmind-agent.exe .
 
-      - name: Build PrintMind Satellite Agent V3.0 (Linux AMD64 Pure Go)
+      - name: Build PrintMind Scanner Agent V3.2 (Linux AMD64 Pure Go)
         run: |
-          CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -ldflags="-s -w" -o dist/printmind-agent-linux-amd64 ./cmd/agent/main.go
+          cd cmd/agent
+          CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -ldflags="-s -w" -o ../../dist/printmind-agent-linux-amd64 .
 
       - name: Upload Compiled Binaries as Artifacts
         uses: actions/upload-artifact@v4
