@@ -1,4 +1,103 @@
   <!-- =========================================================================
+       MODAL: TOUR DE PRIMEIRO LOGIN (COMO FUNCIONA O SISTEMA EM 3 ETAPAS)
+       ========================================================================= -->
+  <div id="welcomeTourModal" class="hidden fixed inset-0 z-50 bg-slate-900/70 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl max-w-2xl w-full p-6 space-y-5 shadow-2xl">
+      <div class="flex justify-between items-center border-b border-slate-100 pb-3">
+        <div class="flex items-center space-x-2.5">
+          <div class="w-10 h-10 rounded-2xl bg-blue-50 text-[#0038A8] flex items-center justify-center font-black">
+            <i data-lucide="compass" class="w-5 h-5"></i>
+          </div>
+          <div>
+            <h3 class="font-black text-base text-slate-900">Como Funciona o PrintMind</h3>
+            <p class="text-xs text-slate-500">Aprenda a operar sua plataforma em 3 passos simples</p>
+          </div>
+        </div>
+        <button onclick="closeModal('welcomeTourModal')" class="text-slate-400 hover:text-slate-600 text-lg">✕</button>
+      </div>
+
+      <!-- SLIDES DO TOUR -->
+      <div id="tourSlide1" class="space-y-4">
+        <div class="p-5 rounded-2xl bg-blue-50/70 border border-blue-200 space-y-2">
+          <div class="flex items-center space-x-2">
+            <span class="w-6 h-6 rounded-full bg-[#0038A8] text-white text-xs font-black flex items-center justify-center">1</span>
+            <h4 class="font-black text-sm text-[#0038A8]">Cadastrar seus Clientes e Contratos</h4>
+          </div>
+          <p class="text-xs text-slate-600 leading-relaxed">
+            O primeiro passo é cadastrar as empresas, hospitais ou filiais para onde você aluga impressoras. Aqui você define:
+          </p>
+          <ul class="text-xs text-slate-700 space-y-1 list-disc list-inside pt-1">
+            <li>Valor fixo da locação mensal (ex: R$ 1.200,00);</li>
+            <li>Franquia contratual de páginas (ex: 5.000 P&B e 1.000 Color);</li>
+            <li>Valor do excedente por página e data de corte no mês.</li>
+          </ul>
+        </div>
+        <div class="flex justify-between items-center pt-2">
+          <span class="text-xs font-bold text-slate-400">Etapa 1 de 3</span>
+          <button onclick="switchTourSlide(2)" class="px-5 py-2.5 rounded-xl bg-[#0038A8] hover:bg-blue-800 text-white font-bold text-xs shadow-sm transition flex items-center space-x-1.5">
+            <span>Próximo Passo: Scanner de Impressoras</span>
+            <i data-lucide="arrow-right" class="w-4 h-4"></i>
+          </button>
+        </div>
+      </div>
+
+      <div id="tourSlide2" class="hidden space-y-4">
+        <div class="p-5 rounded-2xl bg-emerald-50/70 border border-emerald-200 space-y-2">
+          <div class="flex items-center space-x-2">
+            <span class="w-6 h-6 rounded-full bg-emerald-700 text-white text-xs font-black flex items-center justify-center">2</span>
+            <h4 class="font-black text-sm text-emerald-900">Localizar Impressoras com o Scanner Automático</h4>
+          </div>
+          <p class="text-xs text-slate-600 leading-relaxed">
+            Você não precisa digitar IP ou serial de máquina por máquina:
+          </p>
+          <ul class="text-xs text-slate-700 space-y-1 list-disc list-inside pt-1">
+            <li>Baixe o <strong>Scanner de Impressoras (printmind-agent.exe)</strong> no computador da rede ou no PC onde o cabo USB está espetado;</li>
+            <li>O scanner varre a rede e encontra as impressoras Brother, HP, Ricoh e Epson sozinho;</li>
+            <li>Os contadores de páginas e níveis de toner aparecem automaticamente no painel web!</li>
+          </ul>
+        </div>
+        <div class="flex justify-between items-center pt-2">
+          <button onclick="switchTourSlide(1)" class="px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs transition">
+            ← Voltar
+          </button>
+          <span class="text-xs font-bold text-slate-400">Etapa 2 de 3</span>
+          <button onclick="switchTourSlide(3)" class="px-5 py-2.5 rounded-xl bg-[#0038A8] hover:bg-blue-800 text-white font-bold text-xs shadow-sm transition flex items-center space-x-1.5">
+            <span>Próximo Passo: Fechamento & Faturamento</span>
+            <i data-lucide="arrow-right" class="w-4 h-4"></i>
+          </button>
+        </div>
+      </div>
+
+      <div id="tourSlide3" class="hidden space-y-4">
+        <div class="p-5 rounded-2xl bg-indigo-50/70 border border-indigo-200 space-y-2">
+          <div class="flex items-center space-x-2">
+            <span class="w-6 h-6 rounded-full bg-indigo-700 text-white text-xs font-black flex items-center justify-center">3</span>
+            <h4 class="font-black text-sm text-indigo-900">Fechamento Automático & Cobrança no WhatsApp</h4>
+          </div>
+          <p class="text-xs text-slate-600 leading-relaxed">
+            Na data de corte contratual, o PrintMind faz o trabalho contábil por você:
+          </p>
+          <ul class="text-xs text-slate-700 space-y-1 list-disc list-inside pt-1">
+            <li>Calcula automaticamente quantas páginas rodaram e o valor do excedente;</li>
+            <li>Gera o <strong>Demonstrativo Formal A4 em PDF</strong> com rateio por setor hospitalar;</li>
+            <li>Gera o código <strong>PIX Copia e Cola Oficial</strong> e envia a fatura pronta no WhatsApp do cliente com 1 clique!</li>
+          </ul>
+        </div>
+        <div class="flex justify-between items-center pt-2">
+          <button onclick="switchTourSlide(2)" class="px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs transition">
+            ← Voltar
+          </button>
+          <span class="text-xs font-bold text-slate-400">Etapa 3 de 3</span>
+          <button onclick="finishTourAndStart()" class="px-6 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs shadow-md transition flex items-center space-x-1.5">
+            <i data-lucide="check-circle" class="w-4 h-4"></i>
+            <span>🎉 Entendi Tudo! Começar Agora</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- =========================================================================
        MODAL: GUIA COMPLETO DE CONEXÃO (REDE, USB OU ANTIGA SEM REDE)
        ========================================================================= -->
   <div id="printerTypesModal" class="hidden fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
@@ -29,7 +128,7 @@
             </p>
             <div class="p-2.5 rounded-xl bg-white border border-slate-200 text-[11px] text-slate-700 space-y-1">
               <strong>Como funciona:</strong>
-              <p>Basta instalar o <code class="text-blue-700 font-bold">printmind-agent.exe</code> em <strong>apenas 1 computador</strong> daquela rede. O robô faz a varredura SNMP e acha todas as impressoras sozinho!</p>
+              <p>Basta instalar o <code class="text-blue-700 font-bold">printmind-agent.exe</code> em <strong>apenas 1 computador</strong> daquela rede. O scanner faz a varredura automática na rede e acha todas as impressoras sozinho!</p>
             </div>
           </div>
           <span class="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-lg border border-emerald-200 text-center">
@@ -49,7 +148,7 @@
             </p>
             <div class="p-2.5 rounded-xl bg-white border border-slate-200 text-[11px] text-slate-700 space-y-1">
               <strong>Como funciona:</strong>
-              <p>Instale o robô satélite <strong>no computador onde o cabo USB está conectado</strong>. O módulo <em>USB Spooler</em> intercepta as impressões e lê os medidores da porta USB.</p>
+              <p>Execute o scanner <strong>no computador onde o cabo USB da impressora está conectado</strong>. O módulo <em>USB Spooler</em> intercepta as impressões e lê os medidores da porta USB.</p>
             </div>
           </div>
           <span class="text-[10px] font-bold text-indigo-700 bg-indigo-50 px-2.5 py-1 rounded-lg border border-indigo-200 text-center">
@@ -239,6 +338,10 @@
 
         <!-- BOTÕES DE AÇÃO RÁPIDA -->
         <div class="flex items-center gap-2">
+          <button onclick="openModal('welcomeTourModal')" class="px-3 py-1.5 rounded-xl bg-amber-400/20 hover:bg-amber-400/30 text-amber-200 text-xs font-bold flex items-center space-x-1 border border-amber-300/30 transition shadow-sm" title="Ver como funciona o sistema">
+            <i data-lucide="help-circle" class="w-3.5 h-3.5 text-amber-300"></i>
+            <span>Como Funciona?</span>
+          </button>
           <button onclick="openModal('newClientModal')" class="px-3 py-1.5 rounded-xl bg-white text-[#0038A8] hover:bg-blue-50 text-xs font-black flex items-center space-x-1 shadow-sm transition">
             <i data-lucide="plus" class="w-3.5 h-3.5"></i><span>Novo Cliente</span>
           </button>
@@ -246,7 +349,7 @@
             <i data-lucide="cpu" class="w-3.5 h-3.5"></i><span>+ Impressora</span>
           </button>
           <button onclick="openModal('agentModal')" class="px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 text-xs font-bold flex items-center space-x-1 border border-white/15 transition">
-            <i data-lucide="radar" class="w-3.5 h-3.5"></i><span>Agente Satélite</span>
+            <i data-lucide="radar" class="w-3.5 h-3.5"></i><span>Scanner de Impressoras</span>
           </button>
           <button onclick="openModal('pricingModal')" class="px-3 py-1.5 rounded-xl bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-100 text-xs font-bold flex items-center space-x-1 border border-emerald-400/30 transition">
             <i data-lucide="calculator" class="w-3.5 h-3.5"></i><span>Módulos (R$ 1 a R$ 6)</span>
@@ -372,17 +475,17 @@
                 <div class="flex items-center justify-between">
                   <div class="flex items-center space-x-2">
                     <span id="wtStep2Num" class="w-6 h-6 rounded-full bg-slate-300 text-slate-700 font-black text-xs flex items-center justify-center">2</span>
-                    <strong class="text-xs font-black text-slate-900">Conectar Robô Satélite</strong>
+                    <strong class="text-xs font-black text-slate-900">Localizar Impressoras na Rede</strong>
                   </div>
                   <span id="wtStep2Pill" class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-200 text-slate-600">Aguardando Passo 1</span>
                 </div>
                 <p class="text-[11px] text-slate-600 leading-relaxed">
-                  Execute o <code class="text-blue-700 font-bold">printmind-agent.exe</code> na rede local ou no PC da impressora USB. O robô detecta e puxa os contadores sozinho!
+                  Execute o <code class="text-blue-700 font-bold">printmind-agent.exe</code> na rede local ou no PC da impressora USB. O scanner localiza as impressoras na rede/USB e puxa os contadores sozinho!
                 </p>
               </div>
               <button id="wtStep2Btn" onclick="openModal('newPrinterModal')" class="w-full py-2.5 rounded-xl bg-slate-200 text-slate-500 font-bold text-xs transition flex items-center justify-center space-x-2" disabled>
                 <i data-lucide="cpu" class="w-4 h-4"></i>
-                <span>Conectar Impressoras via Robô</span>
+                <span>Abrir Scanner de Impressoras</span>
               </button>
             </div>
           </div>
@@ -413,10 +516,10 @@
               <div class="space-y-1">
                 <div class="flex items-center space-x-2">
                   <span class="w-5 h-5 rounded-full bg-white text-[#0038A8] font-black text-[11px] flex items-center justify-center">1</span>
-                  <strong class="text-xs font-black text-white">Baixar o Agente Satélite</strong>
+                  <strong class="text-xs font-black text-white">Baixar Scanner de Impressoras</strong>
                 </div>
                 <p class="text-[11px] text-blue-100">
-                  O robô oficial Go (6.9 MB) é quem faz a varredura e lê os contadores invioláveis de hardware na sua rede.
+                  O Scanner leve em Go (6.9 MB) faz a varredura automática na rede local ou porta USB e lê os contadores de hardware.
                 </p>
               </div>
               <a href="https://github.com/lucaspereiracardoso2024-hue/printmind-platform/raw/main/printmind-agent.exe" download="printmind-agent.exe" class="w-full py-2.5 rounded-xl bg-white text-[#0038A8] font-black text-xs hover:bg-blue-50 transition shadow-sm flex items-center justify-center space-x-1.5 mt-2">
@@ -450,7 +553,7 @@
                   <strong class="text-xs font-black text-white">Telemetria ao Vivo no Painel</strong>
                 </div>
                 <p class="text-[11px] text-blue-100">
-                  O robô detecta Brother, HP, Ricoh e Epson via SNMP RFC 3805 e os contadores aparecem aqui na hora!
+                  O scanner detecta Brother, HP, Ricoh e Epson via rede local ou cabo USB e exibe os contadores no painel!
                 </p>
               </div>
               <div class="p-2 rounded-xl bg-emerald-500/20 border border-emerald-400/30 text-[11px] text-emerald-200 font-bold flex items-center space-x-1.5 mt-2">
@@ -468,7 +571,7 @@
             </div>
             <button onclick="openModal('printerTypesModal')" class="px-3.5 py-1.5 rounded-xl bg-white/15 hover:bg-white/25 text-white font-bold transition flex items-center space-x-1.5 border border-white/20 shadow-sm">
               <i data-lucide="printer" class="w-3.5 h-3.5 text-amber-300"></i>
-              <span>Guia: Como Conectar USB e Antigas</span>
+              <span>Guia de Conexão: Rede, USB ou Antiga</span>
             </button>
           </div>
         </div>
@@ -1370,7 +1473,7 @@
   </div>
 
   <!-- =========================================================================
-       MODAL 4: CONECTAR IMPRESSORAS (PADRÃO AUTOMÁTICO VIA ROBÔ SATÉLITE)
+       MODAL 4: CONECTAR IMPRESSORAS (PADRÃO AUTOMÁTICO VIA SCANNER)
        ========================================================================= -->
   <div id="newPrinterModal" class="hidden fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
     <div class="bg-white rounded-3xl max-w-2xl w-full p-6 space-y-4 shadow-2xl max-h-[92vh] overflow-y-auto">
@@ -1381,7 +1484,7 @@
           </div>
           <div>
             <h3 class="font-black text-base text-slate-900">Conectar Impressoras ao Sistema</h3>
-            <p class="text-xs text-slate-500">Detecção 100% automatizada pelo Agente Satélite PrintMind (Go)</p>
+            <p class="text-xs text-slate-500">Localização 100% automatizada pelo Scanner de Impressoras PrintMind</p>
           </div>
         </div>
         <button onclick="closeModal('newPrinterModal')" class="text-slate-400 hover:text-slate-600 text-lg">✕</button>
@@ -1391,7 +1494,7 @@
       <div class="flex bg-slate-100 p-1 rounded-2xl text-xs font-bold">
         <button id="tabPrinterAuto" onclick="switchPrinterAddMode('auto')" class="flex-1 py-2 rounded-xl bg-white text-[#0038A8] shadow-sm transition flex items-center justify-center space-x-1.5">
           <i data-lucide="sparkles" class="w-3.5 h-3.5 text-amber-500"></i>
-          <span>Automático via Robô Satélite (Recomendado)</span>
+          <span>Escanear Impressoras Automaticamente (Recomendado)</span>
         </button>
         <button id="tabPrinterManual" onclick="switchPrinterAddMode('manual')" class="flex-1 py-2 rounded-xl text-slate-600 hover:text-slate-900 transition flex items-center justify-center space-x-1.5">
           <i data-lucide="edit-3" class="w-3.5 h-3.5"></i>
@@ -1400,7 +1503,7 @@
       </div>
 
       <!-- =====================================================================
-           VISÃO 1: CONEXÃO AUTOMÁTICA VIA ROBÔ (O PADRÃO INDUSTRIAL ENTERPRISE)
+           VISÃO 1: CONEXÃO AUTOMÁTICA VIA SCANNER DE REDE
            ===================================================================== -->
       <div id="viewPrinterAuto" class="space-y-4">
         <!-- PASSO 1: VINCULAR AO CLIENTE -->
@@ -1415,7 +1518,7 @@
             <div class="space-y-1">
               <div class="flex items-center space-x-1.5">
                 <span class="w-5 h-5 rounded-full bg-[#0038A8] text-white text-[11px] font-black flex items-center justify-center">2</span>
-                <strong class="text-xs font-black text-slate-900">Baixar o Executável Go</strong>
+                <strong class="text-xs font-black text-slate-900">Baixar Scanner de Impressoras</strong>
               </div>
               <p class="text-[11px] text-slate-600">
                 Arquivo único e leve (6.9 MB). Não precisa instalar nada, basta abrir no computador.
@@ -1456,7 +1559,7 @@
                 <span class="px-2 py-0.5 rounded-full text-[10px] font-black bg-emerald-200 text-emerald-900">AO VIVO</span>
               </div>
               <p class="text-xs text-emerald-800 mt-0.5">
-                Assim que o robô iniciar na sua rede, todas as impressoras Brother, HP, Ricoh e Epson aparecerão aqui automaticamente com contadores reais de hardware.
+                Assim que o scanner iniciar no computador, todas as impressoras Brother, HP, Ricoh e Epson da rede ou USB aparecerão aqui automaticamente com contadores reais de hardware.
               </p>
             </div>
           </div>
@@ -1469,7 +1572,7 @@
         <div class="flex justify-between items-center pt-2 text-xs text-slate-500">
           <button onclick="openModal('printerTypesModal')" class="hover:text-[#0038A8] font-bold flex items-center space-x-1 text-slate-600">
             <i data-lucide="help-circle" class="w-3.5 h-3.5 text-blue-600"></i>
-            <span>Dúvidas sobre como o robô lê USB ou rede?</span>
+            <span>Como o scanner encontra impressoras na rede ou USB?</span>
           </button>
           <button onclick="switchPrinterAddMode('manual')" class="text-slate-400 hover:text-slate-600 underline">
             Cadastrar manualmente (último caso)
@@ -1486,7 +1589,7 @@
             <i data-lucide="alert-circle" class="w-4 h-4 text-amber-600 flex-shrink-0"></i>
             <span>O cadastro manual não possui telemetria automática por segundo. É indicado apenas para máquinas isoladas sem computador.</span>
           </div>
-          <button onclick="switchPrinterAddMode('auto')" class="text-blue-700 font-bold hover:underline ml-2 whitespace-nowrap">← Voltar ao Robô</button>
+          <button onclick="switchPrinterAddMode('auto')" class="text-blue-700 font-bold hover:underline ml-2 whitespace-nowrap">← Voltar ao Scanner Automático</button>
         </div>
 
         <form onsubmit="handleCreatePrinter(event)" class="space-y-3">
@@ -2011,21 +2114,21 @@
     }
 
     async function confirmDeleteTenantAccount() {
-      if (!currentTenant || !currentSession) return;
-      const resp = prompt('⚠️ ATENÇÃO: Esta ação é irreversível e excluirá permanentemente todos os seus clientes, impressoras e faturas.\n\nPara confirmar a exclusão definitiva, digite "EXCLUIR":');
+      if (!currentSession) return;
+      const resp = prompt('⚠️ ATENÇÃO: Esta ação é definitiva e irreversível!\n\nSua conta de acesso, login, clientes, impressoras e histórico de faturamento serão permanentemente excluídos do sistema.\n\nPara confirmar a exclusão definitiva, digite "EXCLUIR":');
       if (resp !== 'EXCLUIR') {
         alert('Ação cancelada. A conta não foi excluída.');
         return;
       }
 
-      // Exclui tenant (ON DELETE CASCADE no banco remove clientes, impressoras, fechamentos e perfis)
-      const { error } = await sb.from('tenants').delete().eq('id', currentTenant.id);
+      // Chama a função atômica do Supabase via RPC SECURITY DEFINER (deleta auth.users, tenants, profiles e dados vinculados)
+      const { data, error } = await sb.rpc('delete_user_account');
       if (error) {
         alert('Erro ao excluir conta: ' + error.message);
         return;
       }
 
-      alert('Sua conta e todos os dados foram excluídos com sucesso.');
+      alert('✓ Sua conta e todos os seus dados foram permanentemente excluídos. O login foi revogado.');
       await handleLogout();
     }
 
@@ -2079,8 +2182,8 @@
       } else if (!hasPrinters) {
         // CASO 2: CLIENTE JÁ CADASTRADO, 0 IMPRESSORAS -> FOCO VAI PARA O PASSO 2 (CONECTAR ROBÔ)
         badge.innerText = "Passo 2 de 2 • Próximo Passo";
-        desc.innerText = "Cliente cadastrado com sucesso! Agora baixe e rode o robô para achar as impressoras.";
-        indicator.innerText = "Aguardando Conexão do Robô";
+        desc.innerText = "Cliente cadastrado com sucesso! Agora baixe e execute o Scanner de Impressoras para localizar os equipamentos.";
+        indicator.innerText = "Aguardando Scanner de Impressoras";
 
         // Passo 1 Concluído
         s1Card.className = "p-4 rounded-2xl border-2 transition-all flex flex-col justify-between space-y-3 bg-emerald-50/50 border-emerald-300 opacity-90";
@@ -2097,7 +2200,7 @@
         s2Pill.innerText = "👉 PRÓXIMO PASSO OBRIGATÓRIO";
         s2Btn.className = "w-full py-2.5 rounded-xl bg-[#0038A8] hover:bg-blue-800 text-white font-black text-xs shadow-md transition flex items-center justify-center space-x-2";
         s2Btn.disabled = false;
-        s2Btn.innerHTML = `<i data-lucide="cpu" class="w-4 h-4"></i><span>👉 Conectar Impressoras via Robô Agora</span>`;
+        s2Btn.innerHTML = `<i data-lucide="cpu" class="w-4 h-4"></i><span>👉 Abrir Scanner de Impressoras Agora</span>`;
 
       } else {
         // CASO 3: PARQUE ATIVO (CLIENTES E IMPRESSORAS OPERANDO)
@@ -2155,6 +2258,31 @@
       if (printers.length > 0) closeModal('newPrinterModal');
     }
 
+
+    // =========================================================================
+    // TOUR INTERATIVO DE BOAS-VINDAS (SLIDES 1, 2 E 3)
+    // =========================================================================
+    function switchTourSlide(slideNum) {
+      document.getElementById('tourSlide1').classList.toggle('hidden', slideNum !== 1);
+      document.getElementById('tourSlide2').classList.toggle('hidden', slideNum !== 2);
+      document.getElementById('tourSlide3').classList.toggle('hidden', slideNum !== 3);
+      lucide.createIcons();
+    }
+
+    function finishTourAndStart() {
+      closeModal('welcomeTourModal');
+      localStorage.setItem('printmind_tour_completed', 'true');
+      if (clients.length === 0) {
+        openModal('newClientModal');
+      }
+    }
+
+    function checkFirstTimeUserTour() {
+      if (!localStorage.getItem('printmind_tour_completed') && clients.length === 0) {
+        setTimeout(() => { openModal('welcomeTourModal'); }, 800);
+      }
+    }
+
     async function loadTenantData() {
       if (!currentSession) return;
       const [cRes, uRes, pRes, clRes] = await Promise.all([
@@ -2170,6 +2298,7 @@
 
       renderDashboard();
       updateInteractiveWalkthrough();
+      checkFirstTimeUserTour();
       if (currentTab === 'reports') renderReportsView();
       if (currentTab === 'grafica') renderGraficaView();
     }
