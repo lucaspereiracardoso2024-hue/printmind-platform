@@ -1,14 +1,14 @@
 {
   "FixedFileInfo": {
     "FileVersion": {
-      "Major": 3,
-      "Minor": 2,
+      "Major": 4,
+      "Minor": 0,
       "Patch": 0,
       "Build": 0
     },
     "ProductVersion": {
-      "Major": 3,
-      "Minor": 2,
+      "Major": 4,
+      "Minor": 0,
       "Patch": 0,
       "Build": 0
     },
@@ -20,13 +20,13 @@
   },
   "StringFileInfo": {
     "CompanyName": "PrintMind Tecnologia",
-    "FileDescription": "PrintMind Satellite Agent - Monitoramento Autonomo de Impressoras e Telemetria",
-    "FileVersion": "3.2.0.0",
+    "FileDescription": "PrintMind Satellite Agent v4.0 - Monitoramento Autonomo de Impressoras e Telemetria",
+    "FileVersion": "4.0.0.0",
     "InternalName": "printmind-agent",
     "LegalCopyright": "Copyright (C) 2026 PrintMind Tecnologia. Todos os direitos reservados.",
     "OriginalFilename": "printmind-agent.exe",
     "ProductName": "PrintMind Platform",
-    "ProductVersion": "3.2.0.0"
+    "ProductVersion": "4.0.0.0"
   },
   "VarFileInfo": {
     "Translation": {
