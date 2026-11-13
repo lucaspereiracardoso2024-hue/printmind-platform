@@ -35,7 +35,7 @@ jobs:
           const fs = require("fs");
           const vm = require("vm");
           const html = fs.readFileSync("index.html", "utf8");
-          const requiredIds = ["authScreen", "appScreen", "formLogin", "formSignup", "formForgotPassword", "formResetPassword", "agentModal", "printersGrid", "sectionMaster"];
+          const requiredIds = ["authScreen", "appScreen", "formLogin", "formSignup", "formForgotPassword", "formResetPassword", "agentModal", "printersGrid", "sectionMaster", "masterSubTabTenants", "masterSubTabBilling", "masterSubTabFraud", "suspendedTenantOverlay", "masterTenantDetailModal"];
           for (const id of requiredIds) {
             if (!html.includes(`id="${id}"`)) throw new Error(`Missing required element id=${id}`);
           }
