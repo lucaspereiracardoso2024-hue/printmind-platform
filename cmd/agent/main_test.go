@@ -155,3 +155,84 @@ func TestSendTelemetrySupabaseRPCFormat(t *testing.T) {
 		t.Errorf("unexpected sync response: %+v", resp)
 	}
 }
+
+func TestExtractTokenFromExeName(t *testing.T) {
+	cases := []struct {
+		path string
+		want string
+	}{
+		{`C:\Users\Test\Downloads\printmind-agent__pm_live_560af0c12f274ffa9b131ae5b1b7d7ad.exe`, "pm_live_560af0c12f274ffa9b131ae5b1b7d7ad"},
+		{`C:\Users\Test\Downloads\printmind-agent__pm_live_abc123def (1).exe`, "pm_live_abc123def"},
+		{`/home/user/printmind-agent-linux-amd64__pm_live_xyz789`, "pm_live_xyz789"},
+		{`C:\Users\Test\Downloads\printmind-agent.exe`, ""},
+		{`printmind-agent-linux-amd64`, ""},
+	}
+	for _, tc := range cases {
+		if got := extractTokenFromExeName(tc.path); got != tc.want {
+			t.Errorf("extractTokenFromExeName(%q) = %q, want %q", tc.path, got, tc.want)
+		}
+	}
+}
+
+func TestLoadOrInitConfigIgnoresLegacyPlaceholder(t *testing.T) {
+	dir := t.TempDir()
+	cfgPath := filepath.Join(dir, "printmind-config.json")
+
+	legacy := `{"server_url":"https://zbsmzcbcivhzslcnfxmq.supabase.co/rest/v1/rpc/sync_agent_telemetry","pairing_token":"pm_live_hosp_central_01","poll_interval_sec":300,"enable_usb":true}`
+	if err := os.WriteFile(cfgPath, []byte(legacy), 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	cfg := loadOrInitConfig(cfgPath, "", "", "")
+	if cfg.PairingToken != "" {
+		t.Errorf("expected legacy placeholder token to be cleared, got %q", cfg.PairingToken)
+	}
+}
+
+func TestResolveTokenByEmail(t *testing.T) {
+	var gotPath, gotEmail string
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		gotPath = r.URL.Path
+		var body map[string]string
+		_ = json.NewDecoder(r.Body).Decode(&body)
+		gotEmail = body["p_email"]
+		w.Header().Set("Content-Type", "application/json")
+		if gotEmail == "ok@example.com" {
+			_, _ = w.Write([]byte(`{"status":"success","pairing_token":"pm_live_resolved_99","unit_name":"Matriz"}`))
+		} else {
+			_, _ = w.Write([]byte(`{"status":"error","message":"Conta não encontrada"}`))
+		}
+	}))
+	defer srv.Close()
+
+	client := &http.Client{Timeout: 5 * time.Second}
+	tok, err := resolveTokenByEmail(client, srv.URL+"/rest/v1/rpc/sync_agent_telemetry", "anon", " ok@example.com ")
+	if err != nil {
+		t.Fatalf("resolveTokenByEmail expected success, got %v", err)
+	}
+	if gotPath != "/rest/v1/rpc/resolve_unit_token_by_email" || tok != "pm_live_resolved_99" {
+		t.Errorf("got path=%q token=%q", gotPath, tok)
+	}
+
+	if _, err := resolveTokenByEmail(client, srv.URL+"/rest/v1/rpc/sync_agent_telemetry", "anon", "missing@example.com"); err == nil {
+		t.Error("expected error when account not found")
+	}
+}
+
+func TestSendTelemetryServerErrorStatus(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{"status":"error","message":"Token inválido ou conta suspensa"}`))
+	}))
+	defer srv.Close()
+
+	cfg := Config{
+		ServerURL:    srv.URL + "/rest/v1/rpc/sync_agent_telemetry",
+		APIKey:       "test-key",
+		PairingToken: "pm_invalid",
+	}
+	req := SyncRequest{AgentVersion: AgentVersion, PairingToken: "pm_invalid"}
+	if _, err := sendTelemetry(&http.Client{Timeout: 5 * time.Second}, cfg, req); err == nil {
+		t.Error("expected error when server returns status=error")
+	}
+}

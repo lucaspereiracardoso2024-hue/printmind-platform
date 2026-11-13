@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bufio"
 	"bytes"
 	"context"
 	"encoding/binary"
@@ -13,6 +14,8 @@ import (
 	"net/http"
 	"os"
 	"os/exec"
+	"path/filepath"
+	"regexp"
 	"runtime"
 	"strings"
 	"sync"
@@ -20,11 +23,13 @@ import (
 )
 
 const (
-	AgentVersion      = "3.2.0"
+	AgentVersion      = "3.2.1"
 	DefaultConfigPath = "printmind-config.json"
 	DefaultSupabaseRP = "https://zbsmzcbcivhzslcnfxmq.supabase.co/rest/v1/rpc/sync_agent_telemetry"
 	DefaultAnonAPIKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inpic216Y2JjaXZoenNsY25meG1xIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTQ0NDUxNTcsImV4cCI6MjExMDAyMTE1N30.U9F-EL3ddBBqEK0MqkNuZBC6ZvwtuEElN6Z_VpEGT7Q"
 )
+
+var exeTokenRegex = regexp.MustCompile(`pm_live_[A-Za-z0-9]+`)
 
 type Config struct {
 	ServerURL       string   `json:"server_url"`
@@ -102,11 +107,22 @@ type localSpoolerPrinter struct {
 	WorkOffline   bool   `json:"WorkOffline"`
 }
 
+func extractTokenFromExeName(exePath string) string {
+	base := filepath.Base(exePath)
+	return exeTokenRegex.FindString(base)
+}
+
+func saveConfig(path string, cfg Config) {
+	if out, err := json.MarshalIndent(cfg, "", "  "); err == nil {
+		_ = os.WriteFile(path, out, 0644)
+	}
+}
+
 func loadOrInitConfig(path, flagServer, flagToken, flagSubnets string) Config {
 	cfg := Config{
 		ServerURL:       DefaultSupabaseRP,
 		APIKey:          DefaultAnonAPIKey,
-		PairingToken:    "pm_live_hosp_central_01",
+		PairingToken:    "",
 		PollIntervalSec: 300,
 		EnableUSB:       true,
 	}
@@ -120,8 +136,9 @@ func loadOrInitConfig(path, flagServer, flagToken, flagSubnets string) Config {
 			if strings.TrimSpace(loaded.APIKey) != "" {
 				cfg.APIKey = strings.TrimSpace(loaded.APIKey)
 			}
-			if strings.TrimSpace(loaded.PairingToken) != "" {
-				cfg.PairingToken = strings.TrimSpace(loaded.PairingToken)
+			tok := strings.TrimSpace(loaded.PairingToken)
+			if tok != "" && tok != "pm_live_hosp_central_01" {
+				cfg.PairingToken = tok
 			}
 			if loaded.PollIntervalSec >= 30 {
 				cfg.PollIntervalSec = loaded.PollIntervalSec
@@ -130,6 +147,18 @@ func loadOrInitConfig(path, flagServer, flagToken, flagSubnets string) Config {
 			if len(loaded.Subnets) > 0 {
 				cfg.Subnets = loaded.Subnets
 			}
+		}
+	}
+
+	// Token embutido no nome do arquivo baixado (ex: printmind-agent__pm_live_xxxx.exe)
+	if exePath, err := os.Executable(); err == nil {
+		if exeTok := extractTokenFromExeName(exePath); exeTok != "" {
+			cfg.PairingToken = exeTok
+		}
+	}
+	if cfg.PairingToken == "" && len(os.Args) > 0 {
+		if argTok := extractTokenFromExeName(os.Args[0]); argTok != "" {
+			cfg.PairingToken = argTok
 		}
 	}
 
@@ -152,10 +181,51 @@ func loadOrInitConfig(path, flagServer, flagToken, flagSubnets string) Config {
 		}
 	}
 
-	if out, err := json.MarshalIndent(cfg, "", "  "); err == nil {
-		_ = os.WriteFile(path, out, 0644)
-	}
+	saveConfig(path, cfg)
 	return cfg
+}
+
+func resolveTokenByEmail(client *http.Client, serverURL, apiKey, email string) (string, error) {
+	baseRPC := strings.TrimRight(serverURL, "/")
+	if idx := strings.Index(baseRPC, "/rest/v1/rpc/"); idx != -1 {
+		baseRPC = baseRPC[:idx] + "/rest/v1/rpc/resolve_unit_token_by_email"
+	} else {
+		baseRPC = "https://zbsmzcbcivhzslcnfxmq.supabase.co/rest/v1/rpc/resolve_unit_token_by_email"
+	}
+
+	payloadBytes, _ := json.Marshal(map[string]string{"p_email": strings.TrimSpace(email)})
+	req, err := http.NewRequest(http.MethodPost, baseRPC, bytes.NewBuffer(payloadBytes))
+	if err != nil {
+		return "", err
+	}
+	req.Header.Set("Content-Type", "application/json")
+	if apiKey != "" {
+		req.Header.Set("apikey", apiKey)
+		req.Header.Set("Authorization", "Bearer "+apiKey)
+	}
+
+	resp, err := client.Do(req)
+	if err != nil {
+		return "", err
+	}
+	defer resp.Body.Close()
+
+	var result struct {
+		Status       string `json:"status"`
+		Message      string `json:"message"`
+		PairingToken string `json:"pairing_token"`
+		UnitName     string `json:"unit_name"`
+	}
+	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
+		return "", err
+	}
+	if result.Status != "success" || result.PairingToken == "" {
+		if result.Message == "" {
+			result.Message = "conta não encontrada"
+		}
+		return "", fmt.Errorf("%s", result.Message)
+	}
+	return result.PairingToken, nil
 }
 
 func isPrivateIPv4(ip net.IP) bool {
@@ -739,18 +809,57 @@ func sendTelemetry(client *http.Client, cfg Config, reqPayload SyncRequest) (*Sy
 
 	var syncResp SyncResponse
 	_ = json.Unmarshal(respData, &syncResp)
+	if syncResp.Status == "error" {
+		return &syncResp, fmt.Errorf("servidor recusou sincronizacao: %s", syncResp.Message)
+	}
 	return &syncResp, nil
 }
 
 func main() {
 	serverURL := flag.String("server", "", "URL do Endpoint PrintMind / Supabase RPC")
 	token := flag.String("token", "", "Token de Pareamento da Unidade/Filial")
+	emailFlag := flag.String("email", "", "E-mail cadastrado no PrintMind (pareamento automático)")
 	subnetsFlag := flag.String("subnets", "", "Sub-redes locais ou VLANs remotas separadas por vírgula")
 	configPath := flag.String("config", DefaultConfigPath, "Caminho do arquivo de configuração persistente")
 	once := flag.Bool("once", false, "Executa apenas 1 ciclo de varredura e encerra")
 	flag.Parse()
 
+	httpClient := &http.Client{Timeout: 20 * time.Second}
 	cfg := loadOrInitConfig(*configPath, *serverURL, *token, *subnetsFlag)
+
+	if cfg.PairingToken == "" && strings.TrimSpace(*emailFlag) != "" {
+		if resolved, err := resolveTokenByEmail(httpClient, cfg.ServerURL, cfg.APIKey, *emailFlag); err == nil {
+			cfg.PairingToken = resolved
+			saveConfig(*configPath, cfg)
+		} else {
+			log.Printf("[Pareamento] Falha ao localizar conta para %s: %v", *emailFlag, err)
+		}
+	}
+
+	if cfg.PairingToken == "" {
+		fmt.Println("================================================================")
+		fmt.Println("  PrintMind Scanner v" + AgentVersion + " - Vinculacao Inicial da Conta")
+		fmt.Println("================================================================")
+		fmt.Print("Digite o E-MAIL da sua conta PrintMind (ou seu Token pm_live_...): ")
+		reader := bufio.NewReader(os.Stdin)
+		input, _ := reader.ReadString('\n')
+		input = strings.TrimSpace(input)
+		if strings.Contains(input, "@") {
+			resolved, err := resolveTokenByEmail(httpClient, cfg.ServerURL, cfg.APIKey, input)
+			if err != nil {
+				log.Fatalf("Nao foi possivel vincular a conta (%v). Baixe o scanner novamente pelo seu painel.", err)
+			}
+			cfg.PairingToken = resolved
+			saveConfig(*configPath, cfg)
+			log.Printf("[Pareamento] Conta vinculada com sucesso! Token salvo em %s.", *configPath)
+		} else if input != "" {
+			cfg.PairingToken = input
+			saveConfig(*configPath, cfg)
+		} else {
+			log.Fatalf("Token ou e-mail nao informado. Baixe o scanner pelo seu painel PrintMind.")
+		}
+	}
+
 	hostname, _ := os.Hostname()
 	subnets := cfg.Subnets
 	if len(subnets) == 0 {
@@ -763,7 +872,6 @@ func main() {
 	}
 	rateLimit := 25
 	enableWakeup := true
-	httpClient := &http.Client{Timeout: 20 * time.Second}
 
 	log.Printf("PrintMind Satellite Agent v%s iniciado em %s (%s/%s)", AgentVersion, hostname, runtime.GOOS, runtime.GOARCH)
 	log.Printf("[Varredura de Rede] Iniciando varredura SNMP em %v...", subnets)
