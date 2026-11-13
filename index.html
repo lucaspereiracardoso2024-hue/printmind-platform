@@ -562,10 +562,10 @@
                   O Scanner leve em Go (6.9 MB) faz a varredura automática na rede local ou porta USB e lê os contadores de hardware.
                 </p>
               </div>
-              <a href="https://github.com/lucaspereiracardoso2024-hue/printmind-platform/raw/main/printmind-agent.exe" download="printmind-agent.exe" class="w-full py-2.5 rounded-xl bg-white text-[#0038A8] font-black text-xs hover:bg-blue-50 transition shadow-sm flex items-center justify-center space-x-1.5 mt-2">
+              <button type="button" onclick="downloadPairedAgent('windows')" class="w-full py-2.5 rounded-xl bg-white text-[#0038A8] font-black text-xs hover:bg-blue-50 transition shadow-sm flex items-center justify-center space-x-1.5 mt-2">
                 <i data-lucide="download" class="w-3.5 h-3.5"></i>
                 <span>Baixar printmind-agent.exe</span>
-              </a>
+              </button>
             </div>
 
             <!-- PASSO 2 -->
@@ -1710,10 +1710,10 @@
                 Arquivo único e leve (6.9 MB). Não precisa instalar nada, basta abrir no computador.
               </p>
             </div>
-            <a href="https://github.com/lucaspereiracardoso2024-hue/printmind-platform/raw/main/printmind-agent.exe" download="printmind-agent.exe" class="w-full py-2.5 rounded-xl bg-[#0038A8] hover:bg-blue-800 text-white font-black text-xs transition shadow-sm flex items-center justify-center space-x-1.5">
+            <button type="button" onclick="downloadPairedAgent('windows')" class="w-full py-2.5 rounded-xl bg-[#0038A8] hover:bg-blue-800 text-white font-black text-xs transition shadow-sm flex items-center justify-center space-x-1.5">
               <i data-lucide="download" class="w-4 h-4"></i>
               <span>Baixar printmind-agent.exe</span>
-            </a>
+            </button>
           </div>
 
           <div class="p-4 rounded-2xl bg-indigo-50/70 border border-indigo-200 flex flex-col justify-between space-y-2.5">
@@ -1841,26 +1841,26 @@
       <div class="p-4 rounded-2xl bg-gradient-to-r from-blue-900 to-[#0038A8] text-white flex flex-wrap items-center justify-between gap-3 shadow-md">
         <div>
           <div class="flex items-center space-x-2">
-            <span class="px-2 py-0.5 rounded-full text-[10px] font-black bg-emerald-400/20 text-emerald-300 border border-emerald-400/30">BINÁRIOS OFICIAIS COMPILADOS v3.2.0</span>
+            <span class="px-2 py-0.5 rounded-full text-[10px] font-black bg-emerald-400/20 text-emerald-300 border border-emerald-400/30">BINÁRIOS OFICIAIS COMPILADOS v3.2.1</span>
             <span class="text-xs text-blue-200">Windows &amp; Linux 64-bit • Go Nativo</span>
           </div>
           <h4 class="text-sm font-black text-white mt-1">Scanner Autônomo PrintMind (Rede + USB Spooler)</h4>
           <p class="text-[11px] text-blue-200">Zero instalação. Auto-detecta sub-redes locais, impressoras de rede via SNMP RFC 3805 e impressoras USB locais. Sincroniza direto com a nuvem.</p>
         </div>
         <div class="flex flex-wrap gap-2">
-          <a href="https://github.com/lucaspereiracardoso2024-hue/printmind-platform/raw/main/printmind-agent.exe" download="printmind-agent.exe" target="_blank" class="px-3.5 py-2 rounded-xl bg-white text-[#0038A8] font-black text-xs hover:bg-blue-50 transition shadow-md flex items-center space-x-1.5">
+          <button type="button" onclick="downloadPairedAgent('windows')" class="px-3.5 py-2 rounded-xl bg-white text-[#0038A8] font-black text-xs hover:bg-blue-50 transition shadow-md flex items-center space-x-1.5">
             <i data-lucide="download" class="w-4 h-4"></i>
             <span>Baixar p/ Windows (.exe)</span>
-          </a>
-          <a href="https://github.com/lucaspereiracardoso2024-hue/printmind-platform/raw/main/printmind-agent-linux-amd64" download="printmind-agent-linux-amd64" target="_blank" class="px-3.5 py-2 rounded-xl bg-blue-800 text-white font-black text-xs hover:bg-blue-700 transition border border-white/20 flex items-center space-x-1.5">
+          </button>
+          <button type="button" onclick="downloadPairedAgent('linux')" class="px-3.5 py-2 rounded-xl bg-blue-800 text-white font-black text-xs hover:bg-blue-700 transition border border-white/20 flex items-center space-x-1.5">
             <i data-lucide="download" class="w-4 h-4"></i>
             <span>Baixar p/ Linux (amd64)</span>
-          </a>
+          </button>
         </div>
       </div>
 
       <p class="text-xs text-slate-600">
-        Basta dar dois cliques no <code class="text-blue-700 font-bold">printmind-agent.exe</code> no computador da recepção/empresa ou rodar via terminal:
+        Baixe e dê dois cliques — o executável já sai pareado com o seu token no nome do arquivo (<code class="text-blue-700 font-bold">printmind-agent__pm_live_....exe</code>) e cadastra as impressoras no seu painel automaticamente:
       </p>
       <div id="unitsTokensList" class="space-y-2.5 text-xs"></div>
     </div>
@@ -2328,11 +2328,21 @@
 
       const isMaster = isMasterAdminUser();
       syncMasterAccess(session.user.email);
+      tourCheckedThisSession = false;
+      if (autoRefreshTimer) {
+        clearInterval(autoRefreshTimer);
+        autoRefreshTimer = null;
+      }
 
       if (isMaster) {
         switchTab('master');
       } else {
         await loadTenantData();
+        autoRefreshTimer = setInterval(() => {
+          if (currentSession && !isMasterAdminUser() && document.visibilityState === 'visible' && !document.querySelector('[id$="Modal"]:not(.hidden)') && (currentTab === 'clients' || currentTab === 'reports')) {
+            loadTenantData();
+          }
+        }, 15000);
       }
       checkTrialPrinterLock();
       lucide.createIcons();
@@ -2590,10 +2600,39 @@
       }
     }
 
+    let tourCheckedThisSession = false;
+    let autoRefreshTimer = null;
+
     function checkFirstTimeUserTour() {
+      if (tourCheckedThisSession) return;
+      tourCheckedThisSession = true;
       if (!localStorage.getItem('printmind_tour_completed') && clients.length === 0) {
         setTimeout(() => { openModal('welcomeTourModal'); }, 800);
       }
+    }
+
+    function getActiveUnitPairingToken() {
+      return (units && units.length > 0 && units[0].pairing_token) ? units[0].pairing_token : '';
+    }
+
+    function downloadPairedAgent(osType = 'windows', explicitToken = '') {
+      const token = String(explicitToken || getActiveUnitPairingToken() || '').trim();
+      if (!token) {
+        alert('Cadastre seu primeiro cliente/unidade antes de baixar o scanner para que ele já saia pareado automaticamente com a sua conta.');
+        closeModal('agentModal');
+        closeModal('newPrinterModal');
+        openModal('newClientModal');
+        return;
+      }
+      const isLinux = osType === 'linux';
+      const src = isLinux ? './printmind-agent-linux-amd64' : './printmind-agent.exe';
+      const filename = isLinux ? `printmind-agent-linux-amd64__${token}` : `printmind-agent__${token}.exe`;
+      const a = document.createElement('a');
+      a.href = src;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
     }
 
     async function loadTenantData() {
@@ -3209,13 +3248,18 @@ Para cadastrar a 3ª máquina e monitorar todo o seu parque, ative o Módulo 1 (
       container.innerHTML = units.map(u => {
         const cli = clients.find(c => c.id === u.client_id);
         const subnetsStr = (u.scan_subnets || ['192.168.1.0/24']).join(',');
+        const safeTok = String(u.pairing_token || '').replace(/[^a-zA-Z0-9_-]/g, '');
         return `
-          <div class="p-4 rounded-2xl bg-slate-900 text-slate-100 space-y-2">
-            <div class="flex justify-between items-center">
+          <div class="p-4 rounded-2xl bg-slate-900 text-slate-100 space-y-2.5">
+            <div class="flex flex-wrap justify-between items-center gap-2">
               <strong class="text-white">${cli ? cli.name : 'Cliente'} • Unidade: ${u.unit_name}</strong>
               <span class="px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 mono text-[10px]">${u.pairing_token}</span>
             </div>
-            <pre class="bg-black/40 p-2.5 rounded-xl text-[11px] mono text-emerald-300 overflow-x-auto select-all">./printmind-agent.exe -token="${u.pairing_token}"</pre>
+            <div class="flex flex-wrap gap-2">
+              <button type="button" onclick="downloadPairedAgent('windows', '${safeTok}')" class="px-3 py-1.5 rounded-lg bg-[#0038A8] hover:bg-blue-700 text-white font-bold text-[11px] transition">Baixar .exe Já Pareado</button>
+              <button type="button" onclick="downloadPairedAgent('linux', '${safeTok}')" class="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-[11px] border border-white/10 transition">Baixar Linux Pareado</button>
+            </div>
+            <pre class="bg-black/40 p-2.5 rounded-xl text-[11px] mono text-emerald-300 overflow-x-auto select-all">printmind-agent__${u.pairing_token}.exe  (ou: ./printmind-agent.exe -token="${u.pairing_token}")</pre>
           </div>
         `;
       }).join('');
