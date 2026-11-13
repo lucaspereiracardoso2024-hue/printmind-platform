@@ -1,0 +1,21 @@
+[Unit]
+Description=Agente autonomo PrintMind de monitoramento de impressoras, telemetria e auditoria de impressao.
+After=network-online.target cups.service ipp-usb.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=lp
+Group=lp
+ExecStart=/usr/local/bin/printmind-agent
+Restart=always
+RestartSec=5s
+StandardOutput=journal
+StandardError=journal
+StateDirectory=printmind
+WorkingDirectory=/var/lib/printmind
+CapabilityBoundingSet=CAP_NET_RAW CAP_NET_BIND_SERVICE
+NoNewPrivileges=true
+
+[Install]
+WantedBy=multi-user.target

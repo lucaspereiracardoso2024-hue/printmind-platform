@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs">
+  <Package
+      Name="PrintMind Satellite Agent"
+      Manufacturer="PrintMind Tecnologia"
+      Version="4.0.0.0"
+      UpgradeCode="D9F4A1E2-8C3B-4A6D-B1E9-72C5E8F04A10"
+      Scope="perMachine">
+
+    <MajorUpgrade DowngradeErrorMessage="Uma versao mais recente do PrintMind Satellite Agent ja esta instalada." />
+    <MediaTemplate EmbedCab="yes" />
+
+    <!-- Intune / GPO enterprise control: pass AUTOUPDATE=0 to disable agent-initiated MSI upgrades -->
+    <Property Id="AUTOUPDATE" Value="1" Secure="yes" />
+    <Property Id="PAIRINGTOKEN" Value="" Secure="yes" />
+
+    <StandardDirectory Id="ProgramFiles64Folder">
+      <Directory Id="INSTALLFOLDER" Name="PrintMind" />
+    </StandardDirectory>
+
+    <StandardDirectory Id="CommonAppDataFolder">
+      <Directory Id="PrintMindDataDir" Name="PrintMind">
+        <Directory Id="PrintMindLogsDir" Name="logs" />
+        <Directory Id="PrintMindStagingDir" Name="staging" />
+      </Directory>
+    </StandardDirectory>
+
+    <ComponentGroup Id="ProductComponents" Directory="INSTALLFOLDER">
+      <Component Id="AgentExecutable" Guid="B37C8A91-2E4D-4F5A-9D1C-44B8A120E601">
+        <File Id="PrintMindAgentExe" Source="..\..\dist\printmind-agent.exe" KeyPath="yes" />
+
+        <ServiceInstall
+            Id="PrintMindServiceInstall"
+            Name="PrintMindAgent"
+            DisplayName="PrintMind Satellite Agent"
+            Description="Agente autonomo PrintMind de monitoramento de impressoras, telemetria e auditoria de impressao."
+            Type="ownProcess"
+            Start="auto"
+            ErrorControl="normal"
+            Account="LocalSystem"
+            Vital="yes">
+          <ServiceConfig
+              DelayedAutoStart="yes"
+              OnInstall="yes"
+              OnReinstall="yes" />
+          <ServiceConfig
+              FirstFailureActionType="restart"
+              SecondFailureActionType="restart"
+              ThirdFailureActionType="restart"
+              RestartServiceDelayInSeconds="5"
+              ResetPeriodInDays="1" />
+        </ServiceInstall>
+
+        <ServiceControl
+            Id="PrintMindServiceControl"
+            Name="PrintMindAgent"
+            Start="install"
+            Stop="both"
+            Remove="uninstall"
+            Wait="yes" />
+
+        <RegistryKey Root="HKLM" Key="SOFTWARE\PrintMind\Agent">
+          <RegistryValue Name="AUTOUPDATE" Type="string" Value="[AUTOUPDATE]" />
+          <RegistryValue Name="InstallDir" Type="string" Value="[INSTALLFOLDER]" />
+        </RegistryKey>
+      </Component>
+    </ComponentGroup>
+
+    <Feature Id="MainFeature" Title="PrintMind Satellite Agent" Level="1">
+      <ComponentGroupRef Id="ProductComponents" />
+    </Feature>
+  </Package>
+</Wix>
