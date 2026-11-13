@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs">
+<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs"
+     xmlns:util="http://wixtoolset.org/schemas/v4/wxs/util">
   <Package
       Name="PrintMind Satellite Agent"
       Manufacturer="PrintMind Tecnologia"
@@ -12,7 +13,7 @@
 
     <!-- Intune / GPO enterprise control: pass AUTOUPDATE=0 to disable agent-initiated MSI upgrades -->
     <Property Id="AUTOUPDATE" Value="1" Secure="yes" />
-    <Property Id="PAIRINGTOKEN" Value="" Secure="yes" />
+    <Property Id="PAIRINGTOKEN" Secure="yes" />
 
     <StandardDirectory Id="ProgramFiles64Folder">
       <Directory Id="INSTALLFOLDER" Name="PrintMind" />
@@ -27,7 +28,7 @@
 
     <ComponentGroup Id="ProductComponents" Directory="INSTALLFOLDER">
       <Component Id="AgentExecutable" Guid="B37C8A91-2E4D-4F5A-9D1C-44B8A120E601">
-        <File Id="PrintMindAgentExe" Source="..\..\dist\printmind-agent.exe" KeyPath="yes" />
+        <File Id="PrintMindAgentExe" Source="printmind-agent.exe" KeyPath="yes" />
 
         <ServiceInstall
             Id="PrintMindServiceInstall"
@@ -43,7 +44,7 @@
               DelayedAutoStart="yes"
               OnInstall="yes"
               OnReinstall="yes" />
-          <ServiceConfig
+          <util:ServiceConfig
               FirstFailureActionType="restart"
               SecondFailureActionType="restart"
               ThirdFailureActionType="restart"
