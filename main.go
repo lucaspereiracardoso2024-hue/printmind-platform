@@ -127,6 +127,8 @@ type Closing struct {
 	Status           string  `json:"status"`
 	FrozenAt         string  `json:"frozen_at"`
 	PixKey           string  `json:"pix_key"`
+	MerchantName     string  `json:"merchant_name,omitempty"`
+	City             string  `json:"city,omitempty"`
 	PixCopyPaste     string  `json:"pix_copy_paste,omitempty"`
 	BoletoURL        string  `json:"boleto_url,omitempty"`
 }
@@ -242,17 +244,18 @@ func crc16CCITT(payload string) string {
 }
 
 func GenerateValidPixPayload(pixKey string, merchantName string, city string, amount float64, txID string) string {
-	if pixKey == "" {
-		pixKey = "18.234.567/0001-89"
-	}
-	if merchantName == "" {
-		merchantName = "STAR COPIAS OUTSOURCING"
+	pixKey = strings.TrimSpace(pixKey)
+	merchantName = strings.TrimSpace(merchantName)
+	city = strings.TrimSpace(city)
+	txID = strings.TrimSpace(txID)
+	if pixKey == "" || merchantName == "" || city == "" || amount <= 0 {
+		return ""
 	}
 	if len(merchantName) > 25 {
 		merchantName = merchantName[:25]
 	}
-	if city == "" {
-		city = "SAO PAULO"
+	if len(city) > 15 {
+		city = city[:15]
 	}
 	if txID == "" {
 		txID = "PRINTMIND"
@@ -1051,7 +1054,7 @@ func handleSaveClosing(w http.ResponseWriter, r *http.Request) {
 	}
 	c.PlatformSplitFee = c.TotalAmount * 0.015
 	c.NetTenantAmount = c.TotalAmount - c.PlatformSplitFee
-	c.PixCopyPaste = GenerateValidPixPayload(c.PixKey, "STAR COPIAS OUTSOURCING", "SAO PAULO", c.TotalAmount, c.ID)
+	c.PixCopyPaste = GenerateValidPixPayload(c.PixKey, c.MerchantName, c.City, c.TotalAmount, c.ID)
 
 	exists := false
 	for i, existing := range dbData.Closings {
@@ -1260,20 +1263,27 @@ func handleWhatsAppSendInvoice(w http.ResponseWriter, r *http.Request) {
 
 func handleEmitSplitCharge(w http.ResponseWriter, r *http.Request) {
 	var req struct {
-		ClientID    string  `json:"client_id"`
-		ClientName  string  `json:"client_name"`
-		Amount      float64 `json:"amount"`
-		DueDate     string  `json:"due_date"`
-		Description string  `json:"description"`
+		ClientID     string  `json:"client_id"`
+		ClientName   string  `json:"client_name"`
+		Amount       float64 `json:"amount"`
+		DueDate      string  `json:"due_date"`
+		Description  string  `json:"description"`
+		PixKey       string  `json:"pix_key"`
+		MerchantName string  `json:"merchant_name"`
+		City         string  `json:"city"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		http.Error(w, `{"error":"payload inválido"}`, http.StatusBadRequest)
 		return
 	}
 
+	pixPayload := GenerateValidPixPayload(req.PixKey, req.MerchantName, req.City, req.Amount, req.ClientID)
+	if pixPayload == "" {
+		http.Error(w, `{"error":"configure pix_key, merchant_name, city e amount > 0 em Minha Empresa antes de gerar PIX"}`, http.StatusBadRequest)
+		return
+	}
 	splitFee := req.Amount * 0.015
 	netAmount := req.Amount - splitFee
-	pixPayload := GenerateValidPixPayload("18.234.567/0001-89", "STAR COPIAS OUTSOURCING", "SAO PAULO", req.Amount, req.ClientID)
 
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(map[string]interface{}{

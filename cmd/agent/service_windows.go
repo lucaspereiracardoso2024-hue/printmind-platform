@@ -8,10 +8,13 @@ import (
 	"log/slog"
 	"os"
 	"os/signal"
+	"path/filepath"
 	"strings"
 	"syscall"
 	"time"
 
+	"golang.org/x/sys/windows"
+	"golang.org/x/sys/windows/registry"
 	"golang.org/x/sys/windows/svc"
 	"golang.org/x/sys/windows/svc/eventlog"
 	"golang.org/x/sys/windows/svc/mgr"
@@ -99,6 +102,141 @@ func runWindowsService(runLoop func(ctx context.Context)) error {
 	return svc.Run(ServiceName, &printMindServiceHandler{runLoop: runLoop})
 }
 
+func queryPrintMindServicePID() uint32 {
+	m, err := mgr.Connect()
+	if err != nil {
+		return 0
+	}
+	defer m.Disconnect()
+	s, err := m.OpenService(ServiceName)
+	if err != nil {
+		return 0
+	}
+	defer s.Close()
+	st, err := s.Query()
+	if err != nil || st.State == svc.Stopped {
+		return 0
+	}
+	return st.ProcessId
+}
+
+func stopExistingPrintMindService(timeout time.Duration) {
+	m, err := mgr.Connect()
+	if err != nil {
+		return
+	}
+	defer m.Disconnect()
+	s, err := m.OpenService(ServiceName)
+	if err != nil {
+		return
+	}
+	defer s.Close()
+
+	st, qErr := s.Query()
+	if qErr == nil && st.State == svc.Stopped {
+		return
+	}
+	_, _ = s.Control(svc.Stop)
+	deadline := time.Now().Add(timeout)
+	for time.Now().Before(deadline) {
+		time.Sleep(300 * time.Millisecond)
+		st, err := s.Query()
+		if err != nil || st.State == svc.Stopped {
+			return
+		}
+	}
+}
+
+func registerWindowsAutoStartAndUninstall(exePath string) {
+	trayCmd := fmt.Sprintf(`"%s" -tray`, exePath)
+	if k, _, err := registry.CreateKey(registry.LOCAL_MACHINE, `SOFTWARE\Microsoft\Windows\CurrentVersion\Run`, registry.SET_VALUE); err == nil {
+		_ = k.SetStringValue("PrintMindTray", trayCmd)
+		_ = k.Close()
+	}
+
+	uninstallKey := `SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\PrintMindAgent`
+	if uk, _, err := registry.CreateKey(registry.LOCAL_MACHINE, uninstallKey, registry.SET_VALUE); err == nil {
+		_ = uk.SetStringValue("DisplayName", "PrintMind Agente de Telemetria")
+		_ = uk.SetStringValue("DisplayVersion", AgentVersion)
+		_ = uk.SetStringValue("Publisher", "PrintMind Tecnologia")
+		_ = uk.SetStringValue("InstallLocation", filepath.Dir(exePath))
+		_ = uk.SetStringValue("UninstallString", fmt.Sprintf(`"%s" uninstall`, exePath))
+		_ = uk.SetDWordValue("NoModify", 1)
+		_ = uk.SetDWordValue("NoRepair", 1)
+		_ = uk.Close()
+	}
+}
+
+func unregisterWindowsAutoStartAndUninstall() {
+	if k, err := registry.OpenKey(registry.LOCAL_MACHINE, `SOFTWARE\Microsoft\Windows\CurrentVersion\Run`, registry.SET_VALUE); err == nil {
+		_ = k.DeleteValue("PrintMindTray")
+		_ = k.Close()
+	}
+	_ = registry.DeleteKey(registry.LOCAL_MACHINE, `SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\PrintMindAgent`)
+}
+
+func installOrUpdateWindowsService(exePath string, paths OSPaths) error {
+	m, err := mgr.Connect()
+	if err != nil {
+		return fmt.Errorf("falha ao conectar ao SCM (execute como Administrador): %w", err)
+	}
+	defer m.Disconnect()
+
+	desiredCfg := mgr.Config{
+		DisplayName:      ServiceDisplay,
+		Description:      ServiceDesc,
+		StartType:        mgr.StartAutomatic,
+		DelayedAutoStart: true,
+		ServiceStartName: "LocalSystem",
+		BinaryPathName:   exePath,
+	}
+
+	var s *mgr.Service
+	if existing, oErr := m.OpenService(ServiceName); oErr == nil {
+		s = existing
+		if uErr := s.UpdateConfig(desiredCfg); uErr != nil {
+			_ = s.Close()
+			return fmt.Errorf("falha ao atualizar servico existente: %w", uErr)
+		}
+	} else {
+		created, cErr := m.CreateService(ServiceName, exePath, desiredCfg)
+		if cErr != nil {
+			return cErr
+		}
+		s = created
+	}
+	defer s.Close()
+
+	_ = s.SetRecoveryActions([]mgr.RecoveryAction{
+		{Type: mgr.ServiceRestart, Delay: 10 * time.Second},
+		{Type: mgr.ServiceRestart, Delay: 30 * time.Second},
+		{Type: mgr.ServiceRestart, Delay: 60 * time.Second},
+	}, 86400)
+
+	_ = eventlog.InstallAsEventCreate(ServiceName, eventlog.Error|eventlog.Warning|eventlog.Info)
+	_ = EnablePrintServiceOperationalLog()
+	registerWindowsAutoStartAndUninstall(exePath)
+	slog.Info("Windows service configured", "service", ServiceName, "exe", exePath, "config", paths.ConfigPath)
+	return nil
+}
+
+func startInstalledWindowsService() error {
+	m, err := mgr.Connect()
+	if err != nil {
+		return err
+	}
+	defer m.Disconnect()
+	s, err := m.OpenService(ServiceName)
+	if err != nil {
+		return err
+	}
+	defer s.Close()
+	if err := s.Start(); err != nil && err != windows.ERROR_SERVICE_ALREADY_RUNNING {
+		return err
+	}
+	return nil
+}
+
 func handleServiceSubcommand(cmd string, cfg Config, paths OSPaths) (handled bool, err error) {
 	switch strings.ToLower(strings.TrimSpace(cmd)) {
 	case "install":
@@ -107,40 +245,18 @@ func handleServiceSubcommand(cmd string, cfg Config, paths OSPaths) (handled boo
 		if err != nil {
 			return true, err
 		}
-		m, err := mgr.Connect()
-		if err != nil {
-			return true, fmt.Errorf("falha ao conectar ao SCM (execute como Administrador): %w", err)
-		}
-		defer m.Disconnect()
-
-		if s, oErr := m.OpenService(ServiceName); oErr == nil {
-			_ = s.Close()
-			return true, fmt.Errorf("servico %s ja esta instalado", ServiceName)
-		}
-
-		s, err := m.CreateService(ServiceName, exePath, mgr.Config{
-			DisplayName:      ServiceDisplay,
-			Description:      ServiceDesc,
-			StartType:        mgr.StartAutomatic,
-			DelayedAutoStart: true,
-			ServiceStartName: "LocalSystem",
-		})
-		if err != nil {
+		if err := installOrUpdateWindowsService(exePath, paths); err != nil {
 			return true, err
 		}
-		defer s.Close()
-
-		_ = s.SetRecoveryActions([]mgr.RecoveryAction{
-			{Type: mgr.ServiceRestart, Delay: 5 * time.Second},
-			{Type: mgr.ServiceRestart, Delay: 5 * time.Second},
-			{Type: mgr.ServiceRestart, Delay: 5 * time.Second},
-		}, 86400)
-
-		_ = eventlog.InstallAsEventCreate(ServiceName, eventlog.Error|eventlog.Warning|eventlog.Info)
-		fmt.Printf("Servico %s instalado com sucesso (%s).\n", ServiceName, paths.ConfigPath)
+		fmt.Printf("Servico %s instalado/atualizado com sucesso (%s).\n", ServiceName, paths.ConfigPath)
 		return true, nil
 
 	case "uninstall":
+		exePath, _ := os.Executable()
+		stopAllTrayProcesses(exePath)
+		unregisterWindowsAutoStartAndUninstall()
+		stopExistingPrintMindService(10 * time.Second)
+
 		m, err := mgr.Connect()
 		if err != nil {
 			return true, err
@@ -151,8 +267,6 @@ func handleServiceSubcommand(cmd string, cfg Config, paths OSPaths) (handled boo
 			return true, err
 		}
 		defer s.Close()
-		_, _ = s.Control(svc.Stop)
-		time.Sleep(1500 * time.Millisecond)
 		if err := s.Delete(); err != nil {
 			return true, err
 		}
@@ -160,18 +274,24 @@ func handleServiceSubcommand(cmd string, cfg Config, paths OSPaths) (handled boo
 		fmt.Printf("Servico %s removido.\n", ServiceName)
 		return true, nil
 
+	case "restart-service":
+		exePath, _ := os.Executable()
+		stopExistingPrintMindService(15 * time.Second)
+		if snap, sErr := ReadStatusSnapshot(paths.StatusPath); sErr != nil || snap.State == "updating" || snap.State == "" {
+			_ = WriteStatusSnapshot(paths.StatusPath, AgentStatusSnapshot{
+				AgentVersion: AgentVersion,
+				State:        "starting",
+			})
+		}
+		if err := startInstalledWindowsService(); err != nil {
+			return true, err
+		}
+		time.Sleep(1 * time.Second)
+		relaunchTrayInActiveSession(exePath)
+		return true, nil
+
 	case "start":
-		m, err := mgr.Connect()
-		if err != nil {
-			return true, err
-		}
-		defer m.Disconnect()
-		s, err := m.OpenService(ServiceName)
-		if err != nil {
-			return true, err
-		}
-		defer s.Close()
-		if err := s.Start(); err != nil {
+		if err := startInstalledWindowsService(); err != nil {
 			return true, err
 		}
 		fmt.Printf("Servico %s iniciado.\n", ServiceName)
@@ -229,7 +349,8 @@ func handleServiceSubcommand(cmd string, cfg Config, paths OSPaths) (handled boo
 	return false, nil
 }
 
-func onPlatformServiceStartup() {
+func onPlatformServiceStartup(paths OSPaths) {
+	cleanupOrphanUpdateFiles(paths)
 	if err := EnablePrintServiceOperationalLog(); err != nil {
 		slog.Warn("could not enable Microsoft-Windows-PrintService/Operational log", "error", err)
 	}

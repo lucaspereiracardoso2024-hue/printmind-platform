@@ -20,7 +20,7 @@ const (
 )
 
 var (
-	winspoolDLL = windows.NewLazySystemDLL("winspool.drv")
+	winspoolDLL       = windows.NewLazySystemDLL("winspool.drv")
 	procEnumPrintersW = winspoolDLL.NewProc("EnumPrintersW")
 	procOpenPrinterW  = winspoolDLL.NewProc("OpenPrinterW")
 	procClosePrinter  = winspoolDLL.NewProc("ClosePrinter")
@@ -65,48 +65,48 @@ type printerInfo2W struct {
 }
 
 type jobInfo2W struct {
-	JobId              uint32
-	pPrinterName       *uint16
-	pMachineName       *uint16
-	pUserName          *uint16
-	pDocument          *uint16
-	pNotifyName        *uint16
-	pDatatype          *uint16
-	pPrintProcessor    *uint16
-	pParameters        *uint16
-	pDriverName        *uint16
-	pDevMode           *devModeWHeader
-	pStatus            *uint16
+	JobId               uint32
+	pPrinterName        *uint16
+	pMachineName        *uint16
+	pUserName           *uint16
+	pDocument           *uint16
+	pNotifyName         *uint16
+	pDatatype           *uint16
+	pPrintProcessor     *uint16
+	pParameters         *uint16
+	pDriverName         *uint16
+	pDevMode            *devModeWHeader
+	pStatus             *uint16
 	pSecurityDescriptor uintptr
-	Status             uint32
-	Priority           uint32
-	Position           uint32
-	StartTime          uint32
-	UntilTime          uint32
-	TotalPages         uint32
-	Size               uint32
-	Submitted          windows.Systemtime
-	Time               uint32
-	PagesPrinted       uint32
+	Status              uint32
+	Priority            uint32
+	Position            uint32
+	StartTime           uint32
+	UntilTime           uint32
+	TotalPages          uint32
+	Size                uint32
+	Submitted           windows.Systemtime
+	Time                uint32
+	PagesPrinted        uint32
 }
 
 type devModeWHeader struct {
-	dmDeviceName       [32]uint16
-	dmSpecVersion      uint16
-	dmDriverVersion    uint16
-	dmSize             uint16
-	dmDriverExtra      uint16
-	dmFields           uint32
-	dmOrientation      int16
-	dmPaperSize        int16
-	dmPaperLength      int16
-	dmPaperWidth       int16
-	dmScale            int16
-	dmCopies           int16
-	dmDefaultSource    int16
-	dmPrintQuality     int16
-	dmColor            int16
-	dmDuplex           int16
+	dmDeviceName    [32]uint16
+	dmSpecVersion   uint16
+	dmDriverVersion uint16
+	dmSize          uint16
+	dmDriverExtra   uint16
+	dmFields        uint32
+	dmOrientation   int16
+	dmPaperSize     int16
+	dmPaperLength   int16
+	dmPaperWidth    int16
+	dmScale         int16
+	dmCopies        int16
+	dmDefaultSource int16
+	dmPrintQuality  int16
+	dmColor         int16
+	dmDuplex        int16
 }
 
 type spDeviceInterfaceData struct {
@@ -117,12 +117,12 @@ type spDeviceInterfaceData struct {
 }
 
 type winSpoolPrinter struct {
-	Name       string
-	PortName   string
-	DriverName string
-	Status     uint32
+	Name        string
+	PortName    string
+	DriverName  string
+	Status      uint32
 	WorkOffline bool
-	IsColor    bool
+	IsColor     bool
 }
 
 type spoolerJobMeta struct {

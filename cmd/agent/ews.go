@@ -113,17 +113,17 @@ func ParseHPConsumableConfigXML(xmlData []byte) ([]SupplyItem, bool) {
 	colorCapable := false
 
 	type rawCons struct {
-		labelCode  string
-		typeEnum   string
-		desc       string
-		state      string
-		serial     string
-		partNum    string
-		warranty   string
-		pct        *int
-		rawPct     *int
-		isHead     bool
-		isOPC      bool
+		labelCode string
+		typeEnum  string
+		desc      string
+		state     string
+		serial    string
+		partNum   string
+		warranty  string
+		pct       *int
+		rawPct    *int
+		isHead    bool
+		isOPC     bool
 	}
 
 	var cur *rawCons
@@ -358,16 +358,21 @@ func collectHPLEDMSequential(ctx context.Context, ip string, needUsage bool) (*H
 	hpCacheMu.Unlock()
 
 	client := newLocalHTTPClient(4500 * time.Millisecond)
-	baseURL := "http://" + ip
+	baseURL := "https://" + ip
 
 	var data HPLEDMData
 	if entry != nil {
 		data = entry.Data
 	}
 
-	// 1. ProductConfigDyn.xml (1 hour cache)
+	// 1. ProductConfigDyn.xml (1 hour cache; try HTTPS first, fallback to HTTP)
 	if entry == nil || now.Sub(entry.ConfigAt) >= time.Hour {
-		if body, code, err := fetchURLText(ctx, client, baseURL+"/DevMgmt/ProductConfigDyn.xml"); err == nil && code == 200 {
+		body, code, err := fetchURLText(ctx, client, baseURL+"/DevMgmt/ProductConfigDyn.xml")
+		if err != nil {
+			baseURL = "http://" + ip
+			body, code, err = fetchURLText(ctx, client, baseURL+"/DevMgmt/ProductConfigDyn.xml")
+		}
+		if err == nil && code == 200 {
 			m, s, fw := ParseHPProductConfigXML([]byte(body))
 			if m != "" {
 				data.Model = m
@@ -383,15 +388,20 @@ func collectHPLEDMSequential(ctx context.Context, ip string, needUsage bool) (*H
 	}
 
 	// 2. ConsumableConfigDyn.xml (sequential after ProductConfigDyn)
-	if body, code, err := fetchURLText(ctx, client, baseURL+"/DevMgmt/ConsumableConfigDyn.xml"); err == nil && code == 200 {
-		sups, colCap := ParseHPConsumableConfigXML([]byte(body))
+	body2, code2, err2 := fetchURLText(ctx, client, baseURL+"/DevMgmt/ConsumableConfigDyn.xml")
+	if err2 != nil && strings.HasPrefix(baseURL, "https://") {
+		baseURL = "http://" + ip
+		body2, code2, err2 = fetchURLText(ctx, client, baseURL+"/DevMgmt/ConsumableConfigDyn.xml")
+	}
+	if err2 == nil && code2 == 200 {
+		sups, colCap := ParseHPConsumableConfigXML([]byte(body2))
 		if len(sups) > 0 {
 			data.Supplies = sups
 		}
 		if colCap {
 			data.IsColorCapable = true
 		}
-	} else if err != nil {
+	} else if err2 != nil {
 		recordHPBackoff(ip, entry, data)
 		return nil, false
 	}

@@ -12,23 +12,23 @@ import (
 
 // PrintServiceEvent represents a parsed Windows PrintService Event 307 or 805.
 type PrintServiceEvent struct {
-	EventID       int
-	RecordID      int64
-	Provider      string
-	Channel       string
-	TimeCreated   string
-	Computer      string
-	JobID         int
-	DocumentName  string
-	UserName      string
-	MachineName   string
-	PrinterName   string
-	PortName      string
-	SizeBytes     int64
-	PagesPrinted  int
-	Copies        int
-	Color         int  // 2 = Color, 1 = Monochrome
-	Duplex        bool
+	EventID      int
+	RecordID     int64
+	Provider     string
+	Channel      string
+	TimeCreated  string
+	Computer     string
+	JobID        int
+	DocumentName string
+	UserName     string
+	MachineName  string
+	PrinterName  string
+	PortName     string
+	SizeBytes    int64
+	PagesPrinted int
+	Copies       int
+	Color        int // 2 = Color, 1 = Monochrome
+	Duplex       bool
 }
 
 // ParsePrintServiceEventXML parses an Event 307 or 805 XML string rendered by wevtapi.dll.

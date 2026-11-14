@@ -23,6 +23,21 @@ func TestGenerateValidPixPayload(t *testing.T) {
 	}
 }
 
+func TestGenerateValidPixPayloadRejectsMissingFieldsWithoutFallback(t *testing.T) {
+	if got := GenerateValidPixPayload("", "MINHA EMPRESA", "CURITIBA", 120.0, "PM1"); got != "" {
+		t.Fatalf("expected empty payload when pixKey is missing, got %q", got)
+	}
+	if got := GenerateValidPixPayload("pix@empresa.com.br", "MINHA EMPRESA", "", 120.0, "PM1"); got != "" {
+		t.Fatalf("expected empty payload when city is missing, got %q", got)
+	}
+	if got := GenerateValidPixPayload("pix@empresa.com.br", "", "CURITIBA", 120.0, "PM1"); got != "" {
+		t.Fatalf("expected empty payload when merchantName is missing, got %q", got)
+	}
+	if got := GenerateValidPixPayload("pix@empresa.com.br", "MINHA EMPRESA", "CURITIBA", 0, "PM1"); got != "" {
+		t.Fatalf("expected empty payload when amount <= 0, got %q", got)
+	}
+}
+
 func TestServerEncodeOIDAndBERLength(t *testing.T) {
 	oid, err := encodeOID("1.3.6.1.2.1.1.1.0")
 	if err != nil {

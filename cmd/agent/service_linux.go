@@ -106,7 +106,7 @@ func handleServiceSubcommand(cmd string, cfg Config, paths OSPaths) (bool, error
 	return false, nil
 }
 
-func onPlatformServiceStartup() {
+func onPlatformServiceStartup(_ OSPaths) {
 	// No Windows EventLog channel to enable on Linux.
 }
 

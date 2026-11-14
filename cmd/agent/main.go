@@ -166,10 +166,13 @@ func probeNetworkDevice(ctx context.Context, ip string, communities []string, sn
 	// Brand-specific firmware-safe enrichment
 	switch dev.Vendor {
 	case "HP":
+		if cdm, ok := collectHPCDMSequential(ctx, ip, true); ok {
+			MergeIPPAndHPCDM(dev, cdm)
+		}
 		needsLEDM := len(dev.Supplies) == 0 || dev.Counters.LifetimeEngineTotal == 0 || dev.SerialNumber == ""
 		if !needsLEDM {
 			for _, s := range dev.Supplies {
-				if s.Percent == nil || s.LevelState == "unknown" || s.SerialNumber == "" {
+				if s.Percent == nil && s.MeasurementMode != "state_only" || s.LevelState == "unknown" {
 					needsLEDM = true
 					break
 				}
@@ -257,12 +260,13 @@ func scanNetworkDevices(ctx context.Context, subnets []string, staticIPs []strin
 
 func extractSubcommandAndFlags(args []string) (subcmd string, flagArgs []string) {
 	known := map[string]bool{
-		"install":     true,
-		"uninstall":   true,
-		"start":       true,
-		"stop":        true,
-		"status":      true,
-		"run-console": true,
+		"install":         true,
+		"uninstall":       true,
+		"start":           true,
+		"stop":            true,
+		"status":          true,
+		"run-console":     true,
+		"restart-service": true,
 	}
 	for _, a := range args {
 		if subcmd == "" && !strings.HasPrefix(a, "-") && known[strings.ToLower(a)] {
@@ -300,16 +304,32 @@ func main() {
 	configPathFlag := fs.String("config", "", "Caminho do arquivo de configuracao persistente")
 	once := fs.Bool("once", false, "Executa apenas 1 ciclo de varredura e encerra")
 	usbFlag := fs.Bool("usb", true, "Habilita coleta local USB/Spooler")
+	trayFlag := fs.Bool("tray", false, "Inicia icone na bandeja do Windows (sessao do usuario)")
+	installGUIFlag := fs.Bool("install-gui", false, "Executa instalacao grafica sem console")
 	_ = fs.Parse(flagArgs)
 
-	isSvc := isRunningAsService() && subcmd != "run-console" && !*once
+	isSvc := isRunningAsService() && subcmd != "run-console" && !*once && !*trayFlag && !*installGUIFlag
+	if *trayFlag {
+		trayPaths := resolveTrayReadOnlyPaths(*configPathFlag)
+		os.Exit(runTrayMode(Config{}, trayPaths))
+	}
+
+	if !isSvc && !*once && shouldRunWindowsBootstrapGUI(subcmd, *installGUIFlag, Config{}) {
+		bootCfg := Config{
+			ServerURL:    strings.TrimSpace(*serverURL),
+			PairingToken: strings.TrimSpace(*token),
+		}
+		os.Exit(runWindowsBootstrapGUI(bootCfg, OSPaths{}))
+	}
+
 	paths := ResolvePaths(*configPathFlag, isSvc)
 
 	sink := openPlatformEventSink(isSvc)
 	if sink != nil {
 		defer sink.Close()
 	}
-	_, logCloser := SetupLogger(paths.LogPath, !isSvc, sink)
+	alsoConsole := !isSvc && (runtime.GOOS != "windows" || subcmd == "run-console" || subcmd == "status" || *once)
+	_, logCloser := SetupLogger(paths.LogPath, alsoConsole, sink)
 	if logCloser != nil {
 		defer logCloser.Close()
 	}
@@ -351,8 +371,9 @@ func main() {
 	}
 
 	if cfg.PairingToken == "" {
-		if isSvc {
-			slog.Error("pairing token missing in service mode", "config", paths.ConfigPath)
+		if isSvc || (runtime.GOOS == "windows" && subcmd != "run-console" && !*once) {
+			slog.Error("pairing token missing", "config", paths.ConfigPath)
+			notifyGUIErrorIfInteractive("Token de pareamento não encontrado. Execute o instalador com o token pm_live_... no nome do arquivo ou informe na tela inicial.")
 			os.Exit(1)
 		}
 		fmt.Println("================================================================")
@@ -381,7 +402,7 @@ func main() {
 	}
 
 	runLoop := func(rootCtx context.Context) {
-		onPlatformServiceStartup()
+		onPlatformServiceStartup(paths)
 
 		store, dbErr := OpenSQLiteStore(paths.DBPath)
 		if dbErr != nil {
@@ -406,6 +427,55 @@ func main() {
 		var remoteCommunities []string
 		activeSNMPv3 := cfg.SNMPv3
 
+		var statusMu sync.Mutex
+		statusSnap := AgentStatusSnapshot{
+			AgentVersion: AgentVersion,
+			State:        "starting",
+			DashboardURL: "https://lucaspereiracardoso2024-hue.github.io/printmind-platform/",
+			UpdatedAt:    time.Now().UTC().Format(time.RFC3339),
+		}
+		forceScanCh := make(chan struct{}, 1)
+
+		persistStatus := func(mutator func(*AgentStatusSnapshot)) {
+			statusMu.Lock()
+			mutator(&statusSnap)
+			statusSnap.AgentVersion = AgentVersion
+			statusSnap.UpdatedAt = time.Now().UTC().Format(time.RFC3339)
+			copySnap := statusSnap
+			statusMu.Unlock()
+			if wErr := WriteStatusSnapshot(paths.StatusPath, copySnap); wErr != nil {
+				slog.Debug("failed writing status.json", "error", wErr)
+			}
+		}
+
+		if !*once {
+			ipcAddr, ipcTok, _, ipcErr := StartIPCServer(
+				rootCtx,
+				func() bool {
+					select {
+					case forceScanCh <- struct{}{}:
+						return false
+					default:
+						return true
+					}
+				},
+				func() AgentStatusSnapshot {
+					statusMu.Lock()
+					defer statusMu.Unlock()
+					return statusSnap
+				},
+			)
+			if ipcErr != nil {
+				slog.Warn("failed starting loopback IPC server", "error", ipcErr)
+			} else {
+				persistStatus(func(s *AgentStatusSnapshot) {
+					s.IPCAddr = ipcAddr
+					s.IPCToken = ipcTok
+				})
+				slog.Info("loopback IPC server listening", "addr", ipcAddr)
+			}
+		}
+
 		slog.Info("PrintMind Next-Gen Agent started",
 			"version", AgentVersion,
 			"hostname", hostname,
@@ -418,6 +488,10 @@ func main() {
 			if rootCtx.Err() != nil {
 				return
 			}
+
+			persistStatus(func(s *AgentStatusSnapshot) {
+				s.State = "scanning"
+			})
 
 			cycleTimeout := time.Duration(pollSec) * 2 * time.Second
 			if cycleTimeout < 60*time.Second {
@@ -502,7 +576,15 @@ func main() {
 					if qErr := store.EnqueueTelemetry(reqPayload); qErr != nil {
 						slog.Error("failed to persist telemetry to sqlite queue", "error", qErr)
 					}
+					qDepth, _ = store.QueueCount()
 				}
+				persistStatus(func(s *AgentStatusSnapshot) {
+					s.State = "retrying"
+					s.LastScanAt = time.Now().UTC().Format(time.RFC3339)
+					s.PrintersCount = len(devices)
+					s.PendingQueue = qDepth
+					s.LastError = err.Error()
+				})
 				slog.Warn("cloud sync failed; telemetry queued offline", "error", err, "devices", len(devices))
 			} else {
 				if store != nil {
@@ -513,7 +595,17 @@ func main() {
 					if drained > 0 {
 						slog.Info("drained offline telemetry queue", "snapshots", drained)
 					}
+					qDepth, _ = store.QueueCount()
 				}
+				nowIso := time.Now().UTC().Format(time.RFC3339)
+				persistStatus(func(s *AgentStatusSnapshot) {
+					s.State = "online"
+					s.LastScanAt = nowIso
+					s.LastSyncAt = nowIso
+					s.PrintersCount = len(devices)
+					s.PendingQueue = qDepth
+					s.LastError = ""
+				})
 
 				if len(syncResp.RemoteConfig.ScanSubnets) > 0 {
 					remoteSubnets = syncResp.RemoteConfig.ScanSubnets
@@ -538,7 +630,7 @@ func main() {
 				if syncResp.RemoteConfig.DiagnosticRequested {
 					handleDiagnosticRequest(cycleCtx, httpClient, cfg, paths, store, wpp, syncResp.RemoteConfig.DiagnosticUploadURL)
 				}
-				if syncResp.RemoteConfig.UpdateMSIURL != "" || syncResp.RemoteConfig.UpdateLinuxURL != "" {
+				if syncResp.RemoteConfig.UpdateMSIURL != "" || syncResp.RemoteConfig.UpdateExeURL != "" || syncResp.RemoteConfig.UpdateLinuxURL != "" {
 					checkAndApplyUpdate(cycleCtx, httpClient, cfg, paths, syncResp.RemoteConfig)
 				}
 
@@ -560,6 +652,9 @@ func main() {
 			case <-rootCtx.Done():
 				timer.Stop()
 				return
+			case <-forceScanCh:
+				timer.Stop()
+				slog.Info("immediate scan triggered via tray IPC")
 			case <-timer.C:
 			}
 		}

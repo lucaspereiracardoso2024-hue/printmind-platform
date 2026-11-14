@@ -1,0 +1,20 @@
+# Dependencies
+node_modules/
+
+# Build & test outputs
+dist/
+_site/
+.vite/
+coverage/
+*.tsbuildinfo
+
+# Local secrets & binaries produced by builds
+.env
+.env.local
+.env.*.local
+dist/*.exe
+repo-printmind/*.exe
+
+# OS & editor files
+.DS_Store
+Thumbs.db

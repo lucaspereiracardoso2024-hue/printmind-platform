@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <assembly xmlns="urn:schemas-microsoft-com:asm.v1" manifestVersion="1.0">
-  <assemblyIdentity version="4.0.0.0" processorArchitecture="*" name="PrintMind.Satellite.Agent" type="win32"/>
-  <description>PrintMind Satellite Agent v4.0 - Monitoramento Autonomo de Impressao</description>
+  <assemblyIdentity version="4.2.0.0" processorArchitecture="*" name="PrintMind.Satellite.Agent" type="win32"/>
+  <description>PrintMind Satellite Agent v4.2 - Monitoramento Autonomo de Impressao</description>
   <trustInfo xmlns="urn:schemas-microsoft-com:asm.v3">
     <security>
       <requestedPrivileges>

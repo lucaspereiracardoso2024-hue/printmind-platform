@@ -14,28 +14,28 @@ import (
 )
 
 var (
-	wevtapiDLL                    = windows.NewLazySystemDLL("wevtapi.dll")
-	procEvtOpenChannelConfig      = wevtapiDLL.NewProc("EvtOpenChannelConfig")
-	procEvtSetChannelConfigProp   = wevtapiDLL.NewProc("EvtSetChannelConfigProperty")
-	procEvtSaveChannelConfig      = wevtapiDLL.NewProc("EvtSaveChannelConfig")
-	procEvtQuery                  = wevtapiDLL.NewProc("EvtQuery")
-	procEvtNext                   = wevtapiDLL.NewProc("EvtNext")
-	procEvtRender                 = wevtapiDLL.NewProc("EvtRender")
-	procEvtClose                  = wevtapiDLL.NewProc("EvtClose")
+	wevtapiDLL                  = windows.NewLazySystemDLL("wevtapi.dll")
+	procEvtOpenChannelConfig    = wevtapiDLL.NewProc("EvtOpenChannelConfig")
+	procEvtSetChannelConfigProp = wevtapiDLL.NewProc("EvtSetChannelConfigProperty")
+	procEvtSaveChannelConfig    = wevtapiDLL.NewProc("EvtSaveChannelConfig")
+	procEvtQuery                = wevtapiDLL.NewProc("EvtQuery")
+	procEvtNext                 = wevtapiDLL.NewProc("EvtNext")
+	procEvtRender               = wevtapiDLL.NewProc("EvtRender")
+	procEvtClose                = wevtapiDLL.NewProc("EvtClose")
 
-	netapi32DLL           = windows.NewLazySystemDLL("netapi32.dll")
-	procNetWkstaGetInfo   = netapi32DLL.NewProc("NetWkstaGetInfo")
-	procNetApiBufferFree  = netapi32DLL.NewProc("NetApiBufferFree")
+	netapi32DLL          = windows.NewLazySystemDLL("netapi32.dll")
+	procNetWkstaGetInfo  = netapi32DLL.NewProc("NetWkstaGetInfo")
+	procNetApiBufferFree = netapi32DLL.NewProc("NetApiBufferFree")
 )
 
 const (
 	printServiceChannel = "Microsoft-Windows-PrintService/Operational"
 
-	evtChannelConfigEnabled    = 0
-	evtVarTypeBoolean          = 13
-	evtQueryChannelPath        = 0x1
-	evtQueryReverseDirection   = 0x200
-	evtRenderEventXml          = 1
+	evtChannelConfigEnabled  = 0
+	evtVarTypeBoolean        = 13
+	evtQueryChannelPath      = 0x1
+	evtQueryReverseDirection = 0x200
+	evtRenderEventXml        = 1
 )
 
 type evtVariantBoolean struct {
@@ -46,11 +46,11 @@ type evtVariantBoolean struct {
 }
 
 type wkstaInfo100 struct {
-	PlatformID  uint32
+	PlatformID   uint32
 	ComputerName *uint16
-	LanGroup    *uint16
-	VerMajor    uint32
-	VerMinor    uint32
+	LanGroup     *uint16
+	VerMajor     uint32
+	VerMinor     uint32
 }
 
 // EnablePrintServiceOperationalLog enables Microsoft-Windows-PrintService/Operational via wevtapi.dll.

@@ -5,6 +5,7 @@ import (
 	"context"
 	"crypto/tls"
 	"encoding/binary"
+	"errors"
 	"fmt"
 	"io"
 	"math"
@@ -240,7 +241,35 @@ func newLocalHTTPClient(timeout time.Duration) *http.Client {
 	tr := &http.Transport{
 		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
 	}
-	return &http.Client{Timeout: timeout, Transport: tr}
+	return &http.Client{
+		Timeout:   timeout,
+		Transport: tr,
+		CheckRedirect: func(req *http.Request, via []*http.Request) error {
+			if len(via) >= 5 {
+				return errors.New("too many local HTTP redirects")
+			}
+			if len(via) > 0 {
+				orig := via[0]
+				// Preserve POST + IPP binary body across 301/302 HTTP->HTTPS redirects emitted by HP/Canon/Epson firmwares.
+				if orig.Method == http.MethodPost && req.Method != http.MethodPost {
+					req.Method = http.MethodPost
+					if ct := orig.Header.Get("Content-Type"); ct != "" && req.Header.Get("Content-Type") == "" {
+						req.Header.Set("Content-Type", ct)
+					}
+					if orig.GetBody != nil {
+						bodyCopy, err := orig.GetBody()
+						if err != nil {
+							return err
+						}
+						req.Body = bodyCopy
+						req.GetBody = orig.GetBody
+						req.ContentLength = orig.ContentLength
+					}
+				}
+			}
+			return nil
+		},
+	}
 }
 
 func sendIPPRequest(ctx context.Context, client *http.Client, endpoint string, body []byte) (*IPPResponse, error) {
@@ -337,6 +366,26 @@ func ParseIPPPrinterAttributes(ip string, source string, resp *IPPResponse) (*Di
 	mColors := ippGetStrings(merged, "marker-colors")
 	mHighs := ippGetInts(merged, "marker-high-levels")
 
+	isTankModel := isTankPrinterWithoutContinuousLevel(model)
+	allValidLevelsAtMax := len(mLevels) > 0
+	validCount := 0
+	for i, lvl := range mLevels {
+		maxCap := 100
+		if i < len(mHighs) && mHighs[i] > 0 {
+			maxCap = mHighs[i]
+		}
+		if lvl >= 0 {
+			validCount++
+			if lvl != maxCap && lvl != 100 {
+				allValidLevelsAtMax = false
+				break
+			}
+		}
+	}
+	if validCount == 0 {
+		allValidLevelsAtMax = false
+	}
+
 	var supplies []SupplyItem
 	for i := 0; i < len(mNames) || i < len(mLevels); i++ {
 		name := fmt.Sprintf("Suprimento %d", i+1)
@@ -372,13 +421,37 @@ func ParseIPPPrinterAttributes(ip string, source string, resp *IPPResponse) (*Di
 
 		item := buildSupplyItem(name, col, classCode, 0, lvl, maxCap)
 		item.SupplyType = mType
-		if lvl >= 0 && maxCap > 0 {
+
+		if isTankModel && allValidLevelsAtMax && lvl >= 0 {
+			// Tank models (HP Smart Tank, Epson EcoTank, Canon MegaTank) report static 100 across all tanks without an optical percentage sensor.
+			item.MeasurementMode = "state_only"
+			item.LevelState = "state_only"
+			item.Percent = nil
+			item.Level = -3
+			item.SupplyState = deriveIPPSupplyState(cleanReasons)
+		} else if lvl >= 0 && maxCap > 0 {
 			pct := int(math.Round(float64(lvl) / float64(maxCap) * 100.0))
 			if pct > 100 {
 				pct = 100
 			}
 			item.Percent = &pct
 			item.LevelState = "exact"
+			item.MeasurementMode = "percentage"
+			switch {
+			case pct <= 0:
+				item.SupplyState = "empty"
+			case pct <= 15:
+				item.SupplyState = "low"
+			default:
+				item.SupplyState = "ok"
+			}
+		} else {
+			item.MeasurementMode = "state_only"
+			if lvl == -3 {
+				item.SupplyState = deriveIPPSupplyState(cleanReasons)
+			} else {
+				item.SupplyState = "unknown"
+			}
 		}
 		supplies = append(supplies, item)
 	}
@@ -437,6 +510,32 @@ func normalizeIPPColor(hexOrName, fallbackName string) string {
 	return inferSupplyColor(fallbackName)
 }
 
+func isTankPrinterWithoutContinuousLevel(model string) bool {
+	m := strings.ToLower(model)
+	return strings.Contains(m, "smart tank") ||
+		strings.Contains(m, "ecotank") ||
+		strings.Contains(m, "megatank") ||
+		strings.Contains(m, "ink tank") ||
+		strings.Contains(m, "dcp-t") ||
+		strings.Contains(m, "mfc-t")
+}
+
+func deriveIPPSupplyState(reasons []string) string {
+	for _, r := range reasons {
+		lr := strings.ToLower(r)
+		if strings.Contains(lr, "marker-supply-empty") || strings.Contains(lr, "toner-empty") || strings.Contains(lr, "ink-empty") {
+			return "empty"
+		}
+	}
+	for _, r := range reasons {
+		lr := strings.ToLower(r)
+		if strings.Contains(lr, "marker-supply-low") || strings.Contains(lr, "toner-low") || strings.Contains(lr, "ink-low") {
+			return "low"
+		}
+	}
+	return "ok"
+}
+
 func probeDeviceIPP(ctx context.Context, client *http.Client, ip string, hint *LANDiscoveryHint) (*DiscoveredDevice, bool) {
 	port := 631
 	path := "ipp/print"
@@ -455,6 +554,7 @@ func probeDeviceIPP(ctx context.Context, client *http.Client, ip string, hint *L
 
 	candidates := []string{
 		fmt.Sprintf("%s://%s:%d/%s", scheme, ip, port, path),
+		fmt.Sprintf("https://%s:631/ipp/print", ip),
 		fmt.Sprintf("http://%s:631/ipp/print", ip),
 		fmt.Sprintf("http://%s:631/ipp", ip),
 		fmt.Sprintf("https://%s:443/ipp/print", ip),

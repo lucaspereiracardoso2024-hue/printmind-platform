@@ -1,7 +1,7 @@
 package main
 
 const (
-	AgentVersion      = "4.1.0"
+	AgentVersion      = "4.2.0"
 	ServiceName       = "PrintMindAgent"
 	ServiceDisplay    = "PrintMind Satellite Agent"
 	ServiceDesc       = "Agente autonomo PrintMind de monitoramento de impressoras, telemetria e auditoria de impressao."
@@ -38,28 +38,49 @@ type Config struct {
 	DisableAutoUpdate bool         `json:"disable_auto_update,omitempty"`
 }
 
-// OSPaths resolves the OS-appropriate paths for config, SQLite DB, logs, and staging.
+// OSPaths resolves the OS-appropriate paths for config, SQLite DB, logs, status IPC, updates, and staging.
 type OSPaths struct {
 	DataDir    string
 	ConfigPath string
 	DBPath     string
 	LogPath    string
+	StatusPath string
 	StagingDir string
+	UpdatesDir string
+}
+
+// AgentStatusSnapshot stores runtime service status and loopback IPC metadata in status.json.
+type AgentStatusSnapshot struct {
+	AgentVersion  string `json:"agent_version"`
+	State         string `json:"state"` // "starting" | "scanning" | "online" | "retrying" | "error"
+	LastScanAt    string `json:"last_scan_at,omitempty"`
+	LastSyncAt    string `json:"last_sync_at,omitempty"`
+	PrintersCount int    `json:"printers_count"`
+	PendingQueue  int    `json:"pending_queue"`
+	LastError     string `json:"last_error,omitempty"`
+	IPCAddr       string `json:"ipc_addr,omitempty"`
+	IPCToken      string `json:"ipc_token,omitempty"`
+	DashboardURL  string `json:"dashboard_url,omitempty"`
+	UpdatedAt     string `json:"updated_at"`
 }
 
 // SupplyItem represents a single consumable or waste receptacle following RFC 3805 semantics.
 type SupplyItem struct {
-	Name         string `json:"name"`
-	Color        string `json:"color"`
-	SupplyClass  string `json:"supply_class,omitempty"` // "consumed" | "waste"
-	SupplyType   string `json:"supply_type,omitempty"`
-	Level        int    `json:"level"`
-	MaxCapacity  int    `json:"max_capacity"`
-	Percent      *int   `json:"percent"`     // nil when Level is -2 (unknown) or -3 (some_remaining) or -1 (other)
-	LevelState   string `json:"level_state"` // "exact" | "some_remaining" | "unknown" | "other"
-	SerialNumber string `json:"serial_number,omitempty"`
-	PartNumber   string `json:"part_number,omitempty"`
-	WarrantyEnd  string `json:"warranty_end,omitempty"`
+	Name            string `json:"name"`
+	Color           string `json:"color"`
+	SupplyClass     string `json:"supply_class,omitempty"` // "consumed" | "waste"
+	SupplyType      string `json:"supply_type,omitempty"`
+	Level           int    `json:"level"`
+	MaxCapacity     int    `json:"max_capacity"`
+	Percent         *int   `json:"percent"`                    // nil when Level is -2 (unknown) or -3 (some_remaining) or -1 (other) or state_only
+	LevelState      string `json:"level_state"`                // "exact" | "some_remaining" | "unknown" | "other" | "state_only"
+	MeasurementMode string `json:"measurement_mode,omitempty"` // "percentage" | "state_only"
+	SupplyState     string `json:"supply_state,omitempty"`     // "ok" | "low" | "empty" | "unknown"
+	SerialNumber    string `json:"serial_number,omitempty"`
+	PartNumber      string `json:"part_number,omitempty"`
+	ManufactureDate string `json:"manufacture_date,omitempty"`
+	WarrantyEnd     string `json:"warranty_end,omitempty"`
+	IsGenuine       *bool  `json:"is_genuine,omitempty"`
 }
 
 // DeviceCounters holds hardware odometer and job/maintenance counters.
@@ -190,6 +211,8 @@ type RemoteConfig struct {
 	DiagnosticUploadURL       string       `json:"diagnostic_upload_url,omitempty"`
 	UpdateMSIURL              string       `json:"update_msi_url,omitempty"`
 	UpdateSHA256              string       `json:"update_sha256,omitempty"`
+	UpdateExeURL              string       `json:"update_exe_url,omitempty"`
+	UpdateExeSHA256           string       `json:"update_exe_sha256,omitempty"`
 	UpdateLinuxURL            string       `json:"update_linux_url,omitempty"`
 	UpdateLinuxSHA256         string       `json:"update_linux_sha256,omitempty"`
 	UpdateVersion             string       `json:"update_version,omitempty"`

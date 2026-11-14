@@ -24,31 +24,54 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Setup Node.js for Frontend Smoke Check
+      - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: package-lock.json
 
-      - name: Validate Frontend Inline JS & Critical Elements
+      - name: Install Dependencies
+        run: npm ci
+
+      - name: TypeScript Strict Check
+        run: npm run typecheck
+
+      - name: ESLint Verification
+        run: npm run lint
+
+      - name: Run Unit Tests (Vitest)
+        run: npm test
+
+      - name: Validate Critical DOM IDs
         run: |
           node -e '
           const fs = require("fs");
-          const vm = require("vm");
           const html = fs.readFileSync("index.html", "utf8");
-          const requiredIds = ["authScreen", "appScreen", "formLogin", "formSignup", "formForgotPassword", "formResetPassword", "agentModal", "agentMsiCard", "printersGrid", "sectionMaster", "masterSubTabTenants", "masterSubTabBilling", "masterSubTabFraud", "suspendedTenantOverlay", "masterTenantDetailModal", "fairBillingBadge", "simStarterRechargeNote", "btnExportErpCSV", "clientAdjustmentModal", "spareTonersModal", "printerDetailModal"];
+          const requiredIds = [
+            "portalScreen", "authScreen", "appScreen", "formLogin", "formSignup",
+            "formForgotPassword", "formResetPassword", "agentModal", "agentMsiCard",
+            "printersGrid", "sectionMaster", "masterSubTabTenants", "masterSubTabBilling",
+            "masterSubTabFraud", "suspendedTenantOverlay", "masterTenantDetailModal",
+            "fairBillingBadge", "simStarterRechargeNote", "btnExportErpCSV",
+            "clientAdjustmentModal", "spareTonersModal", "printerDetailModal", "portalQrModal"
+          ];
           for (const id of requiredIds) {
             if (!html.includes(`id="${id}"`)) throw new Error(`Missing required element id=${id}`);
           }
-          const scripts = [...html.matchAll(/<script(?![^>]*\bsrc=)[^>]*>([\s\S]*?)<\/script>/gi)];
-          if (scripts.length === 0) throw new Error("No inline scripts found in index.html");
-          scripts.forEach((m, i) => new vm.Script(m[1], { filename: `inline-script-${i}.js` }));
-          console.log(`Validated ${scripts.length} inline script(s) and ${requiredIds.length} critical DOM IDs.`);
+          console.log(`Validated ${requiredIds.length} critical DOM IDs.`);
           '
 
-      - name: Prepare Static Web Bundle
+      - name: Build Production Bundle (Vite)
+        env:
+          VITE_SUPABASE_URL: ${{ vars.VITE_SUPABASE_URL || secrets.VITE_SUPABASE_URL || 'https://zbsmzcbcivhzslcnfxmq.supabase.co' }}
+          VITE_SUPABASE_ANON_KEY: ${{ vars.VITE_SUPABASE_ANON_KEY || secrets.VITE_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inpic216Y2JjaXZoenNsY25meG1xIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTQ0NDUxNTcsImV4cCI6MjExMDAyMTE1N30.U9F-EL3ddBBqEK0MqkNuZBC6ZvwtuEElN6Z_VpEGT7Q' }}
+        run: npm run build
+
+      - name: Prepare Pages Artifact
         run: |
           mkdir -p _site
-          cp index.html _site/index.html
+          cp -r dist/* _site/
           [ -f printmind-agent.exe ] && cp printmind-agent.exe _site/printmind-agent.exe || true
           [ -f printmind-agent-linux-amd64 ] && cp printmind-agent-linux-amd64 _site/printmind-agent-linux-amd64 || true
           [ -f printmind-config.json ] && cp printmind-config.json _site/printmind-config.json || true

@@ -10,16 +10,25 @@ import (
 	"regexp"
 	"runtime"
 	"strings"
+	"time"
 )
 
 var exeTokenRegex = regexp.MustCompile(`pm_live_[A-Za-z0-9]+`)
+var exeDuplicateSuffixRegex = regexp.MustCompile(`(?i)(?:\s*\(\d+\)|\s*-\s*c[oó]p(?:ia|y)(?:\s*\(\d+\))?)+$`)
 
 // installerPairingTokenReader is a test-overridable hook for reading the MSI installer registry token.
 var installerPairingTokenReader = readInstallerPairingToken
 
-// extractTokenFromExeName extracts an embedded pm_live_* pairing token from the executable name.
+// extractTokenFromExeName extracts an embedded pm_live_* pairing token from the executable name,
+// safely ignoring browser/OS duplicate copy suffixes such as " (1)", "(2)", or " - Copia".
 func extractTokenFromExeName(exePath string) string {
 	base := filepath.Base(exePath)
+	ext := filepath.Ext(base)
+	stem := strings.TrimSuffix(base, ext)
+	stem = strings.TrimSpace(exeDuplicateSuffixRegex.ReplaceAllString(stem, ""))
+	if tok := exeTokenRegex.FindString(stem); tok != "" {
+		return tok
+	}
 	return exeTokenRegex.FindString(base)
 }
 
@@ -63,7 +72,9 @@ func ResolvePaths(explicitConfig string, isService bool) OSPaths {
 			ConfigPath: absCfg,
 			DBPath:     filepath.Join(dir, DefaultDBName),
 			LogPath:    filepath.Join(dir, "logs", "agent.log"),
+			StatusPath: filepath.Join(dir, "status.json"),
 			StagingDir: filepath.Join(dir, "staging"),
+			UpdatesDir: filepath.Join(dir, "updates"),
 		}
 	}
 
@@ -85,6 +96,7 @@ func ResolvePaths(explicitConfig string, isService bool) OSPaths {
 
 	_ = os.MkdirAll(filepath.Join(dataDir, "logs"), 0755)
 	_ = os.MkdirAll(filepath.Join(dataDir, "staging"), 0755)
+	_ = os.MkdirAll(filepath.Join(dataDir, "updates"), 0755)
 
 	cfgName := DefaultConfigName
 	if explicitConfig != "" {
@@ -96,7 +108,32 @@ func ResolvePaths(explicitConfig string, isService bool) OSPaths {
 		ConfigPath: filepath.Join(dataDir, cfgName),
 		DBPath:     filepath.Join(dataDir, DefaultDBName),
 		LogPath:    filepath.Join(dataDir, "logs", "agent.log"),
+		StatusPath: filepath.Join(dataDir, "status.json"),
 		StagingDir: filepath.Join(dataDir, "staging"),
+		UpdatesDir: filepath.Join(dataDir, "updates"),
+	}
+}
+
+// resolveTrayReadOnlyPaths locates ProgramData (or explicit config dir) without creating directories
+// or writing config.json in non-writable/Downloads directories when invoked as unprivileged -tray.
+func resolveTrayReadOnlyPaths(explicitConfig string) OSPaths {
+	dir := defaultProductionDataDir()
+	if strings.TrimSpace(explicitConfig) != "" {
+		absCfg, err := filepath.Abs(explicitConfig)
+		if err == nil {
+			dir = filepath.Dir(absCfg)
+		} else {
+			dir = filepath.Dir(explicitConfig)
+		}
+	}
+	return OSPaths{
+		DataDir:    dir,
+		ConfigPath: filepath.Join(dir, DefaultConfigName),
+		DBPath:     filepath.Join(dir, DefaultDBName),
+		LogPath:    filepath.Join(dir, "logs", "agent.log"),
+		StatusPath: filepath.Join(dir, "status.json"),
+		StagingDir: filepath.Join(dir, "staging"),
+		UpdatesDir: filepath.Join(dir, "updates"),
 	}
 }
 
@@ -135,6 +172,30 @@ func saveConfig(path string, cfg Config) {
 			_ = os.Rename(tmp, path)
 		}
 	}
+}
+
+// WriteStatusSnapshot atomically persists status.json in the same directory so Windows
+// ACL inheritance keeps it readable by the interactive -tray user session.
+func WriteStatusSnapshot(statusPath string, snap AgentStatusSnapshot) error {
+	if strings.TrimSpace(statusPath) == "" {
+		return nil
+	}
+	if snap.AgentVersion == "" {
+		snap.AgentVersion = AgentVersion
+	}
+	if snap.UpdatedAt == "" {
+		snap.UpdatedAt = time.Now().UTC().Format(time.RFC3339)
+	}
+	_ = os.MkdirAll(filepath.Dir(statusPath), 0755)
+	out, err := json.MarshalIndent(snap, "", "  ")
+	if err != nil {
+		return err
+	}
+	tmp := statusPath + ".tmp"
+	if err := os.WriteFile(tmp, out, 0644); err != nil {
+		return err
+	}
+	return os.Rename(tmp, statusPath)
 }
 
 func loadOrInitConfig(path, flagServer, flagToken, flagSubnets string) Config {

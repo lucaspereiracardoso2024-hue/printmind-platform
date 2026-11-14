@@ -18,9 +18,9 @@ import (
 	"time"
 )
 
-func TestAgentVersionIs410(t *testing.T) {
-	if AgentVersion != "4.1.0" {
-		t.Fatalf("expected AgentVersion 4.1.0, got %q", AgentVersion)
+func TestAgentVersionIs420(t *testing.T) {
+	if AgentVersion != "4.2.0" {
+		t.Fatalf("expected AgentVersion 4.2.0, got %q", AgentVersion)
 	}
 }
 
@@ -541,4 +541,3 @@ func TestSNMPv3OutgoingPacketBuildAndParseRoundtrip(t *testing.T) {
 		t.Fatalf("unexpected packet sizes: disc=%d req=%d err=%v", len(discPkt), len(pkt), err)
 	}
 }
-
