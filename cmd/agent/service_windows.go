@@ -175,6 +175,23 @@ func unregisterWindowsAutoStartAndUninstall() {
 	_ = registry.DeleteKey(registry.LOCAL_MACHINE, `SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\PrintMindAgent`)
 }
 
+func buildDesiredServiceConfig(exePath string, base mgr.Config) mgr.Config {
+	cfg := base
+	if cfg.ServiceType == 0 {
+		cfg.ServiceType = windows.SERVICE_WIN32_OWN_PROCESS
+	}
+	if cfg.ErrorControl == 0 {
+		cfg.ErrorControl = mgr.ErrorNormal
+	}
+	cfg.DisplayName = ServiceDisplay
+	cfg.Description = ServiceDesc
+	cfg.StartType = mgr.StartAutomatic
+	cfg.DelayedAutoStart = true
+	cfg.ServiceStartName = "LocalSystem"
+	cfg.BinaryPathName = exePath
+	return cfg
+}
+
 func installOrUpdateWindowsService(exePath string, paths OSPaths) error {
 	m, err := mgr.Connect()
 	if err != nil {
@@ -182,23 +199,20 @@ func installOrUpdateWindowsService(exePath string, paths OSPaths) error {
 	}
 	defer m.Disconnect()
 
-	desiredCfg := mgr.Config{
-		DisplayName:      ServiceDisplay,
-		Description:      ServiceDesc,
-		StartType:        mgr.StartAutomatic,
-		DelayedAutoStart: true,
-		ServiceStartName: "LocalSystem",
-		BinaryPathName:   exePath,
-	}
-
 	var s *mgr.Service
 	if existing, oErr := m.OpenService(ServiceName); oErr == nil {
 		s = existing
+		baseCfg, cfgErr := s.Config()
+		if cfgErr != nil {
+			baseCfg = mgr.Config{}
+		}
+		desiredCfg := buildDesiredServiceConfig(exePath, baseCfg)
 		if uErr := s.UpdateConfig(desiredCfg); uErr != nil {
 			_ = s.Close()
 			return fmt.Errorf("falha ao atualizar servico existente: %w", uErr)
 		}
 	} else {
+		desiredCfg := buildDesiredServiceConfig(exePath, mgr.Config{})
 		created, cErr := m.CreateService(ServiceName, exePath, desiredCfg)
 		if cErr != nil {
 			return cErr

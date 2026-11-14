@@ -55,7 +55,7 @@ export function renderUnitsTokensList(): void {
 
   const winLink = byId<HTMLAnchorElement>('btnDirectAgentWinDownload');
   const msiLink = byId<HTMLAnchorElement>('btnDirectMsiDownload');
-  if (winLink) winLink.href = `${AGENT_RELEASE_BASE}/printmind-agent.exe`;
+  if (winLink) winLink.href = './printmind-agent.exe';
   if (msiLink) msiLink.href = `${AGENT_RELEASE_BASE}/PrintMindAgentSetup-v${APP_VERSION}-x64.msi`;
 
   const container = byId('unitsTokensList');
@@ -163,6 +163,12 @@ export function initCompanyView(callbacks: CompanyCallbacks): void {
   });
 
   byId('btnCopyMsiGlobal')?.addEventListener('click', () => copyMsiSilentCommand());
+  byId<HTMLAnchorElement>('btnDirectAgentWinDownload')?.addEventListener('click', e => {
+    const tok = getActiveUnitPairingToken();
+    if (!tok) return;
+    e.preventDefault();
+    downloadPairedAgent('windows', tok);
+  });
   byId('unitsTokensList')?.addEventListener('click', e => {
     const btn = (e.target as HTMLElement).closest<HTMLElement>('[data-action]');
     if (!btn) return;

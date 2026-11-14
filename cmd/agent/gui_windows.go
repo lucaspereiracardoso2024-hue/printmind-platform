@@ -3,6 +3,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"io"
 	"log/slog"
@@ -233,9 +234,41 @@ func relaunchElevatedForGUIInstall(extractedToken string) error {
 	return nil
 }
 
+func verifyPairingTokenWithBackend(httpClient *http.Client, cfg Config, token string) error {
+	tok := strings.TrimSpace(token)
+	if tok == "" {
+		return fmt.Errorf("token de pareamento vazio")
+	}
+	checkCfg := cfg
+	checkCfg.PairingToken = tok
+	hostname, _ := os.Hostname()
+	ctx, cancel := context.WithTimeout(context.Background(), 12*time.Second)
+	defer cancel()
+
+	_, err := sendTelemetry(ctx, httpClient, checkCfg, SyncRequest{
+		AgentVersion: AgentVersion,
+		PairingToken: tok,
+		CollectedAt:  time.Now().UTC().Format(time.RFC3339),
+		HostInfo: map[string]any{
+			"hostname":     hostname,
+			"os":           "windows/amd64",
+			"service_mode": false,
+		},
+		Devices: []DiscoveredDevice{},
+	})
+	if err != nil {
+		if strings.Contains(err.Error(), "Token de pareamento") {
+			return err
+		}
+		// Do not block installation on transient network/offline errors.
+		slog.Warn("pairing token verification skipped due to transient network error", "error", err)
+	}
+	return nil
+}
+
 func runWindowsBootstrapGUI(cfg Config, _ OSPaths) int {
 	// Ensure token extracted from downloaded filename survives into elevated process.
-	extractedTok := cfg.PairingToken
+	extractedTok := strings.TrimSpace(cfg.PairingToken)
 	if extractedTok == "" {
 		if exePath, err := os.Executable(); err == nil {
 			extractedTok = extractTokenFromExeName(exePath)
@@ -257,15 +290,22 @@ func runWindowsBootstrapGUI(cfg Config, _ OSPaths) int {
 		defer logCloser.Close()
 	}
 	cfg = loadOrInitConfig(prodPaths.ConfigPath, cfg.ServerURL, extractedTok, "")
+	httpClient := &http.Client{Timeout: 20 * time.Second}
 
-	if strings.TrimSpace(cfg.PairingToken) == "" {
-		input, ok := promptPairingTokenDialog()
+	if extractedTok == "" {
+		if strings.TrimSpace(cfg.PairingToken) != "" {
+			if err := verifyPairingTokenWithBackend(httpClient, cfg, cfg.PairingToken); err != nil {
+				slog.Warn("discarding rejected pairing token from local config", "error", err)
+				cfg.PairingToken = ""
+			}
+		}
+
+		input, ok := promptPairingTokenDialog(cfg.PairingToken)
 		if !ok || strings.TrimSpace(input) == "" {
 			return 0
 		}
 		input = strings.TrimSpace(input)
 		if strings.Contains(input, "@") {
-			httpClient := &http.Client{Timeout: 20 * time.Second}
 			resolved, err := resolveTokenByEmail(httpClient, cfg.ServerURL, cfg.APIKey, input)
 			if err != nil {
 				slog.Error("failed resolving pairing token via email in GUI", "error", err)
@@ -282,6 +322,15 @@ func runWindowsBootstrapGUI(cfg Config, _ OSPaths) int {
 				showMessageBox(
 					"PrintMind Agente — Token Inválido",
 					"O token informado deve começar com 'pm_live_' ou ser o e-mail da sua conta PrintMind.",
+					mbIconWarning,
+				)
+				return 1
+			}
+			if err := verifyPairingTokenWithBackend(httpClient, cfg, input); err != nil {
+				slog.Warn("entered pairing token rejected by backend", "error", err)
+				showMessageBox(
+					"PrintMind Agente — Token Inválido",
+					"Este token de pareamento não foi aceito pelo servidor (token inválido ou unidade excluída).\n\nCopie o token atual em Minha Empresa -> Tokens de Pareamento ou digite o e-mail da conta.",
 					mbIconWarning,
 				)
 				return 1
@@ -417,7 +466,7 @@ func getWindowTextString(hwnd windows.Handle) string {
 	return windows.UTF16ToString(buf)
 }
 
-func promptPairingTokenDialog() (string, bool) {
+func promptPairingTokenDialog(initialValue string) (string, bool) {
 	hInst, _, _ := procGetModuleHandle.Call(0)
 	clsName, _ := windows.UTF16PtrFromString("PrintMindPairingDialogClass")
 	titlePtr, _ := windows.UTF16PtrFromString("PrintMind Agente v" + AgentVersion + " — Pareamento")
@@ -501,9 +550,9 @@ func promptPairingTokenDialog() (string, bool) {
 	)
 
 	editCls, _ := windows.UTF16PtrFromString("EDIT")
-	emptyPtr, _ := windows.UTF16PtrFromString("")
+	initPtr, _ := windows.UTF16PtrFromString(strings.TrimSpace(initialValue))
 	hEdit, _, _ := procCreateWindowExW.Call(
-		0, uintptr(unsafe.Pointer(editCls)), uintptr(unsafe.Pointer(emptyPtr)),
+		0, uintptr(unsafe.Pointer(editCls)), uintptr(unsafe.Pointer(initPtr)),
 		wsChild|wsVisible|wsTabStop|wsBorder|esAutoHScroll,
 		16, 46, 424, 28,
 		hwnd, idEditToken, hInst, 0,

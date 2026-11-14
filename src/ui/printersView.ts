@@ -1,4 +1,4 @@
-import { AGENT_RELEASE_BASE, APP_VERSION, sb } from '../services/supabaseClient';
+import { APP_VERSION, sb } from '../services/supabaseClient';
 import { getOrCreatePortalToken } from '../services/portalService';
 import { appState, byId, closeModal, getActiveUnitPairingToken, isMasterAdminUser, loadTenantData, openModal } from '../state/store';
 import { BillingMode, Printer, SpareTonersStock } from '../types/models';
@@ -36,18 +36,14 @@ export function downloadPairedAgent(osType: 'windows' | 'linux' = 'windows', exp
     openClientModalForCreate();
     return;
   }
-  const url =
-    osType === 'linux'
-      ? `${AGENT_RELEASE_BASE}/printmind-agent-linux-amd64`
-      : `${AGENT_RELEASE_BASE}/printmind-agent.exe`;
+  void navigator.clipboard?.writeText(token);
+  const url = osType === 'linux' ? './printmind-agent-linux-amd64' : './printmind-agent.exe';
   const filename =
     osType === 'linux' ? `printmind-agent-linux-amd64__${token}` : `printmind-agent__${token}.exe`;
 
   const a = document.createElement('a');
   a.href = url;
   a.download = filename;
-  a.target = '_blank';
-  a.rel = 'noopener';
   document.body.appendChild(a);
   a.click();
   a.remove();

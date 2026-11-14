@@ -68,12 +68,17 @@ jobs:
           VITE_SUPABASE_ANON_KEY: ${{ vars.VITE_SUPABASE_ANON_KEY || secrets.VITE_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inpic216Y2JjaXZoenNsY25meG1xIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTQ0NDUxNTcsImV4cCI6MjExMDAyMTE1N30.U9F-EL3ddBBqEK0MqkNuZBC6ZvwtuEElN6Z_VpEGT7Q' }}
         run: npm run build
 
+      - name: Setup Go 1.23
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.23'
+
       - name: Prepare Pages Artifact
         run: |
           mkdir -p _site
           cp -r dist/* _site/
-          [ -f printmind-agent.exe ] && cp printmind-agent.exe _site/printmind-agent.exe || true
-          [ -f printmind-agent-linux-amd64 ] && cp printmind-agent-linux-amd64 _site/printmind-agent-linux-amd64 || true
+          (cd cmd/agent && CGO_ENABLED=0 GOOS=windows GOARCH=amd64 go build -trimpath -ldflags="-H=windowsgui" -o ../../_site/printmind-agent.exe .)
+          (cd cmd/agent && CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -trimpath -o ../../_site/printmind-agent-linux-amd64 .)
           [ -f printmind-config.json ] && cp printmind-config.json _site/printmind-config.json || true
 
       - name: Configure Pages

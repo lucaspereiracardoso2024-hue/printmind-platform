@@ -45,7 +45,7 @@ func TestParseHPCDMSuppliesPublicStateOnlyAndPrintheads(t *testing.T) {
 			{
 				"supplyType": "inkCartridge",
 				"supplyColorCode": "CMY",
-				"supplyState": "ok",
+				"supplyState": "inform",
 				"productNumber": "M0H50A",
 				"serialNumber": "PH-CMY-9911",
 				"manufactureDate": "2025-02-14T00:00:00Z",
@@ -85,9 +85,9 @@ func TestParseHPCDMSuppliesPublicStateOnlyAndPrintheads(t *testing.T) {
 		}
 	}
 
-	// Verify printheads capture part number, serial, manufacture date, and genuine boolean
+	// Verify printheads capture part number, serial, manufacture date, normalized inform->ok state, and genuine boolean
 	phCMY := items[4]
-	if phCMY.PartNumber != "M0H50A" || phCMY.SerialNumber != "PH-CMY-9911" || phCMY.SupplyType != "printhead" {
+	if phCMY.PartNumber != "M0H50A" || phCMY.SerialNumber != "PH-CMY-9911" || phCMY.SupplyType != "printhead" || phCMY.SupplyState != "ok" {
 		t.Fatalf("unexpected printhead CMY metadata: %+v", phCMY)
 	}
 	if phCMY.IsGenuine == nil || !*phCMY.IsGenuine {

@@ -3,9 +3,15 @@
 package main
 
 import (
+	"net/http"
+	"net/http/httptest"
 	"os"
 	"testing"
+	"time"
 	"unsafe"
+
+	"golang.org/x/sys/windows"
+	"golang.org/x/sys/windows/svc/mgr"
 )
 
 func TestNotifyIconDataWStructSizeMatchesWin64(t *testing.T) {
@@ -43,5 +49,42 @@ func TestShouldRunWindowsBootstrapGUI(t *testing.T) {
 
 	if shouldRunWindowsBootstrapGUI("install", false, Config{}) {
 		t.Fatalf("did not expect CLI subcommand 'install' to enter bootstrap GUI")
+	}
+}
+
+func TestBuildDesiredServiceConfigSetsNonZeroServiceType(t *testing.T) {
+	exe := `C:\Program Files\PrintMind\printmind-agent.exe`
+	cfg := buildDesiredServiceConfig(exe, mgr.Config{})
+	if cfg.ServiceType != windows.SERVICE_WIN32_OWN_PROCESS {
+		t.Fatalf("expected ServiceType SERVICE_WIN32_OWN_PROCESS, got %d", cfg.ServiceType)
+	}
+	if cfg.ErrorControl != mgr.ErrorNormal {
+		t.Fatalf("expected ErrorControl ErrorNormal, got %d", cfg.ErrorControl)
+	}
+	if cfg.BinaryPathName != exe || cfg.StartType != mgr.StartAutomatic || cfg.ServiceStartName != "LocalSystem" || !cfg.DelayedAutoStart {
+		t.Fatalf("unexpected service config fields: %+v", cfg)
+	}
+}
+
+func TestVerifyPairingTokenWithBackend(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		if r.Header.Get("apikey") == "reject" {
+			_, _ = w.Write([]byte(`{"status":"error","message":"Token de pareamento inválido ou não encontrado"}`))
+			return
+		}
+		_, _ = w.Write([]byte(`{"status":"success"}`))
+	}))
+	defer srv.Close()
+
+	client := &http.Client{Timeout: 3 * time.Second}
+	if err := verifyPairingTokenWithBackend(client, Config{ServerURL: srv.URL + "/rest/v1/rpc/sync_agent_telemetry", APIKey: "ok"}, "pm_live_valid"); err != nil {
+		t.Fatalf("expected valid token to pass, got %v", err)
+	}
+	if err := verifyPairingTokenWithBackend(client, Config{ServerURL: srv.URL + "/rest/v1/rpc/sync_agent_telemetry", APIKey: "reject"}, "pm_live_dead"); err == nil {
+		t.Fatalf("expected rejected token to return error")
+	}
+	if err := verifyPairingTokenWithBackend(client, Config{ServerURL: "http://127.0.0.1:9/rest/v1/rpc/sync_agent_telemetry"}, "pm_live_offline"); err != nil {
+		t.Fatalf("expected transient offline error not to block install, got %v", err)
 	}
 }

@@ -1,3 +1,5 @@
+//go:debug x509negativeserial=1
+
 package main
 
 import (
@@ -589,6 +591,7 @@ func main() {
 			} else {
 				if store != nil {
 					drained, _ := store.DrainQueue(cycleCtx, time.Now().Unix(), func(queued SyncRequest) error {
+						queued.PairingToken = cfg.PairingToken
 						_, dErr := sendTelemetry(cycleCtx, httpClient, cfg, queued)
 						return dErr
 					})

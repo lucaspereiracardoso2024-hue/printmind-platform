@@ -96,7 +96,7 @@ func normalizeHPCDMSupplyState(raw string) string {
 	switch s {
 	case "", "unknown":
 		return "unknown"
-	case "ok", "ready", "normal", "informational", "okfull", "full":
+	case "ok", "ready", "normal", "inform", "informational", "okfull", "full":
 		return "ok"
 	case "low", "verylow", "very_low", "warning", "lowwarning", "replace_soon":
 		return "low"
