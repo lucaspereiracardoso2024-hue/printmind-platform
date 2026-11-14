@@ -130,9 +130,19 @@ export async function toggleClientClosingFreeze(params: {
     const payload = {
       tenant_id: tenantId,
       client_id: client.id,
+      client_name: client.name,
+      month_year: periodMonth,
       status: 'congelado',
       total_pages: metrics.dTotal,
+      mono_pages: metrics.dMono,
+      color_pages: metrics.dColor,
+      technical_discount_mono: metrics.techDedMono,
+      technical_discount_color: metrics.techDedColor,
+      base_rate: client.base_rate,
+      extra_mono: client.extra_mono,
+      extra_color: client.extra_color,
       total_amount: metrics.total,
+      net_tenant_amount: metrics.total,
       period_month: periodMonth,
       client_name_snapshot: client.name,
       client_cnpj_snapshot: client.cnpj ?? null,
@@ -143,6 +153,7 @@ export async function toggleClientClosingFreeze(params: {
       frozen_at: nowIso,
       snapshot_hash: snap.snapshotHash,
       pix_payload: pixPayload,
+      pix_copy_paste: pixPayload,
       updated_at: nowIso,
     };
 

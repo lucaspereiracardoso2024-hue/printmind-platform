@@ -294,22 +294,31 @@ export function getPrinterPeriodMetrics(
     .sort((a, b) => new Date(a.recorded_at).getTime() - new Date(b.recorded_at).getTime());
 
   const earliest = readings.length > 0 ? readings[0] : null;
-  const startTotal =
-    earliest && earliest.total_pages !== null && earliest.total_pages !== undefined
-      ? Number(earliest.total_pages)
-      : Number(p.initial_total_pages ?? 0);
-  const startMono =
-    earliest && earliest.mono_pages !== null && earliest.mono_pages !== undefined
-      ? Number(earliest.mono_pages)
-      : Number(p.initial_mono_pages ?? 0);
-  const startColor =
-    earliest && earliest.color_pages !== null && earliest.color_pages !== undefined
-      ? Number(earliest.color_pages)
-      : Number(p.initial_color_pages ?? 0);
-
   const finalTotal = Number(p.total_pages ?? 0);
   const finalMono = Number(p.mono_pages ?? 0);
   const finalColor = Number(p.color_pages ?? 0);
+
+  const initTotal = Number(p.initial_total_pages ?? 0);
+  const initMono = Number(p.initial_mono_pages ?? 0);
+  const initColor = Number(p.initial_color_pages ?? 0);
+
+  const startTotal =
+    earliest && earliest.total_pages !== null && earliest.total_pages !== undefined
+      ? Number(earliest.total_pages)
+      : initTotal;
+  let startMono =
+    earliest && earliest.mono_pages !== null && earliest.mono_pages !== undefined
+      ? Number(earliest.mono_pages)
+      : initMono;
+  let startColor =
+    earliest && earliest.color_pages !== null && earliest.color_pages !== undefined
+      ? Number(earliest.color_pages)
+      : initColor;
+
+  if (earliest && startColor === 0 && initColor > 0) {
+    startColor = initColor;
+    startMono = Math.max(0, finalMono - Math.max(0, finalTotal - startTotal));
+  }
 
   const replacedMono = Math.max(0, Number(p.replaced_delta_mono ?? 0));
   const replacedColor = Math.max(0, Number(p.replaced_delta_color ?? 0));

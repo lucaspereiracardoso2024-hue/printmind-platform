@@ -670,4 +670,49 @@ describe('billingEngine contratos, Fair Billing, pools e snapshot', () => {
     expect(resolveEffectiveCourtesyLimit(500, 5.0, 'trial')).toBe(2);
     expect(resolveEffectiveCourtesyLimit(null, 5.0, 'starter')).toBe(6);
   });
+
+  it('nao cobra cor retroativa quando telemetry_readings anterior tem color=0 e baseline foi ajustado', () => {
+    const cliNoFranq: Client = {
+      id: 'cli-retro',
+      tenant_id: 'ten-1',
+      name: 'Clínica Retro Cor',
+      closing_day: 15,
+      base_rate: 100,
+      franchise_mono: 0,
+      extra_mono: 0.05,
+      franchise_color: 0,
+      extra_color: 0.1,
+    };
+    const prtAdjusted: Printer = {
+      id: 'prt-retro',
+      tenant_id: 'ten-1',
+      client_id: 'cli-retro',
+      model: 'HP Smart Tank 580',
+      serial: 'E2E-SN-001',
+      initial_total_pages: 1000,
+      initial_mono_pages: 800,
+      initial_color_pages: 200,
+      total_pages: 1250,
+      mono_pages: 1050,
+      color_pages: 200,
+      is_color_capable: true,
+    };
+    const legacyZeroColorReading: TelemetryReading[] = [
+      {
+        printer_id: 'prt-retro',
+        total_pages: 1000,
+        mono_pages: 1000,
+        color_pages: 0,
+        recorded_at: `${monthPrefix}-05T10:00:00Z`,
+      },
+    ];
+
+    const pm = getPrinterPeriodMetrics(prtAdjusted, legacyZeroColorReading, monthPrefix);
+    expect(pm.deltaMono).toBe(250);
+    expect(pm.deltaColor).toBe(0);
+    expect(pm.deltaTotal).toBe(250);
+
+    const metrics = computeClientMetrics(cliNoFranq, [prtAdjusted], legacyZeroColorReading, [], monthPrefix);
+    expect(metrics.total).toBeCloseTo(112.5, 2);
+  });
 });

@@ -102,26 +102,28 @@ function bindGlobalUiListeners(): void {
   registerTabChangeHandler(tab => {
     if (tab === 'reports') renderReportsView();
     else if (tab === 'grafica') renderGraficaView();
-    else if (tab === 'tickets') renderTicketsView();
-    else if (tab === 'company') renderCompanyView();
+    else if (tab === 'tickets') {
+      renderTicketsView();
+      void loadTenantData().then(() => renderTicketsView());
+    } else if (tab === 'company') renderCompanyView();
     else if (tab === 'plans') renderPlansView();
     else if (tab === 'master') void loadMasterTenants();
   });
 }
 
 async function bootstrap(): Promise<void> {
-  const portalToken = getPortalTokenFromHash();
-  if (portalToken) {
-    await mountPublicPortal(portalToken);
-    return;
-  }
-
   window.addEventListener('hashchange', () => {
     const tok = getPortalTokenFromHash();
     if (tok) {
       void mountPublicPortal(tok);
     }
   });
+
+  const portalToken = getPortalTokenFromHash();
+  if (portalToken) {
+    await mountPublicPortal(portalToken);
+    return;
+  }
 
   bindGlobalUiListeners();
 

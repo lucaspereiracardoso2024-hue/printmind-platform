@@ -74,7 +74,7 @@ ALTER TABLE public.tenants
 CREATE OR REPLACE FUNCTION public.protect_tenant_billing_columns()
 RETURNS trigger
 LANGUAGE plpgsql
-SECURITY DEFINER
+SECURITY INVOKER
 SET search_path = public
 AS $$
 DECLARE
@@ -208,6 +208,14 @@ ALTER TABLE public.closings ADD COLUMN IF NOT EXISTS snapshot_hash VARCHAR(64);
 ALTER TABLE public.closings ADD COLUMN IF NOT EXISTS pix_payload TEXT;
 ALTER TABLE public.closings ADD COLUMN IF NOT EXISTS asaas_payment_id VARCHAR(120);
 ALTER TABLE public.closings ADD COLUMN IF NOT EXISTS invoice_url TEXT;
+ALTER TABLE public.closings ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW();
+ALTER TABLE public.closings ADD COLUMN IF NOT EXISTS client_name VARCHAR(150) NOT NULL DEFAULT '';
+ALTER TABLE public.closings ADD COLUMN IF NOT EXISTS month_year VARCHAR(7) NOT NULL DEFAULT to_char(now(), 'YYYY-MM');
+ALTER TABLE public.closings ALTER COLUMN client_name SET DEFAULT '';
+ALTER TABLE public.closings ALTER COLUMN month_year SET DEFAULT to_char(now(), 'YYYY-MM');
+ALTER TABLE public.closings DROP CONSTRAINT IF EXISTS closings_status_check;
+ALTER TABLE public.closings ADD CONSTRAINT closings_status_check
+  CHECK (status::text = ANY (ARRAY['aberto', 'processado', 'congelado', 'faturado', 'pago', 'vencido']));
 
 CREATE INDEX IF NOT EXISTS idx_closings_tenant_period
   ON public.closings(tenant_id, period_month);
@@ -256,7 +264,7 @@ CREATE POLICY "Tenant users can manage closing_printer_items"
 CREATE OR REPLACE FUNCTION public.prevent_frozen_closing_mutation()
 RETURNS trigger
 LANGUAGE plpgsql
-SECURITY DEFINER
+SECURITY INVOKER
 SET search_path = public
 AS $$
 DECLARE
@@ -315,7 +323,7 @@ CREATE TRIGGER trg_prevent_frozen_closing_mutation
 CREATE OR REPLACE FUNCTION public.prevent_frozen_closing_items_mutation()
 RETURNS trigger
 LANGUAGE plpgsql
-SECURITY DEFINER
+SECURITY INVOKER
 SET search_path = public
 AS $$
 DECLARE
@@ -699,6 +707,13 @@ BEGIN
         IF COALESCE(v_prt.color_pages, 0) = 0 AND v_color > 0 AND v_is_color_capable THEN
           v_new_init_color := v_color;
           v_new_init_mono := GREATEST(0, v_mono - GREATEST(0, v_total - COALESCE(v_prt.initial_total_pages, v_total)));
+
+          UPDATE public.telemetry_readings
+          SET
+            color_pages = v_color,
+            mono_pages = GREATEST(0, v_mono - GREATEST(0, v_total - COALESCE(total_pages, v_total)))
+          WHERE printer_id = v_prt.id
+            AND COALESCE(color_pages, 0) = 0;
         END IF;
 
         v_counter_reset := (v_total > 0 AND (v_total + 10) < COALESCE(v_prt.total_pages, 0));

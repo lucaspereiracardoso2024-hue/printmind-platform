@@ -29,6 +29,9 @@ export function syncMasterAccess(userEmail?: string): void {
 
 export function applyOperationModeUI(mode: string): void {
   const isGrafica = mode === 'grafica';
+  if (appState.tenant) {
+    appState.tenant.operation_mode = isGrafica ? 'grafica' : 'outsourcing';
+  }
   document.querySelectorAll<HTMLElement>('[data-outsourcing-only="true"]').forEach(el => {
     el.classList.toggle('hidden', isGrafica);
   });
@@ -84,6 +87,7 @@ export function switchTab(tabId: AppTabId): void {
     master: 'navTabMaster',
   };
 
+  const isGrafica = appState.tenant?.operation_mode === 'grafica';
   (Object.keys(navButtons) as AppTabId[]).forEach(key => {
     const btn = byId(navButtons[key]);
     if (!btn) return;
@@ -97,6 +101,10 @@ export function switchTab(tabId: AppTabId): void {
       btn.className =
         'px-3 py-1.5 rounded-xl text-white/85 hover:text-white hover:bg-white/10 transition flex items-center space-x-1.5 text-xs font-semibold';
     }
+    const shouldHide =
+      (key === 'master' && !isMasterAdminUser()) ||
+      (isGrafica && btn.dataset.outsourcingOnly === 'true');
+    btn.classList.toggle('hidden', shouldHide);
   });
 
   if (onTabChangeCallback) {
@@ -115,6 +123,7 @@ export function switchReportsSubTab(sub: ReportsSubTabId): void {
     supplies: { pane: 'reportsSubSupplies', btn: 'repSubBtnSupplies' },
     ai: { pane: 'reportsSubAi', btn: 'repSubBtnAi' },
   };
+  const isGrafica = appState.tenant?.operation_mode === 'grafica';
   (Object.keys(subMap) as ReportsSubTabId[]).forEach(k => {
     const p = byId(subMap[k].pane);
     const b = byId(subMap[k].btn);
@@ -124,6 +133,8 @@ export function switchReportsSubTab(sub: ReportsSubTabId): void {
         k === sub
           ? 'px-4 py-2 rounded-xl bg-[#0038A8] text-white text-xs font-bold shadow-sm transition'
           : 'px-4 py-2 rounded-xl bg-slate-100 text-slate-700 hover:bg-slate-200 text-xs font-bold transition';
+      const shouldHide = isGrafica && b.dataset.outsourcingOnly === 'true';
+      b.classList.toggle('hidden', shouldHide);
     }
   });
   refreshIcons();
